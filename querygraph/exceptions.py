@@ -1,0 +1,4 @@
+
+
+class QueryGraphException(Exception):
+    pass

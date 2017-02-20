@@ -1,0 +1,39 @@
+DATABASES:
+    factory:
+      type: sqlite
+      host: C:\Users\pete\Packaged Projects\querygraph\querygraph\db\sample_data\factory.db
+    factory_2:
+      type: sqlite
+      host: C:\Users\pete\Packaged Projects\querygraph\querygraph\db\sample_data\factory_2.db
+    chinook:
+      type: sqlite
+      host: host: C:\Users\pete\Packaged Projects\querygraph\querygraph\db\sample_data\chinook.db
+QUERY_NODES:
+  factory_root:
+      database: factory
+      query: |
+        SELECT *
+        FROM vendor
+        LIMIT {% limit %}
+  factory_2:
+    database: factory_2
+    parent_node: factory_root
+    query: |
+      SELECT *
+      FROM test
+      WHERE type_id IN {{ unique(id)|val_list }}
+    join_context:
+      how: left
+      on_columns:
+        id: id
+  chinook:
+    database: chinook
+    parent_node: factory_root
+    query: |
+      SELECT *
+      FROM albums
+      WHERE ArtistId IN {{ val_list:[unique(id)] -> ArtistId }}
+    join_context:
+      how: left
+      on_columns:
+        id: ArtistId
