@@ -1,39 +1,44 @@
 DATABASES:
-    factory:
-      type: sqlite
-      host: C:\Users\pete\Packaged Projects\querygraph\querygraph\db\sample_data\factory.db
-    factory_2:
-      type: sqlite
-      host: C:\Users\pete\Packaged Projects\querygraph\querygraph\db\sample_data\factory_2.db
-    chinook:
-      type: sqlite
-      host: host: C:\Users\pete\Packaged Projects\querygraph\querygraph\db\sample_data\chinook.db
+  flights:
+    type: sqlite
+    host: C:\Users\pete\Packaged Projects\querygraph\querygraph\db\sample_data\flights.db
+  weather:
+    type: sqlite
+    host: C:\Users\pete\Packaged Projects\querygraph\querygraph\db\sample_data\weather.db
+  carriers:
+    type: sqlite
+    host: host: C:\Users\pete\Packaged Projects\querygraph\querygraph\db\sample_data\carriers.db
 QUERY_NODES:
-  factory_root:
-      database: factory
+  flights:
+      database: flights
       query: |
         SELECT *
-        FROM vendor
-        LIMIT {% limit %}
-  factory_2:
-    database: factory_2
-    parent_node: factory_root
+        FROM flights
+        WHERE carrier IN {% carriers|value_list:str %} AND hour != 'nan'
+      create:
+        date_time: str.combine(year, '-', month, '-', day, 'T', as_type.int(as_type.float(hour)), ':00:00', 'Z')
+  weather:
+    database: weather
+    parent_node: flights
     query: |
       SELECT *
-      FROM test
-      WHERE type_id IN {{ unique(id)|val_list }}
+      FROM weather
+      WHERE origin IN {{ origin|value_list:str }} AND time_hour IN {{ date_time|value_list:str }}
+    join_context:
+      how: inner
+      on_columns:
+        origin: origin
+        date_time: time_hour
+  carriers:
+    database: carriers
+    parent_node: flights
+    query: |
+      SELECT *
+      FROM carriers
+      WHERE code IN {% [str.lowercase(carriers)]|value_list:str %}
+    create:
+      code: str.uppercase(code)
     join_context:
       how: left
       on_columns:
-        id: id
-  chinook:
-    database: chinook
-    parent_node: factory_root
-    query: |
-      SELECT *
-      FROM albums
-      WHERE ArtistId IN {{ val_list:[unique(id)] -> ArtistId }}
-    join_context:
-      how: left
-      on_columns:
-        id: ArtistId
+        carrier: code

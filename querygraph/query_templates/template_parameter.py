@@ -19,8 +19,9 @@ class TemplateParameterException(QueryGraphException):
 
 class TemplateParameter(object):
 
-    def __init__(self, param_str):
+    def __init__(self, param_str, param_type):
         self.param_str = param_str
+        self.param_type = param_type
         self.param_expr_str = None
         self.name = None
         self.container_type = None
@@ -79,10 +80,39 @@ class TemplateParameter(object):
         elif self.container_type == 'value':
             return self._make_single_value(pre_value)
 
-    def query_value(self, pre_value=None, df=None, independent_params=None):
-        if not self.param_expr_str and (pre_value is None):
-            raise TemplateParameterException("Something!")
-        if pre_value is not None:
+    def query_value(self, df=None, independent_params=None):
+        """
+        Return TemplateParameter query value. This involves:
+
+            (1) Creating the query 'pre_value', which is either
+                derived from evaluating the parameter's expression
+                string, or taken directly from the independent_params
+                dict.
+            (2) Converting the pre_value into its actualy query value,
+                which is based on the parameter 'data_type' and
+                'container_type' (single value, or list of values).
+
+        Parameters
+        ----------
+        df : Pandas DataFrame or None
+            If not None, the DataFrame of the parent node of the QueryNode this
+            TemplateParameter is associated with.
+        independent_params : dict
+            A dictionary mapping independent parameter names to given parameter
+            values.
+
+        """
+        if self.param_type == 'independent' and independent_params is None:
+            raise TemplateParameterException("Independent template parameter '%s' cannot be defined because no "
+                                             "independent parameter values were given." % self.name)
+        if self.param_type == 'dependent' and df is None:
+            raise TemplateParameterException("Dependent template parameter '%s' cannot be defined because no "
+                                             "parent dataframe was given." % self.name)
+        if self.param_type == 'independent' and self.param_expr_str is None:
+            pre_value = independent_params[self.name]
+            return self._make_query_value(pre_value=pre_value)
+        elif self.param_type == 'dependent' and self.param_expr_str is None:
+            pre_value = df[self.name]
             return self._make_query_value(pre_value=pre_value)
         else:
             evaluator = Evaluator()

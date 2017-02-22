@@ -30,8 +30,10 @@ class ReadYaml(object):
         self.yaml_path = yaml_path
         self.query_nodes = dict()
         self.db_connectors = dict()
+        self.root_node = None
 
     def query_graph(self):
+        """ Create a Query Graph from YAML data. """
         if self.yaml_path:
             graph_data = yaml.load(file('%s' % self.yaml_path, 'r'))
         else:
@@ -39,6 +41,10 @@ class ReadYaml(object):
         self._create_db_connectors(graph_data)
         self._create_query_nodes(graph_data)
         self._join_query_nodes(graph_data)
+        if self.root_node is None:
+            raise YamlFormatException("No root node defined - there should be a single node with no parent.")
+        else:
+            return self.root_node
 
     def _create_db_connectors(self, graph_data):
         if 'DATABASES' not in graph_data:
@@ -58,17 +64,24 @@ class ReadYaml(object):
             self.query_nodes[node_name] = QueryNode(name=node_name,
                                                     query=node_attribs['query'],
                                                     db_connector=self.db_connectors[node_attribs['database']])
-            if 'add_columns' in node_attribs:
+            if 'create' in node_attribs:
                 query_node = self.query_nodes[node_name]
-                for new_col_name, new_col_def in node_attribs['add_columns'].items():
-                    query_node.add_column(new_col_name=new_col_def)
+                for new_col_name, new_col_def in node_attribs['create'].items():
+                    kwarg = {new_col_name: new_col_def}
+                    query_node.add_column(**kwarg)
 
     def _join_query_nodes(self, graph_data):
         query_nodes = graph_data['QUERY_NODES']
         for node_name, node_attribs in query_nodes.items():
-            parent_node = self.query_nodes[node_attribs['parent_node']]
-            child_node = self.query_nodes[node_name]
-            parent_node.join(child_node, how=node_attribs['join_context']['how'],
-                             on_columns=node_attribs['join_context']['on_columns'])
+            if 'parent_node' not in node_attribs:
+                if self.root_node is not None:
+                    raise YamlFormatException("More than one query node do not have a parent node.")
+                else:
+                    self.root_node = self.query_nodes[node_name]
+            else:
+                parent_node = self.query_nodes[node_attribs['parent_node']]
+                child_node = self.query_nodes[node_name]
+                parent_node.join(child_node, how=node_attribs['join_context']['how'],
+                                 on_columns=node_attribs['join_context']['on_columns'])
 
 

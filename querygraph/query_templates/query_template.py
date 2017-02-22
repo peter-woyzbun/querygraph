@@ -42,30 +42,22 @@ class QueryTemplate(object):
             if token.startswith('{{'):
                 tok_expr = token[2:-2].strip()
                 # dependent_parameter = QueryParameter(parameter_str=tok_expr)
-                dependent_parameter = TemplateParameter(param_str=tok_expr)
+                dependent_parameter = TemplateParameter(param_str=tok_expr, param_type='dependent')
                 if df is None:
                     raise DependentParameterException("No dataframe was given from which to generate dependent"
                                                       "parameter value(s).")
-                if dependent_parameter.param_expr_str is None:
-                    pre_val = df[dependent_parameter.name]
-                else:
-                    pre_val = None
-                parsed_query += dependent_parameter.query_value(pre_value=pre_val, df=df)
+                parsed_query += dependent_parameter.query_value(df=df)
             # Comment.
             elif token.startswith('{#'):
                 pass
-            # Independent parameter.parameter_value=df[dependent_parameter.name].unique()
+            # Independent parameter.
             elif token.startswith('{%'):
                 tok_expr = token[2:-2].strip()
-                independent_parameter = TemplateParameter(param_str=tok_expr)
+                independent_parameter = TemplateParameter(param_str=tok_expr, param_type='independent')
                 if independent_params is None:
                     raise IndependentParameterException("Independent parameters present in query and no independent"
                                                         "parameter values given.")
-                if independent_parameter.param_expr_str is None:
-                    pre_val = df[independent_parameter.name]
-                    parsed_query += str(independent_parameter.query_value(pre_value=pre_val))
-                else:
-                    parsed_query += str(independent_parameter.query_value(independent_params=independent_params))
+                parsed_query += str(independent_parameter.query_value(independent_params=independent_params))
             else:
                 parsed_query += token
         print parsed_query
