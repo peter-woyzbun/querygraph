@@ -32,7 +32,7 @@ class QueryTemplate(object):
 
     def parse(self, df=None, independent_params=None):
         """
-        Parses the query template string.
+        Returns parsed query template string.
 
         """
         parsed_query = ""

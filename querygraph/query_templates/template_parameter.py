@@ -1,4 +1,4 @@
-from pyparsing import *
+from pyparsing import Suppress, SkipTo, Word, alphas, alphanums, Literal
 
 from querygraph.exceptions import QueryGraphException
 from querygraph.evaluation.evaluator import Evaluator
@@ -102,12 +102,16 @@ class TemplateParameter(object):
             values.
 
         """
+        # If the parameter is independent, and no independent parameter values are given,
+        # raise exception.
         if self.param_type == 'independent' and independent_params is None:
             raise TemplateParameterException("Independent template parameter '%s' cannot be defined because no "
                                              "independent parameter values were given." % self.name)
+        # If the parameter is dependent, and no dataframe is given, raise exception.
         if self.param_type == 'dependent' and df is None:
             raise TemplateParameterException("Dependent template parameter '%s' cannot be defined because no "
                                              "parent dataframe was given." % self.name)
+
         if self.param_type == 'independent' and self.param_expr_str is None:
             pre_value = independent_params[self.name]
             return self._make_query_value(pre_value=pre_value)

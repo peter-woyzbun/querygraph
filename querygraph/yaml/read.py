@@ -1,7 +1,7 @@
 import yaml
 
 from querygraph.exceptions import QueryGraphException
-from querygraph.db.connectors import SQLite
+from querygraph.db.connectors import SQLite, MySQL, MsSQL, Postgres
 from querygraph.query_node import QueryNode
 
 
@@ -23,7 +23,10 @@ class DatabaseConfigException(YamlFormatException):
 
 class ReadYaml(object):
 
-    db_connector_map = {'sqlite': SQLite}
+    db_connector_map = {'sqlite': SQLite,
+                        'mysql': MySQL,
+                        'mssql': MsSQL,
+                        'postgres': Postgres}
 
     def __init__(self, yaml_str=None, yaml_path=None):
         self.yaml_str = yaml_str

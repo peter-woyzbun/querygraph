@@ -29,13 +29,17 @@ class ExprFunc(object):
         return self._execute(target, *args, **kwargs)
 
     def _execute(self, target, *args, **kwargs):
+        # Pandas Series execution.
         if isinstance(target, pd.Series):
             return self._series_execute(target, *args, **kwargs)
+        # Numpy array execution.
         elif isinstance(target, np.ndarray):
             return self._np_array_execute(target, *args, **kwargs)
+        # List execution.
         elif isinstance(target, list):
             return self._list_execute(target, *args, **kwargs)
-        elif isinstance(target, (str, float, int, datetime.date, datetime.datetime)):
+        # Singleton execution.
+        elif isinstance(target, (str, float, int, datetime.date, datetime.datetime, datetime.time)):
             return self._singleton_execute(target, *args, **kwargs)
         else:
             raise ExprFuncException("Type given not accepted by function.")
@@ -56,8 +60,12 @@ class ExprFunc(object):
             return self._int_execute(target, *args, **kwargs)
         elif isinstance(target, float):
             return self._float_execute(target, *args, **kwargs)
-        elif isinstance(target, (datetime.date, datetime.datetime)):
+        elif isinstance(target, datetime.datetime):
             return self._datetime_execute(target, *args, **kwargs)
+        elif isinstance(target, datetime.date):
+            return self._date_execute(target, *args, **kwargs)
+        elif isinstance(target, datetime.time):
+            return self._time_execute(target, *args, **kwargs)
 
     def _str_execute(self, target, *args, **kwargs):
         raise ExprFuncException("String type not supported for this function.")
@@ -70,6 +78,12 @@ class ExprFunc(object):
 
     def _datetime_execute(self, target, *args, **kwargs):
         raise ExprFuncException("Datetime type not supported for this function.")
+
+    def _date_execute(self, target, *args, **kwargs):
+        raise ExprFuncException("Date type not supported for this function.")
+
+    def _time_execute(self, target, *args, **kwargs):
+        raise ExprFuncException("Time type not supported for this function.")
 
 
 # =============================================
@@ -89,7 +103,6 @@ class ExprFuncGroup(object):
 # =============================================
 # String Functions
 # ---------------------------------------------
-
 
 class Uppercase(ExprFunc):
 
@@ -297,6 +310,31 @@ class AsTypeFuncs(ExprFuncGroup):
     int = AsInt()
     float = AsFloat()
 
+
+# =============================================
+# Date Time Functions
+# ---------------------------------------------
+
+class DateTimeToString(ExprFunc):
+
+    pass
+
+
+# =============================================
+# Date Functions
+# ---------------------------------------------
+
+class DateToString(ExprFunc):
+
+    pass
+
+
+# =============================================
+# Time Functions
+# ---------------------------------------------
+
+class TimeToString(ExprFunc):
+    pass
 
 # =============================================
 # Expression Func Group Collector
