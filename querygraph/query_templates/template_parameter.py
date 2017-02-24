@@ -2,6 +2,7 @@ from pyparsing import Suppress, SkipTo, Word, alphas, alphanums, Literal, ParseE
 
 from querygraph.exceptions import QueryGraphException
 from querygraph.evaluation.evaluator import Evaluator
+from querygraph.db.connectors import DatabaseConnector, SQLite
 
 
 # =============================================
@@ -23,14 +24,16 @@ class ParameterParseException(TemplateParameterException):
 
 class TemplateParameter(object):
 
-    def __init__(self, param_str, param_type):
+    def __init__(self, param_str, param_type, db_connector):
         self.param_str = param_str
         self.param_type = param_type
         self.param_expr_str = None
         self.name = None
         self.container_type = None
         self.data_type = None
-
+        if not isinstance(db_connector, DatabaseConnector):
+            raise TemplateParameterException
+        self.db_connector = db_connector
         self._initial_parse()
 
     def _set_attribute(self, target, value):
@@ -66,13 +69,23 @@ class TemplateParameter(object):
         try:
             parameter_block.parseString(self.param_str)
         except ParseException:
-            raise ParameterParseException 
+            raise ParameterParseException
+
+    def _make_single_date(self, value):
+        if isinstance(self.db_connector, SQLite):
+            return "date(%s)" % value.strftime('%Y-%m-%d')
+
+    def _make_single_datetime(self, value):
+        if isinstance(self.db_connector, SQLite):
+            return "datetime(%s)" % value.strftime('%Y-%m-%d %H:%M:%S')
 
     def _make_single_value(self, value):
         data_type_formatter = {'num': lambda x: x,
                                'int': lambda x: int(x),
                                'float': lambda x: float(x),
-                               'str': lambda x: "'%s'" % x}
+                               'str': lambda x: "'%s'" % x,
+                               'date': lambda x: self._make_single_date(x),
+                               'datetime': lambda x: self._make_single_datetime(x)}
         return data_type_formatter[self.data_type](value)
 
     def _make_value_list(self, parameter_value):

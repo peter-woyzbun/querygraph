@@ -105,3 +105,13 @@ class MsSQL(DatabaseConnector):
         conn = pymssql.connect(self.host, self.user, self.password, self.db_name)
         df = pd.read_sql_query(query, con=conn)
         return df
+
+
+class TestConnector(DatabaseConnector):
+
+    @classmethod
+    def sqlite(cls):
+        return SQLite(host='')
+
+    def execute_query(self, query):
+        return None
