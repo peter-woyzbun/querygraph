@@ -42,7 +42,7 @@ class ExprFunc(object):
         elif isinstance(target, (str, float, int, datetime.date, datetime.datetime, datetime.time)):
             return self._singleton_execute(target, *args, **kwargs)
         else:
-            raise ExprFuncException("Type given not accepted by function.")
+            raise ExprFuncException("Type given not accepted by function '%s'." % self.name)
 
     def _series_execute(self, target, *args, **kwargs):
         raise ExprFuncException("Pandas Series type not supported for this function.")

@@ -7,7 +7,6 @@ class Evaluator(object):
         self.funcs = {func_group_cls.GROUP_LABEL: func_group_cls() for func_group_cls in function_groups}
 
     def _create_locals(self, df=None, independent_params=None):
-        print "Creating locals! Independent params: %s" % independent_params
         df_names = dict()
         param_names = dict()
         if df is not None:

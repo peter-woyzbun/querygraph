@@ -1,4 +1,4 @@
-from pyparsing import Suppress, SkipTo, Word, alphas, alphanums, Literal
+from pyparsing import Suppress, SkipTo, Word, alphas, alphanums, Literal, ParseException
 
 from querygraph.exceptions import QueryGraphException
 from querygraph.evaluation.evaluator import Evaluator
@@ -9,6 +9,10 @@ from querygraph.evaluation.evaluator import Evaluator
 # ---------------------------------------------
 
 class TemplateParameterException(QueryGraphException):
+    pass
+
+
+class ParameterParseException(TemplateParameterException):
     pass
 
 
@@ -53,12 +57,16 @@ class TemplateParameter(object):
         _int = Literal('int')
         _float = Literal('float')
         _str = Literal('str')
+        _date = Literal('date')
 
-        data_type = (num | _int | _float | _str)
+        data_type = (num | _int | _float | _str| _date)
         data_type.addParseAction(lambda x: self._set_attribute(target='data_type', value=x[0]))
 
         parameter_block = (param_declaration + Suppress("|") + container_type + Suppress(":") + data_type)
-        parameter_block.parseString(self.param_str)
+        try:
+            parameter_block.parseString(self.param_str)
+        except ParseException:
+            raise ParameterParseException 
 
     def _make_single_value(self, value):
         data_type_formatter = {'num': lambda x: x,

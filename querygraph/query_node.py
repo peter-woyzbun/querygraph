@@ -49,8 +49,8 @@ class QueryNode(object):
         if self.is_root_node:
             return True
         else:
-            query_parser = QueryTemplate(query=self.query)
-            return not query_parser.has_dependent_parameters()
+            query_template = QueryTemplate(query=self.query)
+            return not query_template.has_dependent_parameters()
 
     @property
     def is_root_node(self):
@@ -96,7 +96,7 @@ class QueryNode(object):
         for k, v in self._new_columns.items():
             self.df[k] = evaluator.eval(eval_str=v, df=self.df)
 
-    def join(self, child_node, on_columns, how=None):
+    def join(self, child_node, on_columns, how='inner'):
         """
         Join this node with the given child node. This creates an edge between
         the two nodes.
@@ -124,12 +124,10 @@ class QueryNode(object):
                                                           child_node.name,
                                                           child_node.name,
                                                           child_node.parent.name))
-        # Make sure joining with the child node wont cause an infinite loop in the graph.
+        # Make sure joining with the child node wont cause an infinite loop (cycle) in the graph.
         if self.creates_cycle(child_node):
             raise CycleException("Joining parent node '%s' with child node '%s' would create a cycle in the "
                                  "graph." % (self.name, child_node.name))
-        if how is None:
-            how = 'inner'
         join_context = {'how': how, 'on_columns': on_columns}
         child_node.parent = self
         child_node.join_context = join_context

@@ -57,6 +57,9 @@ class ReadYaml(object):
             if 'type' not in connector_attribs:
                 raise DatabaseConfigException("No database type defined for '%s'" % connector_name)
             db_type = connector_attribs.pop('type')
+            if db_type not in self.db_connector_map:
+                raise DatabaseConfigException("The given database type, '%s', for '%s' is not "
+                                              "supported." % (connector_name, connector_name))
             self.db_connectors[connector_name] = self.db_connector_map[db_type](**connector_attribs)
 
     def _create_query_nodes(self, graph_data):
