@@ -2,7 +2,7 @@ from pyparsing import Suppress, SkipTo, Word, alphas, alphanums, Literal, ParseE
 
 from querygraph.exceptions import QueryGraphException
 from querygraph.evaluation.evaluator import Evaluator
-from querygraph.db.connectors import DatabaseConnector, SQLite
+from querygraph.db.connectors import DatabaseConnector, SQLite, MySQL
 
 
 # =============================================
@@ -73,6 +73,8 @@ class TemplateParameter(object):
 
     def _make_single_date(self, value):
         if isinstance(self.db_connector, SQLite):
+            return "date(%s)" % value.strftime('%Y-%m-%d')
+        elif isinstance(self.db_connector, MySQL):
             return "date(%s)" % value.strftime('%Y-%m-%d')
 
     def _make_single_datetime(self, value):

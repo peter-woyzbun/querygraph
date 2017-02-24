@@ -113,5 +113,9 @@ class TestConnector(DatabaseConnector):
     def sqlite(cls):
         return SQLite(host='')
 
+    @classmethod
+    def mysql(cls):
+        return MySQL(host='', db_name='', user='', password='')
+
     def execute_query(self, query):
         return None
