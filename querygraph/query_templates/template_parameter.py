@@ -2,7 +2,7 @@ from pyparsing import Suppress, SkipTo, Word, alphas, alphanums, Literal, ParseE
 
 from querygraph.exceptions import QueryGraphException
 from querygraph.evaluation.evaluator import Evaluator
-from querygraph.db.connectors import DatabaseConnector, SQLite, MySQL
+from querygraph.db.connectors import DatabaseConnector, SQLite, MySQL, Postgres
 
 
 # =============================================
@@ -31,6 +31,7 @@ class TemplateParameter(object):
         self.name = None
         self.container_type = None
         self.data_type = None
+        self.custom_data_type_str = None
         if not isinstance(db_connector, DatabaseConnector):
             raise TemplateParameterException
         self.db_connector = db_connector
@@ -38,6 +39,12 @@ class TemplateParameter(object):
 
     def _set_attribute(self, target, value):
         setattr(self, target, value)
+
+    def _set_custom_data_type(self, value):
+        if '%s' not in value:
+            raise ParseException("No '%s' present in custom data type definition.")
+        self.custom_data_type_str = value
+        return 'custom'
 
     def _initial_parse(self):
         # Parameter expression in brackets...
@@ -62,7 +69,10 @@ class TemplateParameter(object):
         _str = Literal('str')
         _date = Literal('date')
 
-        data_type = (num | _int | _float | _str| _date)
+        custom = (Suppress('custom[') + SkipTo(Suppress(']'), include=True))
+        custom.addParseAction(lambda x: self._set_custom_data_type(x[0]))
+
+        data_type = (num | _int | _float | _str | _date | custom)
         data_type.addParseAction(lambda x: self._set_attribute(target='data_type', value=x[0]))
 
         parameter_block = (param_declaration + Suppress("|") + container_type + Suppress(":") + data_type)
@@ -76,10 +86,15 @@ class TemplateParameter(object):
             return "date(%s)" % value.strftime('%Y-%m-%d')
         elif isinstance(self.db_connector, MySQL):
             return "date(%s)" % value.strftime('%Y-%m-%d')
+        elif isinstance(self.db_connector, Postgres):
+            return "date '%s'" % value.strftime('%Y-%m-%d')
 
     def _make_single_datetime(self, value):
         if isinstance(self.db_connector, SQLite):
             return "datetime(%s)" % value.strftime('%Y-%m-%d %H:%M:%S')
+
+    def _make_single_custom(self, value):
+        return self.custom_data_type_str % value
 
     def _make_single_value(self, value):
         data_type_formatter = {'num': lambda x: x,
@@ -87,11 +102,11 @@ class TemplateParameter(object):
                                'float': lambda x: float(x),
                                'str': lambda x: "'%s'" % x,
                                'date': lambda x: self._make_single_date(x),
-                               'datetime': lambda x: self._make_single_datetime(x)}
+                               'datetime': lambda x: self._make_single_datetime(x),
+                               'custom': lambda x: self._make_single_custom(x)}
         return data_type_formatter[self.data_type](value)
 
     def _make_value_list(self, parameter_value):
-        # Todo: unique values only?
         parameter_value = list(set(parameter_value))
         val_str = ", ".join(str(self._make_single_value(x)) for x in parameter_value)
         val_str = "(%s)" % val_str

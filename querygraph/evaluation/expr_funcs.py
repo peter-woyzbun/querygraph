@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+import re
 import pandas as pd
 import numpy as np
 import datetime
@@ -171,7 +172,8 @@ class ToDate(ExprFunc):
 
     def _series_execute(self, target, *args, **kwargs):
         _format = kwargs.pop('format', None)
-        return pd.to_datetime(target, format=_format)
+        new_col = pd.to_datetime(target, format=_format)
+        return new_col.dt.date
 
     def _str_execute(self, target, *args, **kwargs):
         _format = kwargs.pop('format')
@@ -179,7 +181,7 @@ class ToDate(ExprFunc):
 
     def _list_execute(self, target, *args, **kwargs):
         _format = kwargs.pop('format')
-        return map(lambda x: self._str_execute(target, format=_format), target)
+        return map(lambda x: self._str_execute(x, format=_format), target)
 
     _np_array_execute = _list_execute
 
@@ -195,10 +197,32 @@ class ToDateTime(ToDate):
         _format = kwargs.pop('format')
         return datetime.datetime.strptime(target, _format)
 
+    def _series_execute(self, target, *args, **kwargs):
+        _format = kwargs.pop('format', None)
+        new_col = pd.to_datetime(target, format=_format)
+        return new_col
+
+    def _list_execute(self, target, *args, **kwargs):
+        _format = kwargs.pop('format')
+        return map(lambda x: self._str_execute(x, format=_format), target)
+
+    def _int_execute(self, target, *args, **kwargs):
+        return self._str_execute(str(target), *args, **kwargs)
+
+    _float_execute = _int_execute
+
 
 class RegexSub(ExprFunc):
 
-    pass
+    def _str_execute(self, target, *args, **kwargs):
+        regex = kwargs.pop('regex')
+        with_val = kwargs.pop('with_val')
+        return re.sub(regex, with_val, target)
+
+    def _list_execute(self, target, *args, **kwargs):
+        regex = kwargs.pop('regex')
+        with_val = kwargs.pop('with_val')
+        return map(lambda x: self._str_execute(x, regex=regex, with_val=with_val), target)
 
 
 class Replace(ExprFunc):

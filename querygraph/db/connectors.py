@@ -109,6 +109,9 @@ class MsSQL(DatabaseConnector):
 
 class TestConnector(DatabaseConnector):
 
+    def __call__(self):
+        return SQLite(host='')
+
     @classmethod
     def sqlite(cls):
         return SQLite(host='')
@@ -116,6 +119,10 @@ class TestConnector(DatabaseConnector):
     @classmethod
     def mysql(cls):
         return MySQL(host='', db_name='', user='', password='')
+
+    @classmethod
+    def postgres(cls):
+        return Postgres(host='', db_name='', user='', password='')
 
     def execute_query(self, query):
         return None

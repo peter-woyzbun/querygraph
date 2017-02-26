@@ -1,6 +1,7 @@
 import re
 
 from querygraph.exceptions import QueryGraphException
+from querygraph.db.connectors import DatabaseConnector
 from querygraph.query_templates.template_parameter import TemplateParameter
 
 
@@ -26,11 +27,14 @@ class IndependentParameterException(QueryTemplateException):
 
 class QueryTemplate(object):
 
-    def __init__(self, query):
+    def __init__(self, query, db_connector):
         self.query = query
         self.query_isolated = True
+        if not isinstance(db_connector, DatabaseConnector):
+            raise QueryTemplateException("The 'db_connector' arg must be a DatabaseConnector instance.")
+        self.db_connector = db_connector
 
-    def parse(self, df=None, independent_params=None):
+    def render(self, df=None, independent_params=None):
         """
         Returns parsed query template string.
 
@@ -71,3 +75,8 @@ class QueryTemplate(object):
                 contains_dependent_parameter = True
                 break
         return contains_dependent_parameter
+
+    def execute(self, df=None, independent_params=None):
+        rendered_query = self.render(df=df, independent_params=independent_params)
+        df = self.db_connector.execute_query(query=rendered_query)
+        return df
