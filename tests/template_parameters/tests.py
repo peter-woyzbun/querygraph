@@ -116,7 +116,7 @@ class QueryValueTests(unittest.TestCase):
         independent_parameter = TemplateParameter(param_str=test_param_str, param_type='independent',
                                                   db_connector=TestConnector.sqlite())
         param_value_dict = {'date_param': datetime.datetime(2009, 1, 6)}
-        expected_str = "date(2009-01-06)"
+        expected_str = "date('2009-01-06')"
         self.assertEquals(expected_str, independent_parameter.query_value(independent_params=param_value_dict))
 
     def test_mysql_date_value(self):

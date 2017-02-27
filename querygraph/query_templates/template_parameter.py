@@ -81,7 +81,7 @@ class TemplateParameter(object):
 
     def _make_single_date(self, value):
         if isinstance(self.db_connector, SQLite):
-            return "date(%s)" % value.strftime('%Y-%m-%d')
+            return "date('%s')" % value.strftime('%Y-%m-%d')
         elif isinstance(self.db_connector, MySQL):
             return "date(%s)" % value.strftime('%Y-%m-%d')
         elif isinstance(self.db_connector, Postgres):

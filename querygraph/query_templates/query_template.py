@@ -34,7 +34,7 @@ class QueryTemplate(object):
             raise QueryTemplateException("The 'db_connector' arg must be a DatabaseConnector instance.")
         self.db_connector = db_connector
 
-    def render(self, df=None, independent_params=None):
+    def render(self, df=None, **independent_params):
         """
         Returns parsed query template string.
 
@@ -79,7 +79,7 @@ class QueryTemplate(object):
                 break
         return contains_dependent_parameter
 
-    def execute(self, df=None, independent_params=None):
-        rendered_query = self.render(df=df, independent_params=independent_params)
+    def execute(self, df=None, **independent_params):
+        rendered_query = self.render(df=df, **independent_params)
         df = self.db_connector.execute_query(query=rendered_query)
         return df
