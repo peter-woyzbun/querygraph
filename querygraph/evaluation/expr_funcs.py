@@ -224,6 +224,11 @@ class RegexSub(ExprFunc):
         with_val = kwargs.pop('with_val')
         return map(lambda x: self._str_execute(x, regex=regex, with_val=with_val), target)
 
+    def _series_execute(self, target, *args, **kwargs):
+        regex = kwargs.pop('regex')
+        with_val = kwargs.pop('with_val')
+        return target.str.replace(r'%s' % regex, with_val).astype('int')
+
 
 class Replace(ExprFunc):
 
@@ -234,7 +239,8 @@ class Replace(ExprFunc):
 
     def _list_execute(self, target, *args, **kwargs):
         target = pd.Series(target)
-        return self._series_execute(target, *args, **kwargs)
+        series = self._series_execute(target, *args, **kwargs)
+        return series.tolist()
 
     _np_array_execute = _list_execute
 
@@ -255,6 +261,10 @@ class Combine(ExprFunc):
         to_combine = (target,) + args
         return reduce(self._combine, to_combine)
 
+    def _str_execute(self, target, *args, **kwargs):
+        to_combine = (target,) + args
+        return reduce(self._combine, to_combine)
+
     @staticmethod
     def _combine(a, b):
         if isinstance(a, pd.Series):
@@ -262,6 +272,11 @@ class Combine(ExprFunc):
         if isinstance(b, pd.Series):
             b = b.astype(str)
         return a + b
+
+
+class Slice(ExprFunc):
+
+    pass
 
 
 class StrFuncs(ExprFuncGroup):
@@ -341,7 +356,16 @@ class AsTypeFuncs(ExprFuncGroup):
 
 class DateTimeToString(ExprFunc):
 
-    pass
+    def _datetime_execute(self, target, *args, **kwargs):
+        _format = kwargs.pop('format')
+        return target.strftime(_format)
+
+
+class DateTimeFuncs(ExprFuncGroup):
+
+    GROUP_LABEL = 'datetime'
+
+    to_str = DateTimeToString()
 
 
 # =============================================

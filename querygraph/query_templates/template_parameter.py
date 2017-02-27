@@ -2,7 +2,7 @@ from pyparsing import Suppress, SkipTo, Word, alphas, alphanums, Literal, ParseE
 
 from querygraph.exceptions import QueryGraphException
 from querygraph.evaluation.evaluator import Evaluator
-from querygraph.db.connectors import DatabaseConnector, SQLite, MySQL, Postgres
+from querygraph.db.connectors import DatabaseConnector, SQLite, MySQL, Postgres, MsSQL
 
 
 # =============================================
@@ -41,8 +41,6 @@ class TemplateParameter(object):
         setattr(self, target, value)
 
     def _set_custom_data_type(self, value):
-        if '%s' not in value:
-            raise ParseException("No '%s' present in custom data type definition.")
         self.custom_data_type_str = value
         return 'custom'
 
@@ -88,13 +86,24 @@ class TemplateParameter(object):
             return "date(%s)" % value.strftime('%Y-%m-%d')
         elif isinstance(self.db_connector, Postgres):
             return "date '%s'" % value.strftime('%Y-%m-%d')
+        elif isinstance(self.db_connector, MsSQL):
+            return "'%s'" % value.strftime('%Y-%m-%d')
 
     def _make_single_datetime(self, value):
         if isinstance(self.db_connector, SQLite):
             return "datetime(%s)" % value.strftime('%Y-%m-%d %H:%M:%S')
+        elif isinstance(self.db_connector, MySQL):
+            return "datetime(%s)" % value.strftime('%Y-%m-%d %H:%M:%S')
+        elif isinstance(self.db_connector, Postgres):
+            return "timestamp '%s'" % value.strftime('%Y-%m-%d %H:%M:%S')
+        elif isinstance(self.db_connector, MsSQL):
+            return "'%s'" % value.strftime('%Y-%m-%d %H:%M:%S')
 
     def _make_single_custom(self, value):
-        return self.custom_data_type_str % value
+        if '%s' in self.custom_data_type_str:
+            return self.custom_data_type_str % value
+        else:
+            return value
 
     def _make_single_value(self, value):
         data_type_formatter = {'num': lambda x: x,

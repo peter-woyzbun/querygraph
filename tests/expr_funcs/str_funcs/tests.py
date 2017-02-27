@@ -12,6 +12,8 @@ lowercase = expr_funcs.Lowercase()
 capitalize = expr_funcs.Capitalize()
 to_date = expr_funcs.ToDate()
 regex_sub = expr_funcs.RegexSub()
+replace = expr_funcs.Replace()
+combine = expr_funcs.Combine()
 
 
 class UppercaseTests(unittest.TestCase):
@@ -92,6 +94,8 @@ class ToDateTests(unittest.TestCase):
 
 class RegexSubTests(unittest.TestCase):
 
+    # Todo: test series execute.
+
     def test_str_execute(self):
         test_str = "Example String"
         expected_value = re.sub('[ES]', 'a', test_str)
@@ -103,3 +107,28 @@ class RegexSubTests(unittest.TestCase):
         test_list = [test_str, test_str]
         expected_value = [expected_str_value, expected_str_value]
         self.assertEquals(expected_value, regex_sub(test_list, regex='[ES]', with_val='a'))
+
+
+class ReplaceTests(unittest.TestCase):
+
+    def test_str_execute(self):
+        test_str = "Example String"
+        expected_str_value = "Example ABC"
+        self.assertEquals(expected_str_value, replace(test_str, target_val='String', with_val="ABC"))
+
+    def test_list_execute(self):
+        test_list = ["Example String", "Example String"]
+        expected_list_value = ["Example ABC", "Example ABC"]
+        self.assertEquals(expected_list_value, replace(test_list, target_val='String', with_val="ABC"))
+
+    def test_series_execute(self):
+        test_series = pd.Series(["Example String", "Example String"])
+        expected_series_value = pd.Series(["Example ABC", "Example ABC"])
+        self.assertEquals(True, expected_series_value.equals(replace(test_series, target_val='String', with_val="ABC")))
+
+
+class CombineTests(unittest.TestCase):
+
+    def test_str_execute(self):
+        expected_str_value = "A B C"
+        self.assertEquals(expected_str_value, combine("A", " ", "B", " ", "C"))

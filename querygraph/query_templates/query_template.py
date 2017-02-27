@@ -46,7 +46,9 @@ class QueryTemplate(object):
             if token.startswith('{{'):
                 tok_expr = token[2:-2].strip()
                 # dependent_parameter = QueryParameter(parameter_str=tok_expr)
-                dependent_parameter = TemplateParameter(param_str=tok_expr, param_type='dependent')
+                dependent_parameter = TemplateParameter(param_str=tok_expr,
+                                                        param_type='dependent',
+                                                        db_connector=self.db_connector)
                 if df is None:
                     raise DependentParameterException("No dataframe was given from which to generate dependent"
                                                       "parameter value(s).")
@@ -57,14 +59,15 @@ class QueryTemplate(object):
             # Independent parameter.
             elif token.startswith('{%'):
                 tok_expr = token[2:-2].strip()
-                independent_parameter = TemplateParameter(param_str=tok_expr, param_type='independent')
+                independent_parameter = TemplateParameter(param_str=tok_expr,
+                                                          param_type='independent',
+                                                          db_connector=self.db_connector)
                 if independent_params is None:
                     raise IndependentParameterException("Independent parameters present in query and no independent"
                                                         "parameter values given.")
                 parsed_query += str(independent_parameter.query_value(independent_params=independent_params))
             else:
                 parsed_query += token
-        print parsed_query
         return parsed_query
 
     def has_dependent_parameters(self):
