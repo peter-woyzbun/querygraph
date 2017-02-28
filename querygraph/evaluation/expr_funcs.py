@@ -276,7 +276,15 @@ class Combine(ExprFunc):
 
 class Slice(ExprFunc):
 
-    pass
+    def _str_execute(self, target, *args, **kwargs):
+        start = kwargs.pop('s')
+        end = kwargs.pop('e')
+        return target[start: end]
+
+    def _series_execute(self, target, *args, **kwargs):
+        start = kwargs.pop('s')
+        end = kwargs.pop('e')
+        return target.str.slice(start=start, stop=end)
 
 
 class StrFuncs(ExprFuncGroup):
@@ -359,6 +367,10 @@ class DateTimeToString(ExprFunc):
     def _datetime_execute(self, target, *args, **kwargs):
         _format = kwargs.pop('format')
         return target.strftime(_format)
+
+    def _list_execute(self, target, *args, **kwargs):
+        _format = kwargs.pop('format')
+        return [dt.strftime(_format) for dt in target]
 
 
 class DateTimeFuncs(ExprFuncGroup):

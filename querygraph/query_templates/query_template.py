@@ -62,7 +62,7 @@ class QueryTemplate(object):
                 independent_parameter = TemplateParameter(param_str=tok_expr,
                                                           param_type='independent',
                                                           db_connector=self.db_connector)
-                if independent_params is None:
+                if not independent_params:
                     raise IndependentParameterException("Independent parameters present in query and no independent"
                                                         "parameter values given.")
                 parsed_query += str(independent_parameter.query_value(independent_params=independent_params))

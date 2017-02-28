@@ -14,6 +14,7 @@ to_date = expr_funcs.ToDate()
 regex_sub = expr_funcs.RegexSub()
 replace = expr_funcs.Replace()
 combine = expr_funcs.Combine()
+_slice = expr_funcs.Slice()
 
 
 class UppercaseTests(unittest.TestCase):
@@ -132,3 +133,15 @@ class CombineTests(unittest.TestCase):
     def test_str_execute(self):
         expected_str_value = "A B C"
         self.assertEquals(expected_str_value, combine("A", " ", "B", " ", "C"))
+
+
+class SliceTests(unittest.TestCase):
+
+    def test_str_execute(self):
+        expected_str_value = "B"
+        self.assertEquals(expected_str_value, _slice("ABC", s=1, e=2))
+
+    def test_series_execute(self):
+        expected_value = pd.Series(["B", "B"])
+        test_series = pd.Series(["ABC", "ABC"])
+        self.assertEquals(True, expected_value.equals(_slice(test_series, s=1, e=2)))
