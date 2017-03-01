@@ -8,5 +8,5 @@ setup(name='querygraph',
       author='Peter Woyzbun',
       author_email='peter.woyzbun@gmail.com',
       packages=['querygraph'],
-      install_requires=['pandas', 'numpy', 'pyparsing', 'yaml'],
+      install_requires=['pandas', 'numpy', 'pyparsing', 'yaml', 'sphinxcontrib-napoleon'],
       zip_safe=False)
