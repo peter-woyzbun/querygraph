@@ -160,7 +160,7 @@ class QueryNode(object):
         for query_node in reverse_topological_ordering:
             query_node.join_with_parent()
 
-    def _execute(self, **kwargs):
+    def _execute(self, **independent_param_vals):
         """
         Execute this QueryNode's query. This requires:
 
@@ -176,19 +176,18 @@ class QueryNode(object):
 
 
         """
-        query_template = QueryTemplate(query=self.query)
+        query_template = QueryTemplate(query=self.query, db_connector=self.db_connector)
         if self.parent is not None:
             parent_df = self.parent.df
-            parsed_query = query_template.parse(df=parent_df, independent_params=kwargs)
+            df = query_template.execute(df=parent_df, **independent_param_vals)
         else:
-            parsed_query = query_template.parse(independent_params=kwargs)
-        df = self.db_connector.execute_query(parsed_query)
+            df = query_template.execute(**independent_param_vals)
         self.df = df
         if self._new_columns:
             self._create_added_columns()
         self.already_executed = True
 
-    def execute(self, df=None, **kwargs):
+    def execute(self, df=None, **independent_param_vals):
         """
         Execute the QueryGraph. If this QueryNode is the root node, then also
         fold all child nodes (join them with their parents).
@@ -199,7 +198,7 @@ class QueryNode(object):
         """
         print "Executing!"
         for query_node in self:
-            query_node._execute(**kwargs)
+            query_node._execute(**independent_param_vals)
         if self.is_root_node:
             self._fold_children()
 

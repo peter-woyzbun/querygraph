@@ -281,10 +281,18 @@ class Slice(ExprFunc):
         end = kwargs.pop('e')
         return target[start: end]
 
+    def _list_execute(self, target, *args, **kwargs):
+        return [self._singleton_execute(x, *args, **kwargs) for x in target]
+
     def _series_execute(self, target, *args, **kwargs):
         start = kwargs.pop('s')
         end = kwargs.pop('e')
         return target.str.slice(start=start, stop=end)
+
+    def _int_execute(self, target, *args, **kwargs):
+        return self._str_execute(str(target), *args, **kwargs)
+
+    _float_execute = _int_execute
 
 
 class StrFuncs(ExprFuncGroup):
@@ -298,6 +306,7 @@ class StrFuncs(ExprFuncGroup):
     to_datetime = ToDateTime()
     replace = Replace()
     combine = Combine()
+    slice = Slice()
 
 
 # =============================================
@@ -371,6 +380,10 @@ class DateTimeToString(ExprFunc):
     def _list_execute(self, target, *args, **kwargs):
         _format = kwargs.pop('format')
         return [dt.strftime(_format) for dt in target]
+
+    def _series_execute(self, target, *args, **kwargs):
+        _format = kwargs.pop('format')
+        return target.dt.strftime(_format)
 
 
 class DateTimeFuncs(ExprFuncGroup):

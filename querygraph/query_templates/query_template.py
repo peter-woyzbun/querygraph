@@ -34,7 +34,7 @@ class QueryTemplate(object):
             raise QueryTemplateException("The 'db_connector' arg must be a DatabaseConnector instance.")
         self.db_connector = db_connector
 
-    def render(self, df=None, **independent_params):
+    def render(self, df=None, **independent_param_vals):
         """
         Returns parsed query template string.
 
@@ -62,10 +62,10 @@ class QueryTemplate(object):
                 independent_parameter = TemplateParameter(param_str=tok_expr,
                                                           param_type='independent',
                                                           db_connector=self.db_connector)
-                if not independent_params:
+                if not independent_param_vals:
                     raise IndependentParameterException("Independent parameters present in query and no independent"
                                                         "parameter values given.")
-                parsed_query += str(independent_parameter.query_value(independent_params=independent_params))
+                parsed_query += str(independent_parameter.query_value(independent_params=independent_param_vals))
             else:
                 parsed_query += token
         return parsed_query
@@ -79,7 +79,7 @@ class QueryTemplate(object):
                 break
         return contains_dependent_parameter
 
-    def execute(self, df=None, **independent_params):
-        rendered_query = self.render(df=df, **independent_params)
+    def execute(self, df=None, **independent_param_vals):
+        rendered_query = self.render(df=df, **independent_param_vals)
         df = self.db_connector.execute_query(query=rendered_query)
         return df
