@@ -14,6 +14,7 @@
 
 import sys
 import os
+import querygraph
 
 sys.path.insert(0, os.path.abspath(__file__))
 
