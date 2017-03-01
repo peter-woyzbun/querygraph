@@ -1,5 +1,4 @@
 from collections import OrderedDict
-import multiprocessing
 
 import pandas as pd
 
@@ -201,7 +200,3 @@ class QueryNode(object):
             query_node._execute(**independent_param_vals)
         if self.is_root_node:
             self._fold_children()
-
-
-if __name__ == '__main__':
-    multiprocessing.freeze_support()

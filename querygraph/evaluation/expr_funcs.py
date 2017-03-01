@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 import re
 import pandas as pd
 import numpy as np
@@ -386,11 +386,28 @@ class DateTimeToString(ExprFunc):
         return target.dt.strftime(_format)
 
 
+class AddDelta(ExprFunc):
+
+    def _datetime_execute(self, target, *args, **kwargs):
+        return target + datetime.timedelta(**kwargs)
+
+    def _list_execute(self, target, *args, **kwargs):
+        return [self._datetime_execute(x, **kwargs) for x in target]
+
+
+class DateTimeDelta(object):
+
+    def __call__(self, **kwargs):
+        return datetime.timedelta(**kwargs)
+
+
 class DateTimeFuncs(ExprFuncGroup):
 
     GROUP_LABEL = 'datetime'
 
     to_str = DateTimeToString()
+    delta = DateTimeDelta()
+    add_delta = AddDelta()
 
 
 # =============================================

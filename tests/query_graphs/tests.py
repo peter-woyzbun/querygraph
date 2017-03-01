@@ -1,4 +1,5 @@
 import unittest
+import datetime
 
 from querygraph.query_node import QueryNode, CycleException, AddColumnException
 from querygraph.db.test_data import connectors
@@ -44,6 +45,17 @@ class ExecutionTests(unittest.TestCase):
         df = test_graph.df
         # There should be 7 unique month names.
         self.assertEquals(7, len(df['month_name'].unique()))
+
+    def test_datetime_delta_execute(self):
+        daily_ts_query = """
+        SELECT *
+        FROM daily_ts
+        WHERE date(date_a) IN {% [datetime.add_delta(dates, days=20)]|value_list:date %}
+        """
+        daily_ts_node = QueryNode(query=daily_ts_query, db_connector=connectors.daily_ts_connector, name='daily_ts')
+        daily_ts_node.execute(dates=[datetime.datetime(2016, 1, 15), datetime.datetime(2016, 1, 16)])
+        df = daily_ts_node.df
+        self.assertEquals(['February'], df['month_name'].unique())
 
 
 def main():
