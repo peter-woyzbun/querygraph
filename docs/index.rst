@@ -15,7 +15,7 @@ Contents:
 .. automodule:: querygraph
 
 
-.. autoclass:: querygraph.query_templates.query_template.QueryTemplate
+.. autoclass:: QueryTemplate
 
 
 Indices and tables
