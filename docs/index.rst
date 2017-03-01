@@ -12,7 +12,10 @@ Contents:
    :maxdepth: 2
 
 
-.. automodule:: querygraph.
+.. automodule:: querygraph
+
+
+.. autoclass:: querygraph.query_templates.query_template.QueryTemplate
 
 
 Indices and tables
