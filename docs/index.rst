@@ -13,6 +13,7 @@ Contents:
 
 
 .. automodule:: querygraph
+   :members:
 
 
 .. autoclass:: QueryTemplate
