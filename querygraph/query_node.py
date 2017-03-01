@@ -5,6 +5,7 @@ import pandas as pd
 from querygraph.exceptions import QueryGraphException
 from querygraph.query_templates.query_template import QueryTemplate
 from querygraph.db.connectors import DatabaseConnector
+from querygraph.db.test_data import connectors
 from querygraph.evaluation.evaluator import Evaluator
 
 
@@ -54,6 +55,9 @@ class QueryNode(object):
     @property
     def is_root_node(self):
         return self.parent is None
+
+    def __getitem__(self, item):
+        return OnColumn(query_node=self, col_name=item)
 
     def __contains__(self, item):
         """ Check if given item is a child of this QueryNode. """
@@ -200,3 +204,24 @@ class QueryNode(object):
             query_node._execute(**independent_param_vals)
         if self.is_root_node:
             self._fold_children()
+
+
+class OnColumn(object):
+
+    def __init__(self, query_node, col_name):
+        self.query_node = query_node
+        self.col_name = col_name
+
+    def __rrshift__(self, other):
+        if isinstance(other, OnColumn):
+            return {self.query_node.name: self.col_name}, {other.query_node.name: other.col_name}
+
+    def __rshift__(self, other):
+        if isinstance(other, OnColumn):
+            return {self.query_node.name: self.col_name}, {other.query_node.name: other.col_name}
+
+
+parent_node = QueryNode(query='', db_connector=connectors.daily_ts_connector, name='parent_node')
+child_node = QueryNode(query='', db_connector=connectors.daily_ts_connector, name='child_node')
+
+print parent_node['parent_col'] >> child_node['child_col']

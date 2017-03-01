@@ -58,8 +58,20 @@ class ExecutionTests(unittest.TestCase):
         self.assertEquals(['February'], df['month_name'].unique())
 
 
+class JoinOnTests(unittest.TestCase):
+
+    def test_on_columns(self):
+        parent_node = QueryNode(query='', db_connector=connectors.daily_ts_connector, name='parent_node')
+        child_node = QueryNode(query='', db_connector=connectors.daily_ts_connector, name='child_node')
+
+        print parent_node['parent_col'] >> child_node['child_col']
+
+
+
+
 def main():
     unittest.main()
+
 
 if __name__ == '__main__':
     main()

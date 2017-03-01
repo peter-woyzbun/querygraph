@@ -28,6 +28,17 @@ class IndependentParameterException(QueryTemplateException):
 class QueryTemplate(object):
 
     def __init__(self, query, db_connector):
+        """
+        Query Template docstring...
+
+        Parameters
+        ----------
+        query : str
+            The query...
+        db_connector : DatabaseConnector
+            DatabaseConnector instance...
+
+        """
         self.query = query
         self.query_isolated = True
         if not isinstance(db_connector, DatabaseConnector):
