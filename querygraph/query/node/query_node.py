@@ -53,6 +53,12 @@ class QueryNode(object):
             query_template = QueryTemplate(query=self.query)
             return not query_template.has_dependent_parameters()
 
+    def root_node(self):
+        if self.parent is None:
+            return self
+        else:
+            return self.parent.root_node()
+
     @property
     def is_root_node(self):
         return self.parent is None
@@ -150,7 +156,7 @@ class QueryNode(object):
             self._create_added_columns()
         self.already_executed = True
 
-    def execute(self, df=None, **independent_param_vals):
+    def execute(self, **independent_param_vals):
         """
         Execute the QueryGraph. If this QueryNode is the root node, then also
         fold all child nodes (join them with their parents).
