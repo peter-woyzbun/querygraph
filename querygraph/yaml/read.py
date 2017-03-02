@@ -2,7 +2,7 @@ import yaml
 
 from querygraph.exceptions import QueryGraphException
 from querygraph.db.connectors import SQLite, MySQL, MsSQL, Postgres
-from querygraph.query_node import QueryNode
+from querygraph.query.node import QueryNode
 
 
 # =============================================

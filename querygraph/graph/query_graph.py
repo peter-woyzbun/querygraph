@@ -57,8 +57,8 @@ class QueryGraph(object):
     def left_join(self, child_node, parent_node, on_columns):
         self._join(child_node, parent_node, 'left', on_columns)
 
-    def right_join(self, child_node, parent_node, *on_columns):
-        self._join(child_node=child_node, parent_node=parent_node, join_type='right', *on_columns)
+    def right_join(self, child_node, parent_node, on_columns):
+        self._join(child_node=child_node, parent_node=parent_node, join_type='right', on_columns=on_columns)
 
     def _join_checks(self, child_node, parent_node):
         if child_node not in self:
