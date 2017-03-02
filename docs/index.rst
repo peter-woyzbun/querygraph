@@ -12,7 +12,7 @@ Contents:
    :maxdepth: 2
 
 
-.. automodule:: query_templates.query_template
+.. automodule:: query.template
 
 .. autoclass:: QueryTemplate
     :members:

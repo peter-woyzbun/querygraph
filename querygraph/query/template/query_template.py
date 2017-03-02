@@ -2,7 +2,7 @@ import re
 
 from querygraph.exceptions import QueryGraphException
 from querygraph.db.connectors import DatabaseConnector
-from querygraph.query_templates.template_parameter import TemplateParameter
+from querygraph.query.template.parameter import TemplateParameter
 
 
 # =============================================

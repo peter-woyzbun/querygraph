@@ -23,7 +23,6 @@ class ParameterParseException(TemplateParameterException):
 
 
 class TemplateParameter(object):
-
     def __init__(self, param_str, param_type, db_connector):
         self.param_str = param_str
         self.param_type = param_type
@@ -48,7 +47,7 @@ class TemplateParameter(object):
         # Parameter expression in brackets...
         param_expr = (Suppress('[') + SkipTo(Suppress(']'), include=True))
         param_expr.addParseAction(lambda x: self._set_attribute('param_expr_str', value=x[0]))
-        
+
         param_name = Word(alphas, alphanums + "_$")
         param_name.addParseAction(lambda x: self._set_attribute(target='name', value=x[0]))
 

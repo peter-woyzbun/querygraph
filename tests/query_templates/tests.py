@@ -4,7 +4,7 @@ import datetime
 import pandas as pd
 
 from querygraph.db.test_data.connectors import daily_ts_connector, hourly_ts_connector
-from querygraph.query_templates.query_template import QueryTemplate, IndependentParameterException
+from querygraph.query.templates import QueryTemplate, IndependentParameterException
 
 
 class DateTests(unittest.TestCase):

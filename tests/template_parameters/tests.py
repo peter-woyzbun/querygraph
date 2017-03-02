@@ -1,7 +1,7 @@
 import unittest
 import datetime
 
-from querygraph.query_templates.template_parameter import TemplateParameter, ParameterParseException
+from querygraph.query.template.parameter import TemplateParameter, ParameterParseException
 from querygraph.db.connectors import TestConnector
 
 
