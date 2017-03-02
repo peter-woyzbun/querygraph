@@ -14,10 +14,11 @@
 
 import sys
 import os
-import querygraph
 
-sys.path.insert(0, os.path.abspath(__file__))
 
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+QUERY_GRAPH_DIR = os.path.join(ROOT_DIR, 'querygraph')
+sys.path.append(QUERY_GRAPH_DIR)
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the

@@ -83,6 +83,12 @@ class QueryTemplate(object):
         return parsed_query
 
     def has_dependent_parameters(self):
+        """
+        Test docstring...
+
+
+        :return:
+        """
         contains_dependent_parameter = False
         tokens = re.split(r"(?s)({{.*?}})", self.query)
         for token in tokens:
