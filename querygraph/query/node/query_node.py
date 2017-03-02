@@ -4,6 +4,7 @@ import pandas as pd
 
 from querygraph.exceptions import QueryGraphException
 from querygraph.query.template import QueryTemplate
+from querygraph.query.node.join_context import JoinContext
 from querygraph.db.connectors import DatabaseConnector
 from querygraph.db.test_data import connectors
 from querygraph.evaluation.evaluator import Evaluator
@@ -40,7 +41,7 @@ class QueryNode(object):
         self.db_connector = db_connector
         self.children = list()
         self.parent = None
-        self.join_context = None
+        self.join_context = JoinContext()
         self.df = None
         self.already_executed = False
         self._new_columns = OrderedDict()
@@ -99,44 +100,6 @@ class QueryNode(object):
         for k, v in self._new_columns.items():
             self.df[k] = evaluator.eval(eval_str=v, df=self.df)
 
-    def join(self, child_node, on_columns, how='inner'):
-        """
-        Join this node with the given child node. This creates an edge between
-        the two nodes.
-
-        Parameters
-        ----------
-
-        child_node : QueryNode
-            The QueryNode to join with.
-        on_columns : dict
-            A dictionary whose key-value pairs indicate on what columns should be
-            used to join the child node's and the parent node's query result
-            dataframes. The key should be a column in the parent's (this) dataframe,
-            the value should be a key in the child's dataframe.
-        how : {'left', 'right', 'outer', 'inner'}, default 'inner'
-            What type of join to use.
-
-        """
-        if not isinstance(child_node, QueryNode):
-            raise JoinException("The child node to join with must be a QueryNode instance.")
-        # Check that the child node doesn't already have a parent.
-        if child_node.parent is not None:
-            raise JoinException("You trying to join parent node '%s' with child node '%s', but '%s' already"
-                                "has a parent ('%s')." % (self.name,
-                                                          child_node.name,
-                                                          child_node.name,
-                                                          child_node.parent.name))
-        # Make sure joining with the child node wont cause an infinite loop (cycle) in the graph.
-        if self.creates_cycle(child_node):
-            raise CycleException("Joining parent node '%s' with child node '%s' would create a cycle in the "
-                                 "graph." % (self.name, child_node.name))
-        join_context = {'how': how, 'on_columns': on_columns}
-        child_node.parent = self
-        child_node.join_context = join_context
-        self.children.append(child_node)
-        return self
-
     def join_with_parent(self):
         """
         Join this QueryNode with its parent node, using the defined join context.
@@ -144,10 +107,7 @@ class QueryNode(object):
         """
         if self.parent is None and self.df is None:
             raise QueryGraphException
-        left_on = self.join_context['on_columns'].keys()
-        right_on = self.join_context['on_columns'].values()
-        parent_df = self.parent.df
-        joined_df = parent_df.merge(self.df, how=self.join_context['how'], left_on=left_on, right_on=right_on)
+        joined_df = self.join_context.apply_join(parent_df=self.parent.df, child_df=self.df)
         self.parent.df = joined_df
 
     def _fold_children(self):
@@ -214,11 +174,11 @@ class OnColumn(object):
 
     def __rrshift__(self, other):
         if isinstance(other, OnColumn):
-            return {self.query_node.name: self.col_name}, {other.query_node.name: other.col_name}
+            return {self.query_node.name: self.col_name, other.query_node.name: other.col_name}
 
     def __rshift__(self, other):
         if isinstance(other, OnColumn):
-            return {self.query_node.name: self.col_name}, {other.query_node.name: other.col_name}
+            return {self.query_node.name: self.col_name, other.query_node.name: other.col_name}
 
 
 parent_node = QueryNode(query='', db_connector=connectors.daily_ts_connector, name='parent_node')

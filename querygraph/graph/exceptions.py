@@ -9,3 +9,5 @@ class GraphConfigException(GraphException):
     pass
 
 
+class CycleException(GraphConfigException):
+    pass
