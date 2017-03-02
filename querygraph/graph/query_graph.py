@@ -23,5 +23,8 @@ class QueryGraph(object):
                                        "QueryNode instance.")
         self.nodes[query_node.name] = query_node
 
+    def _join(self, child_node, parent_node, join_type, *args):
+        pass
+
     def inner_join(self, child_node, parent_node, *args):
         pass

@@ -11,11 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-
-.. automodule:: query.template
-
-.. autoclass:: QueryTemplate
-    :members:
+   query-templates
 
 
 Indices and tables
