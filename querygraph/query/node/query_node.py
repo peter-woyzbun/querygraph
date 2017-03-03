@@ -190,6 +190,32 @@ class QueryNode(object):
             self._fold_children()
 
 
+class NodeThread(threading.Thread):
+
+    __lock = threading.Lock()
+
+    def __init__(self, query_template, generation_queue, independent_param_vals, parent_df=None):
+        threading.Thread.__init__(self)
+        self.query_template = query_template
+        self.generation_queue = generation_queue
+        self.independent_param_vals = independent_param_vals
+        self.parent_df = parent_df
+
+    def run(self):
+        result = None
+        logging.info("Connecting to database...")
+        try:
+            conn = connect(host=host, port=port, database=self.db)
+            curs = conn.cursor()
+            curs.execute(self.query)
+            result = curs
+            curs.close()
+            conn.close()
+        except Exception as e:
+            logging.error("Unable to access database %s" % str(e))
+        self.result_queue.append(result)
+
+
 class OnColumn(object):
 
     def __init__(self, query_node, col_name):
