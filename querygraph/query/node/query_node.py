@@ -1,4 +1,6 @@
 from collections import OrderedDict
+import threading
+import copy
 
 import pandas as pd
 
@@ -164,6 +166,13 @@ class QueryNode(object):
         if self.manipulation_set:
             self._execute_manipulation_set()
         self.already_executed = True
+
+    def execution_thread(self, results_dict, **independent_param_vals):
+        thread_query_template = QueryTemplate(query=self.query, db_connector=copy.deepcopy(self.db_connector))
+        t = threading.Thread()
+
+    def thread_process(self, results_dict):
+        pass
 
     def execute(self, **independent_param_vals):
         """

@@ -101,3 +101,6 @@ class QueryTemplate(object):
         rendered_query = self.render(df=df, **independent_param_vals)
         df = self.db_connector.execute_query(query=rendered_query)
         return df
+
+    def execute_to_dict(self, df=None, **independent_param_vals):
+        pass

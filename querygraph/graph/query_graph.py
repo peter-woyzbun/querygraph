@@ -48,7 +48,7 @@ class QueryGraph(object):
 
     @property
     def is_spanning_tree(self):
-        """ Check if the graph is a spanning tree - i.e. all nodes are connected. """
+        """ Check if the graph is a spanning tree - i.e. all nodes connected. """
         return self.num_edges == self.num_nodes - 1
 
     @property
@@ -116,9 +116,32 @@ class QueryGraph(object):
             raise CycleException("Joining parent node '%s' with child node '%s' would"
                                  " create a cycle in the graph." % (parent_node.name, child_node.name))
 
+    def _parallel_execute(self, **independent_param_vals):
+        parent_generation = [self.root_node]
+        while len(parent_generation) > 0:
+            child_generation = list()
+            for parent_node in parent_generation:
+                for child_node in parent_node:
+                    child_generation.append(child_node)
+
+    def node_generations(self):
+        """
+        Iterable that returns...
+
+        """
+        parent_generation = [self.root_node]
+        while len(parent_generation) > 0:
+            yield parent_generation
+            child_generation = list()
+            for parent_node in parent_generation:
+                for child_node in parent_node.children:
+                    child_generation.append(child_node)
+            parent_generation = child_generation
+
     def execute(self, **independent_param_vals):
         if not self.is_spanning_tree:
-            raise DisconnectedNodes("The QueryGraph is not a minimum spanning tree - there are disconnected nodes.")
+            raise DisconnectedNodes("Cannot execute: QueryGraph is not a minimum spanning "
+                                    "tree - there are disconnected nodes.")
         root_node = self.root_node
         root_node.execute(**independent_param_vals)
         return root_node.df

@@ -72,6 +72,7 @@ class ManipulationSet(object):
             raise ConfigurationException("Only Manipulation instances can be added to ManipulationSet.")
         else:
             self.manipulations.append(other)
+        return self
 
     __radd__ = __add__
 
@@ -86,6 +87,7 @@ class ManipulationSet(object):
             return False
 
     def execute(self, df):
+        print "Executing manipulation set!"
         evaluator = Evaluator()
         for manipulation in self:
             df = manipulation.execute(df, evaluator)
