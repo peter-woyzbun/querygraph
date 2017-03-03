@@ -1,8 +1,11 @@
+import inspect
+
 import yaml
 from graphviz import Digraph
 
 from querygraph.query.node import QueryNode
 from querygraph.graph.exceptions import GraphException, GraphConfigException, CycleException
+from querygraph.db.connectors import SQLite, MySQL, Postgres
 
 
 class QueryGraph(object):
@@ -107,9 +110,14 @@ class MalformedYaml(GraphException):
 
 class YamlQueryGraph(QueryGraph):
 
+    DB_CONNECTORS = {'sqlite': SQLite,
+                     'mysql': MySQL,
+                     'postgres': Postgres}
+
     def __init__(self, yaml_path=None, yaml_str=None):
         self.yaml_path = yaml_path
         self.yaml_str = yaml_str
+        self.db_connectors = dict()
         QueryGraph.__init__(self)
 
     def _create_graph(self):
@@ -123,7 +131,17 @@ class YamlQueryGraph(QueryGraph):
         connector_dict = graph_data['DATABASES']
         for conn_name, conn_dict in connector_dict.item():
             self._key_check(conn_dict, required_keys=('TYPE', ), container_name='%s connector' % conn_name)
-            db_type = conn_dict['TYPE']
+            db_type = conn_dict.pop('TYPE')
+            self.db_connectors[conn_name] = self._db_connector(conn_name, db_type, conn_dict)
+
+    def _db_connector(self, conn_name, db_type, conn_dict):
+        conn_class = self.DB_CONNECTORS[db_type]
+        required_keys = [key.upper() for key in inspect.getargspec(conn_class.__init__)]
+        self._key_check(data=conn_dict, required_keys=required_keys, container_name='%s connector' % conn_name)
+        return conn_class(**conn_dict)
+
+    def _create_nodes(self, graph_data):
+        pass
 
     @staticmethod
     def _key_check(data, required_keys, container_name):
