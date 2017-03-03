@@ -1,3 +1,6 @@
+import yaml
+from graphviz import Digraph
+
 from querygraph.query.node import QueryNode
 from querygraph.graph.exceptions import GraphException, GraphConfigException, CycleException
 
@@ -23,12 +26,18 @@ class QueryGraph(object):
                                        "QueryNode instance.")
         self.nodes[query_node.name] = query_node
 
+    def __iter__(self):
+        for node in self.root_node:
+            yield node
+
     @property
     def root_node(self):
+        """ Return the root QueryNode instance - the node with no parent."""
         arbitrary_node = self.nodes.values()[0]
         return arbitrary_node.root_node()
 
     def __contains__(self, item):
+        """ Check if graph contains given QueryNode instance. """
         if not isinstance(item, QueryNode):
             raise GraphException("Can only check if graph __contains__ a QueryNode instance.")
         return item in self.nodes.values()
@@ -44,6 +53,7 @@ class QueryGraph(object):
         parent_node.children.append(child_node)
         child_node.parent = parent_node
         child_node.join_context.join_type = join_type
+        child_node.join_context.parent_node_name = parent_node.name
         for pair_dict in on_columns:
             child_node.join_context.add_on_column_pair(parent_col_name=pair_dict[parent_node.name],
                                                        child_col_name=pair_dict[child_node.name])
@@ -79,3 +89,44 @@ class QueryGraph(object):
         root_node.execute(**independent_param_vals)
         return root_node.df
 
+    def render_viz(self, save_path):
+        dot = Digraph(comment='Query Graph Visualization')
+        for node in self:
+            dot.node(node.name)
+        for node in self:
+            for child_node in node.children:
+                dot.edge(node.name, child_node.name)
+                dot.edge(child_node.name, node.name, label='%s' % str(child_node.join_context), fontsize='6',
+                         style='dashed', minlen='4')
+        dot.render(save_path)
+
+
+class MalformedYaml(GraphException):
+    pass
+
+
+class YamlQueryGraph(QueryGraph):
+
+    def __init__(self, yaml_path=None, yaml_str=None):
+        self.yaml_path = yaml_path
+        self.yaml_str = yaml_str
+        QueryGraph.__init__(self)
+
+    def _create_graph(self):
+        if self.yaml_path:
+            graph_data = yaml.load(file('%s' % self.yaml_path, 'r'))
+        else:
+            graph_data = yaml.load(self.yaml_str)
+        self._key_check(data=graph_data, required_keys=('DATABASES', 'QUERY_NODES'), container_name='Query Graph')
+
+    def _create_db_connectors(self, graph_data):
+        connector_dict = graph_data['DATABASES']
+        for conn_name, conn_dict in connector_dict.item():
+            self._key_check(conn_dict, required_keys=('TYPE', ), container_name='%s connector' % conn_name)
+            db_type = conn_dict['TYPE']
+
+    @staticmethod
+    def _key_check(data, required_keys, container_name):
+        for key in required_keys:
+            if key not in data:
+                raise MalformedYaml("'%s' missing in %s data." % (key, container_name))

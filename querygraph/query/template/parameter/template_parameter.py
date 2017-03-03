@@ -1,7 +1,7 @@
 from pyparsing import Suppress, SkipTo, Word, alphas, alphanums, Literal, ParseException
 
 from querygraph.exceptions import QueryGraphException
-from querygraph.evaluation.evaluator import Evaluator
+from querygraph.manipulation.expression.evaluator import Evaluator
 from querygraph.db.connectors import DatabaseConnector, SQLite, MySQL, Postgres, MsSQL
 
 
@@ -166,5 +166,5 @@ class TemplateParameter(object):
             return self._make_query_value(pre_value=pre_value)
         else:
             evaluator = Evaluator()
-            pre_value = evaluator.eval(eval_str=self.param_expr_str, df=df, independent_params=independent_params)
+            pre_value = evaluator.eval(eval_str=self.param_expr_str, df=df, independent_param_vals=independent_params)
             return self._make_query_value(pre_value=pre_value)

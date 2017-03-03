@@ -2,12 +2,10 @@ import unittest
 import datetime
 
 
-from querygraph.evaluation import expr_funcs
-from querygraph.evaluation.expr_funcs import ExprFuncException
+from querygraph.manipulation.expression import functions
 
-
-to_str = expr_funcs.DateTimeToString()
-delta = expr_funcs.DateTimeDelta()
+to_str = functions.DateTimeToString()
+delta = functions.DateTimeDelta()
 
 
 class ToStringTests(unittest.TestCase):
@@ -20,7 +18,7 @@ class ToStringTests(unittest.TestCase):
         self.assertEquals(expected_value, to_str(test_dt, format='%Y-%m-%d %H:%M:%S'))
 
     def test_bad_type_execute(self):
-        self.assertRaises(ExprFuncException, to_str, target='funzone', format='%Y-%m-%d %H:%M:%S')
+        self.assertRaises(functions.ExprFuncException, to_str, target='funzone', format='%Y-%m-%d %H:%M:%S')
 
 
 class DatetimeDeltaTests(unittest.TestCase):

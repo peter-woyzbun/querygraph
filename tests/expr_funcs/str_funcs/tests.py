@@ -4,17 +4,17 @@ import datetime
 import pandas as pd
 import numpy as np
 
-from querygraph.evaluation import expr_funcs
+from querygraph.manipulation.expression import functions
 
 
-uppercase = expr_funcs.Uppercase()
-lowercase = expr_funcs.Lowercase()
-capitalize = expr_funcs.Capitalize()
-to_date = expr_funcs.ToDate()
-regex_sub = expr_funcs.RegexSub()
-replace = expr_funcs.Replace()
-combine = expr_funcs.Combine()
-_slice = expr_funcs.Slice()
+uppercase = functions.Uppercase()
+lowercase = functions.Lowercase()
+capitalize = functions.Capitalize()
+to_date = functions.ToDate()
+regex_sub = functions.RegexSub()
+replace = functions.Replace()
+combine = functions.Combine()
+_slice = functions.Slice()
 
 
 class UppercaseTests(unittest.TestCase):

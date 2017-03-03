@@ -7,7 +7,9 @@ class JoinContextException(QueryGraphException):
 
 class JoinContext(object):
 
-    def __init__(self):
+    def __init__(self, child_node_name):
+        self.child_node_name = child_node_name
+        self.parent_node_name = None
         self.parent_cols = list()
         self.child_cols = list()
         self._join_type = None
@@ -43,3 +45,15 @@ class JoinContext(object):
         self._column_check(parent_df, child_df)
         joined_df = parent_df.merge(child_df, how=self.join_type, left_on=self.parent_cols, right_on=self.child_cols)
         return joined_df
+
+    def __str__(self):
+        # join_context_str = '<%s JOIN <BR /><BR />' % self.join_type.upper()
+        join_context_str = '<<TABLE BORDER="0" CELLBORDER="0"><TR><TD VALIGN="top" HEIGHT="10" CELLPADDING="5">%s JOIN</TD></TR>' % self.join_type.upper()
+        for parent_col, child_col in zip(self.parent_cols, self.child_cols):
+            join_context_str += '<TR><TD CELLPADDING="3"><FONT POINT-SIZE="4">%s.%s = %s.%s</FONT></TD></TR>' % (self.parent_node_name,
+                                                          parent_col,
+                                                          self.child_node_name,
+                                                          child_col)
+        join_context_str += '</TABLE>>'
+
+        return join_context_str

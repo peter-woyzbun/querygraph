@@ -7,7 +7,8 @@ from querygraph.query.template import QueryTemplate
 from querygraph.query.node.join_context import JoinContext
 from querygraph.db.connectors import DatabaseConnector
 from querygraph.db.test_data import connectors
-from querygraph.evaluation.evaluator import Evaluator
+from querygraph.manipulation.expression.evaluator import Evaluator
+from querygraph.manipulation.set import ManipulationSet
 
 
 # =============================================
@@ -41,16 +42,17 @@ class QueryNode(object):
         self.db_connector = db_connector
         self.children = list()
         self.parent = None
-        self.join_context = JoinContext()
+        self.join_context = JoinContext(child_node_name=self.name)
         self.df = None
         self.already_executed = False
         self._new_columns = OrderedDict()
+        self.manipulation_set = ManipulationSet()
 
     def is_independent(self):
         if self.is_root_node:
             return True
         else:
-            query_template = QueryTemplate(query=self.query)
+            query_template = QueryTemplate(query=self.query, db_connector=self.db_connector)
             return not query_template.has_dependent_parameters()
 
     def root_node(self):
@@ -106,6 +108,9 @@ class QueryNode(object):
         for k, v in self._new_columns.items():
             self.df[k] = evaluator.eval(eval_str=v, df=self.df)
 
+    def _execute_manipulation_set(self):
+        self.df = self.manipulation_set.execute(self.df)
+
     def join_with_parent(self):
         """
         Join this QueryNode with its parent node, using the defined join context.
@@ -152,8 +157,8 @@ class QueryNode(object):
         else:
             df = query_template.execute(**independent_param_vals)
         self.df = df
-        if self._new_columns:
-            self._create_added_columns()
+        if self.manipulation_set:
+            self._execute_manipulation_set()
         self.already_executed = True
 
     def execute(self, **independent_param_vals):

@@ -1,44 +1,28 @@
 DATABASES:
-  flights:
-    type: sqlite
-    host: C:\Users\pete\Packaged Projects\querygraph\querygraph\db\sample_data\flights.db
-  weather:
-    type: sqlite
-    host: C:\Users\pete\Packaged Projects\querygraph\querygraph\db\sample_data\weather.db
-  carriers:
-    type: sqlite
-    host: host: C:\Users\pete\Packaged Projects\querygraph\querygraph\db\sample_data\carriers.db
+  mo_seasons:
+    TYPE: sqlite
+    HOST: C:\Users\pete\Packaged Projects\querygraph\querygraph\db\sample_data\flights.db
+  daily_ts:
+    TYPE: sqlite
+    HOST: host: C:\Users\pete\Packaged Projects\querygraph\querygraph\db\sample_data\carriers.db
 QUERY_NODES:
-  flights:
-      database: flights
-      query: |
+  mo_seasons:
+      DATABASE: mo_seasons
+      QUERY: |
         SELECT *
-        FROM flights
-        WHERE carrier IN {% carriers|value_list:str %} AND hour != 'nan'
-      create:
-        date_time: str.combine(year, '-', month, '-', day, 'T', as_type.int(as_type.float(hour)), ':00:00', 'Z')
-  weather:
-    database: weather
-    parent_node: flights
-    query: |
+        FROM month_seasons
+        WHERE season IN {% seasons|value_list:str %}
+  daily_ts:
+    DATABASE: daily_ts
+    PARENT_NODE: mo_seasons
+    QUERY: |
       SELECT *
-      FROM weather
-      WHERE origin IN {{ origin|value_list:str }} AND time_hour IN {{ date_time|value_list:str }}
-    join_context:
-      how: inner
-      on_columns:
-        origin: origin
-        date_time: time_hour
-  carriers:
-    database: carriers
-    parent_node: flights
-    query: |
-      SELECT *
-      FROM carriers
-      WHERE code IN {% [str.lowercase(carriers)]|value_list:str %}
-    create:
-      code: str.uppercase(code)
-    join_context:
-      how: left
-      on_columns:
-        carrier: code
+      FROM daily_ts
+      WHERE month_name IN {{ [datetime.to_str(str.to_datetime(str.capitalize(month), format='%b'), format='%B')]|value_list:str }}
+    JOIN_CONTEXT:
+      HOW: inner
+      ON:
+        - daily_ts.month_abr: mo_seasons.month
+    MANIPULATION_SET:
+      - CREATE:
+        - month_abr: str.lowercase(str.slice(month_name, s=0, e=4))

@@ -38,7 +38,11 @@ class ExecutionTests(unittest.TestCase):
         query_graph.add_node(mo_seasons_node)
         query_graph.add_node(daily_ts_node)
 
-        query_graph.right_join(daily_ts_node, mo_seasons_node, on_columns=[{'mo_seasons': 'month', 'daily_ts': 'month_abr'}])
+        query_graph.right_join(daily_ts_node, mo_seasons_node,
+                               on_columns=[daily_ts_node['month_abr'] >> mo_seasons_node['month']])
+        # query_graph.right_join(daily_ts_node, mo_seasons_node, on_columns=[{'mo_seasons': 'month', 'daily_ts': 'month_abr'}])
+
+        query_graph.render_viz(save_path='query_graph_test')
 
         df = query_graph.execute(seasons=['winter', 'spring'])
         self.assertEquals(7, len(df['month_name'].unique()))

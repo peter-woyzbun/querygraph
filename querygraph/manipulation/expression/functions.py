@@ -86,6 +86,9 @@ class ExprFunc(object):
     def _time_execute(self, target, *args, **kwargs):
         raise ExprFuncException("Time type not supported for this function.")
 
+    def _get_args(self, args, n_expected):
+        pass
+
 
 # =============================================
 # Expression Function Group Base Class
