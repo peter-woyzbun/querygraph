@@ -9,6 +9,18 @@ from querygraph.db.connectors import SQLite, MySQL, Postgres
 from querygraph.manipulation.set import Create
 
 
+# =================================================
+# Exceptions
+# -------------------------------------------------
+
+class DisconnectedNodes(GraphException):
+    pass
+
+
+# =================================================
+# Query Graph Class
+# -------------------------------------------------
+
 class QueryGraph(object):
 
     def __init__(self):
@@ -33,6 +45,22 @@ class QueryGraph(object):
     def __iter__(self):
         for node in self.root_node:
             yield node
+
+    @property
+    def is_spanning_tree(self):
+        """ Check if the graph is a spanning tree - i.e. all nodes are connected. """
+        return self.num_edges == self.num_nodes - 1
+
+    @property
+    def num_nodes(self):
+        return len(self.nodes.keys())
+
+    @property
+    def num_edges(self):
+        num_edges = 0
+        for node in self:
+            num_edges += node.num_edges
+        return num_edges
 
     @property
     def root_node(self):
@@ -89,6 +117,8 @@ class QueryGraph(object):
                                  " create a cycle in the graph." % (parent_node.name, child_node.name))
 
     def execute(self, **independent_param_vals):
+        if not self.is_spanning_tree:
+            raise DisconnectedNodes("The QueryGraph is not a minimum spanning tree - there are disconnected nodes.")
         root_node = self.root_node
         root_node.execute(**independent_param_vals)
         return root_node.df

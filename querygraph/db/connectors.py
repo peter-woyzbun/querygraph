@@ -78,7 +78,8 @@ class MySQL(DatabaseConnector):
 
 class Postgres(DatabaseConnector):
 
-    def __init__(self, host, db_name, user, password):
+    def __init__(self, host, port, db_name, user, password):
+        self.port = port
         self.db_name = db_name
         self.user = user
         self.password = password

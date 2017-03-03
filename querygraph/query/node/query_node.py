@@ -62,6 +62,10 @@ class QueryNode(object):
             return self.parent.root_node()
 
     @property
+    def num_edges(self):
+        return len(self.children)
+
+    @property
     def is_root_node(self):
         return self.parent is None
 
