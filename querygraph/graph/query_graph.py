@@ -6,6 +6,7 @@ from graphviz import Digraph
 from querygraph.query.node import QueryNode
 from querygraph.graph.exceptions import GraphException, GraphConfigException, CycleException
 from querygraph.db.connectors import SQLite, MySQL, Postgres
+from querygraph.manipulation.set import Create
 
 
 class QueryGraph(object):
@@ -114,6 +115,8 @@ class YamlQueryGraph(QueryGraph):
                      'mysql': MySQL,
                      'postgres': Postgres}
 
+    MANIPULATION_TYPES = {'CREATE': Create}
+
     def __init__(self, yaml_path=None, yaml_str=None):
         self.yaml_path = yaml_path
         self.yaml_str = yaml_str
@@ -130,7 +133,7 @@ class YamlQueryGraph(QueryGraph):
     def _create_db_connectors(self, graph_data):
         connector_dict = graph_data['DATABASES']
         for conn_name, conn_dict in connector_dict.item():
-            self._key_check(conn_dict, required_keys=('TYPE', ), container_name='%s connector' % conn_name)
+            self._key_check(conn_dict, required_keys=('TYPE', ), container_name="'%s' connector" % conn_name)
             db_type = conn_dict.pop('TYPE')
             self.db_connectors[conn_name] = self._db_connector(conn_name, db_type, conn_dict)
 
@@ -141,7 +144,27 @@ class YamlQueryGraph(QueryGraph):
         return conn_class(**conn_dict)
 
     def _create_nodes(self, graph_data):
-        pass
+        query_nodes_dict = graph_data['QUERY_NODES']
+        for node_name, node_dict in query_nodes_dict.items():
+            self._key_check(data=node_dict, required_keys=['DATABASE', 'QUERY'], container_name='%s node' % node_name)
+            if node_dict['DATABASE'] not in self.db_connectors.keys():
+                raise MalformedYaml("The database connector '%s' for query node"
+                                    " '%s' is not defined." % (node_dict['DATABASE'], node_name))
+
+    def _query_node(self, node_name, node_dict):
+        db_connector_name = node_dict['DATABASE']
+        query_node = QueryNode(name=node_name,
+                               query=node_dict['QUERY'],
+                               db_connector=self.db_connectors[db_connector_name])
+        if 'MANIPULATION_SET' in node_dict:
+            for manipulation_dict in node_dict['MANIPULATION_SET']:
+                manipulation_type = manipulation_dict.keys()[0]
+                if manipulation_type == 'CREATE':
+                    col_list = manipulation_dict.values()[0]
+                    for create_col in col_list:
+                        query_node.manipulation_set += Create(new_col_name=create_col.keys()[0],
+                                                              new_col_expression=create_col.values()[0])
+
 
     @staticmethod
     def _key_check(data, required_keys, container_name):
