@@ -57,3 +57,18 @@ class JoinContext(object):
         join_context_str += '</TABLE>>'
 
         return join_context_str
+
+
+class OnColumn(object):
+
+    def __init__(self, query_node, col_name):
+        self.query_node = query_node
+        self.col_name = col_name
+
+    def __rrshift__(self, other):
+        if isinstance(other, OnColumn):
+            return {self.query_node.name: self.col_name, other.query_node.name: other.col_name}
+
+    def __rshift__(self, other):
+        if isinstance(other, OnColumn):
+            return {self.query_node.name: self.col_name, other.query_node.name: other.col_name}

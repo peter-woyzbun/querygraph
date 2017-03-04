@@ -5,7 +5,7 @@ import pandas as pd
 
 from querygraph.exceptions import QueryGraphException
 from querygraph.query.template import QueryTemplate
-from querygraph.query.node.join_context import JoinContext
+from querygraph.query.node.join_context import JoinContext, OnColumn
 from querygraph.query.node.execution_thread import ExecutionThread
 from querygraph.db.connectors import DatabaseConnector
 from querygraph.db.test_data import connectors
@@ -199,19 +199,6 @@ class QueryNode(object):
             self.fold_children()
 
 
-class OnColumn(object):
-
-    def __init__(self, query_node, col_name):
-        self.query_node = query_node
-        self.col_name = col_name
-
-    def __rrshift__(self, other):
-        if isinstance(other, OnColumn):
-            return {self.query_node.name: self.col_name, other.query_node.name: other.col_name}
-
-    def __rshift__(self, other):
-        if isinstance(other, OnColumn):
-            return {self.query_node.name: self.col_name, other.query_node.name: other.col_name}
 
 
 parent_node = QueryNode(query='', db_connector=connectors.daily_ts_connector, name='parent_node')
