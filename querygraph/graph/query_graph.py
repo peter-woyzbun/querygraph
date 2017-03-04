@@ -32,7 +32,6 @@ class QueryGraph(object):
 
         Parameters
         ----------
-
         query_node : QueryNode
             The QueryNode instance to add to graph.
 
@@ -117,12 +116,23 @@ class QueryGraph(object):
                                  " create a cycle in the graph." % (parent_node.name, child_node.name))
 
     def _parallel_execute(self, **independent_param_vals):
-        parent_generation = [self.root_node]
-        while len(parent_generation) > 0:
-            child_generation = list()
-            for parent_node in parent_generation:
-                for child_node in parent_node:
-                    child_generation.append(child_node)
+        for generation in self.node_generations():
+            results_df_container = dict()
+            threads = [node.execution_thread(results_df_container, **independent_param_vals) for node in generation]
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join()
+            for node_name, node_df in results_df_container.items():
+                self.nodes[node_name].df = node_df
+            for node in generation:
+                if node.manipulation_set:
+                    node._execute_manipulation_set()
+
+    def parallel_execute(self, **independent_param_vals):
+        self._parallel_execute(**independent_param_vals)
+        self.root_node._fold_children()
+        return self.root_node.df
 
     def node_generations(self):
         """
@@ -156,6 +166,24 @@ class QueryGraph(object):
                 dot.edge(child_node.name, node.name, label='%s' % str(child_node.join_context), fontsize='6',
                          style='dashed', minlen='4')
         dot.render(save_path)
+
+    def render_parallel_viz(self, save_path):
+        sub_graphs = list()
+        for generation_num, generation in enumerate(self.node_generations()):
+            generation_subgraph = Digraph('Generation %s' % generation_num)
+            generation_subgraph.body.append('color=lightgrey')
+            for node in generation:
+                generation_subgraph.node(node.name)
+            sub_graphs.append(generation_subgraph)
+        g = Digraph('Query Graph')
+        for sub_graph in sub_graphs:
+            g.subgraph(sub_graph)
+        for node in self:
+            for child_node in node.children:
+                g.edge(node.name, child_node.name)
+                g.edge(child_node.name, node.name, label='%s' % str(child_node.join_context), fontsize='6',
+                         style='dashed', minlen='4')
+        g.render(save_path)
 
 
 class MalformedYaml(GraphException):

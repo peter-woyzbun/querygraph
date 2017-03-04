@@ -3,8 +3,8 @@ from abc import ABCMeta, abstractmethod
 import sqlite3
 import pandas as pd
 import psycopg2
-import pymssql
-import mysql.connector
+# import pymssql
+# import mysql.connector
 
 
 # =================================================
@@ -127,7 +127,7 @@ class TestConnector(DatabaseConnector):
 
     @classmethod
     def postgres(cls):
-        return Postgres(host='', db_name='', user='', password='')
+        return Postgres(host='', db_name='', user='', password='', port='')
 
     def execute_query(self, query):
         return None

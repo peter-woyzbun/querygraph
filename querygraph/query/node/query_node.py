@@ -167,9 +167,18 @@ class QueryNode(object):
             self._execute_manipulation_set()
         self.already_executed = True
 
-    def execution_thread(self, results_dict, **independent_param_vals):
+    def execution_thread(self, results_df_container, **independent_param_vals):
         thread_query_template = QueryTemplate(query=self.query, db_connector=copy.deepcopy(self.db_connector))
-        t = threading.Thread()
+        if self.parent is None:
+            parent_df = None
+        else:
+            parent_df = self.parent.df
+        thread_query_template.pre_render(df=parent_df, **independent_param_vals)
+        exec_thread = ExecutionThread(query_template=thread_query_template,
+                                      node_name=self.name,
+                                      result_df_container=results_df_container,
+                                      independent_param_vals=independent_param_vals)
+        return exec_thread
 
     def thread_process(self, results_dict):
         pass
@@ -190,30 +199,24 @@ class QueryNode(object):
             self._fold_children()
 
 
-class NodeThread(threading.Thread):
+class ExecutionThread(threading.Thread):
 
     __lock = threading.Lock()
 
-    def __init__(self, query_template, generation_queue, independent_param_vals, parent_df=None):
+    def __init__(self, query_template, node_name, result_df_container, independent_param_vals):
         threading.Thread.__init__(self)
+        if not isinstance(query_template, QueryTemplate):
+            raise QueryGraphException
         self.query_template = query_template
-        self.generation_queue = generation_queue
+        self.node_name = node_name
+        self.result_df_container = result_df_container
         self.independent_param_vals = independent_param_vals
-        self.parent_df = parent_df
 
     def run(self):
-        result = None
-        logging.info("Connecting to database...")
-        try:
-            conn = connect(host=host, port=port, database=self.db)
-            curs = conn.cursor()
-            curs.execute(self.query)
-            result = curs
-            curs.close()
-            conn.close()
-        except Exception as e:
-            logging.error("Unable to access database %s" % str(e))
-        self.result_queue.append(result)
+        print "RUnning thread!"
+        result_df = self.query_template.execute()
+        print result_df
+        self.result_df_container[self.node_name] = result_df
 
 
 class OnColumn(object):

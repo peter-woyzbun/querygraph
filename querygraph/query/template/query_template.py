@@ -41,10 +41,14 @@ class QueryTemplate(object):
     def __init__(self, query, db_connector):
 
         self.query = query
+        self.rendered_query = None
         self.query_isolated = True
         if not isinstance(db_connector, DatabaseConnector):
             raise QueryTemplateException("The 'db_connector' arg must be a DatabaseConnector instance.")
         self.db_connector = db_connector
+
+    def pre_render(self, df=None, **independent_param_vals):
+        self.rendered_query = self.render(df, **independent_param_vals)
 
     def render(self, df=None, **independent_param_vals):
         """
@@ -98,7 +102,10 @@ class QueryTemplate(object):
         return contains_dependent_parameter
 
     def execute(self, df=None, **independent_param_vals):
-        rendered_query = self.render(df=df, **independent_param_vals)
+        if self.rendered_query is not None:
+            rendered_query = self.rendered_query
+        else:
+            rendered_query = self.render(df=df, **independent_param_vals)
         df = self.db_connector.execute_query(query=rendered_query)
         return df
 
