@@ -171,9 +171,12 @@ class QueryGraph(object):
         sub_graphs = list()
         for generation_num, generation in enumerate(self.node_generations()):
             generation_subgraph = Digraph('Generation %s' % generation_num)
+            generation_subgraph.body.append('style=filled')
             generation_subgraph.body.append('color=lightgrey')
+            generation_subgraph.body.append('label = "process #1"')
             for node in generation:
-                generation_subgraph.node(node.name)
+                if node.parent is not None:
+                    generation_subgraph.edge(tail_name=node.name, head_name=node.parent.name)
             sub_graphs.append(generation_subgraph)
         g = Digraph('Query Graph')
         for sub_graph in sub_graphs:
@@ -245,7 +248,6 @@ class YamlQueryGraph(QueryGraph):
                     for create_col in col_list:
                         query_node.manipulation_set += Create(new_col_name=create_col.keys()[0],
                                                               new_col_expression=create_col.values()[0])
-
 
     @staticmethod
     def _key_check(data, required_keys, container_name):
