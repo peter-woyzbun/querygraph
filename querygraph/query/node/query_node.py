@@ -1,5 +1,4 @@
 from collections import OrderedDict
-import threading
 import copy
 
 import pandas as pd

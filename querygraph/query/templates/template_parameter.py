@@ -1,6 +1,7 @@
 from pyparsing import Suppress, Word, alphanums, alphas, SkipTo, Literal, ParseException
 
 from querygraph.exceptions import QueryGraphException
+from querygraph.manipulation.expression.evaluator import Evaluator
 
 
 # =============================================
@@ -17,16 +18,49 @@ class ParameterParseException(TemplateParameterException):
 
 class TemplateParameter(object):
 
-    GENERIC_DATA_TYPES = {'int': lambda x: int(x),
-                          'float': lambda x: float(x),
-                          'str': lambda x: "'%s'" % str(x)}
+    GENERIC_DATA_TYPES = {'int': {int: lambda x: x,
+                                  float: lambda x: int(x),
+                                  str: lambda x: int(x)},
+                          'float': {int: lambda x: float(x),
+                                    float: lambda x: x,
+                                    str: lambda x: float(x)},
+                          'str': {str: lambda x: "'%s'" % x,
+                                  float: lambda x: "'%s'" % x,
+                                  int: lambda x: "'%s'" % x}}
+
     DATA_TYPES = dict()
     CONTAINER_TYPES = dict()
 
     def __init__(self, parameter_str):
         self.parameter_str = parameter_str
         self.param_expr_str = None
+        self.data_type = None
+        self.custom_data_type_str = None
 
+    @property
+    def _data_type_parser(self):
+        data_type_literals = [Literal(d_type) for d_type in self.GENERIC_DATA_TYPES.keys()]
+        data_type = reduce(lambda x, y: x | y, data_type_literals)
+        return data_type
+
+    def _set_attribute(self, target, value):
+        setattr(self, target, value)
+
+    def _set_custom_data_type(self, value):
+        self.custom_data_type_str = value
+        return 'custom'
+
+    def _render_single_value(self, pre_value):
+        if self.data_type == 'custom':
+            return self.custom_data_type_str % pre_value
+        else:
+            return self.GENERIC_DATA_TYPES[self.data_type][type(pre_value)](pre_value)
+
+    def _make_value_list(self, parameter_value):
+        parameter_value = list(set(parameter_value))
+        val_str = ", ".join(str(self._render_single_value(x)) for x in parameter_value)
+        val_str = "(%s)" % val_str
+        return val_str
 
     def _initial_parse(self):
         # Parameter expression in brackets...
@@ -44,22 +78,14 @@ class TemplateParameter(object):
         container_type = (value_list | value)
         container_type.addParseAction(lambda x: self._set_attribute(target='container_type', value=x[0]))
 
-        # Data types
-        num = Literal('num')
-        _int = Literal('int')
-        _float = Literal('float')
-        _str = Literal('str')
-        _date = Literal('date')
-
         custom = (Suppress('custom[') + SkipTo(Suppress(']'), include=True))
         custom.addParseAction(lambda x: self._set_custom_data_type(x[0]))
-        data_type_literals = [Literal(x) for x in self.DATA_TYPES.keys()]
-        data_type = reduce(lambda x, y: x | y, data_type_literals)
+        data_type = (self._data_type_parser | custom)
         # data_type = (num | _int | _float | _str | _date | custom)
         data_type.addParseAction(lambda x: self._set_attribute(target='data_type', value=x[0]))
 
         parameter_block = (param_declaration + Suppress("|") + container_type + Suppress(":") + data_type)
         try:
-            parameter_block.parseString(self.param_str)
+            parameter_block.parseString(self.parameter_str)
         except ParseException:
             raise ParameterParseException
