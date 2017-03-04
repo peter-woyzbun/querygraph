@@ -7,6 +7,7 @@ import pandas as pd
 from querygraph.exceptions import QueryGraphException
 from querygraph.query.template import QueryTemplate
 from querygraph.query.node.join_context import JoinContext
+from querygraph.query.node.execution_thread import ExecutionThread
 from querygraph.db.connectors import DatabaseConnector
 from querygraph.db.test_data import connectors
 from querygraph.manipulation.expression.evaluator import Evaluator
@@ -127,7 +128,7 @@ class QueryNode(object):
         joined_df = self.join_context.apply_join(parent_df=self.parent.df, child_df=self.df)
         self.parent.df = joined_df
 
-    def _fold_children(self):
+    def fold_children(self):
         """
         Join all QueryNode's with their parent in reverse topological order. This
         should only be called by the root QueryNode.
@@ -196,27 +197,7 @@ class QueryNode(object):
         for query_node in self:
             query_node._execute(**independent_param_vals)
         if self.is_root_node:
-            self._fold_children()
-
-
-class ExecutionThread(threading.Thread):
-
-    __lock = threading.Lock()
-
-    def __init__(self, query_template, node_name, result_df_container, independent_param_vals):
-        threading.Thread.__init__(self)
-        if not isinstance(query_template, QueryTemplate):
-            raise QueryGraphException
-        self.query_template = query_template
-        self.node_name = node_name
-        self.result_df_container = result_df_container
-        self.independent_param_vals = independent_param_vals
-
-    def run(self):
-        print "RUnning thread!"
-        result_df = self.query_template.execute()
-        print result_df
-        self.result_df_container[self.node_name] = result_df
+            self.fold_children()
 
 
 class OnColumn(object):

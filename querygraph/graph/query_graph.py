@@ -131,7 +131,7 @@ class QueryGraph(object):
 
     def parallel_execute(self, **independent_param_vals):
         self._parallel_execute(**independent_param_vals)
-        self.root_node._fold_children()
+        self.root_node.fold_children()
         return self.root_node.df
 
     def node_generations(self):
