@@ -3,7 +3,7 @@ import datetime
 from querygraph.query.template.parameter import TemplateParameter
 
 
-class SqliteParameter(TemplateParameter):
+class MySqlParameter(TemplateParameter):
 
     CHILD_DATA_TYPES = {
         'datetime': {datetime.datetime: lambda x: "'%s'" % x.strftime('%Y-%m-%d %H:%M:%S'),

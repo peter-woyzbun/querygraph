@@ -17,7 +17,7 @@ class ParameterParseException(TemplateParameterException):
 
 
 class TemplateParameter(object):
-    
+
     GENERIC_DATA_TYPES = {'int': {int: lambda x: x,
                                   float: lambda x: int(x),
                                   str: lambda x: int(x)},
