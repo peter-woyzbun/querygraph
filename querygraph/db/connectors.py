@@ -1,5 +1,6 @@
-# Misc. imports
 from abc import ABCMeta, abstractmethod
+
+
 import sqlite3
 import pandas as pd
 import psycopg2
@@ -106,6 +107,16 @@ class MsSQL(DatabaseConnector):
         conn = pymssql.connect(self.host, self.user, self.password, self.db_name)
         df = pd.read_sql_query(query, con=conn)
         return df
+
+
+class MongoDb(DatabaseConnector):
+
+    def __init__(self, host, db_name):
+        self.db_name = db_name
+        DatabaseConnector.__init__(self, database_type='Mongodb', host=host)
+
+    def execute_query(self, query, **kwargs):
+        field_types = kwargs.get('field_types')
 
 
 # =================================================

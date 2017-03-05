@@ -12,3 +12,11 @@ class SqliteTemplate(QueryTemplate):
                                template_str=template_str,
                                db_connector=db_connector,
                                parameter_class=SqliteParameter)
+
+    def execute(self, df=None, **independent_param_vals):
+        if self.rendered_query is not None:
+            rendered_query = self.rendered_query
+        else:
+            rendered_query = self.render(df=df, **independent_param_vals)
+        df = self.db_connector.execute_query(query=rendered_query)
+        return df
