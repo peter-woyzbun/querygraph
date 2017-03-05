@@ -28,6 +28,7 @@ class TemplateParameter(object):
                                   float: lambda x: "'%s'" % x,
                                   int: lambda x: "'%s'" % x}}
 
+    CHILD_DATA_TYPES = dict()
     DATA_TYPES = dict()
     CONTAINER_TYPES = dict()
 
@@ -37,9 +38,26 @@ class TemplateParameter(object):
         self.data_type = None
         self.custom_data_type_str = None
 
+    def __new__(cls, *args, **kwargs):
+        cls._make_data_types()
+
+    @classmethod
+    def _make_data_types(cls):
+        if not cls.CHILD_DATA_TYPES:
+            cls.DATA_TYPES = cls.GENERIC_DATA_TYPES
+        else:
+            cls.DATA_TYPES = cls.CHILD_DATA_TYPES.copy()
+            for data_type, input_type_dict in cls.GENERIC_DATA_TYPES.items():
+                if data_type not in cls.DATA_TYPES:
+                    cls.DATA_TYPES[data_type] = input_type_dict
+                elif data_type in cls.DATA_TYPES:
+                    for input_type in input_type_dict.keys():
+                        if input_type not in cls.DATA_TYPES[data_type]:
+                            cls.DATA_TYPES[data_type][input_type] = input_type_dict[input_type]
+
     @property
     def _data_type_parser(self):
-        data_type_literals = [Literal(d_type) for d_type in self.GENERIC_DATA_TYPES.keys()]
+        data_type_literals = [Literal(d_type) for d_type in self.DATA_TYPES.keys()]
         data_type = reduce(lambda x, y: x | y, data_type_literals)
         return data_type
 

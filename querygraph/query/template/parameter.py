@@ -1,8 +1,7 @@
-from pyparsing import Suppress, SkipTo, Word, alphas, alphanums, Literal, ParseException
+from pyparsing import Suppress, Word, alphanums, alphas, SkipTo, Literal, ParseException
 
 from querygraph.exceptions import QueryGraphException
 from querygraph.manipulation.expression.evaluator import Evaluator
-from querygraph.db.connectors import DatabaseConnector, SQLite, MySQL, Postgres, MsSQL
 
 
 # =============================================
@@ -17,24 +16,51 @@ class ParameterParseException(TemplateParameterException):
     pass
 
 
-# =============================================
-# Template Parameter Class
-# ---------------------------------------------
-
-
 class TemplateParameter(object):
-    def __init__(self, param_str, param_type, db_connector):
-        self.param_str = param_str
-        self.param_type = param_type
-        self.param_expr_str = None
+    
+    GENERIC_DATA_TYPES = {'int': {int: lambda x: x,
+                                  float: lambda x: int(x),
+                                  str: lambda x: int(x)},
+                          'float': {int: lambda x: float(x),
+                                    float: lambda x: x,
+                                    str: lambda x: float(x)},
+                          'str': {str: lambda x: "'%s'" % x,
+                                  float: lambda x: "'%s'" % x,
+                                  int: lambda x: "'%s'" % x}}
+
+    CHILD_DATA_TYPES = dict()
+    DATA_TYPES = dict()
+    CONTAINER_TYPES = dict()
+
+    def __init__(self, parameter_str, parameter_type):
+        self.parameter_str = parameter_str
         self.name = None
-        self.container_type = None
+        self.parameter_type = parameter_type
+        self.param_expr_str = None
         self.data_type = None
         self.custom_data_type_str = None
-        if not isinstance(db_connector, DatabaseConnector):
-            raise TemplateParameterException
-        self.db_connector = db_connector
+        self.container_type = None
+        self._make_data_types()
         self._initial_parse()
+
+    def _make_data_types(self):
+        if not self.CHILD_DATA_TYPES:
+            self.DATA_TYPES = self.GENERIC_DATA_TYPES
+        else:
+            self.DATA_TYPES = self.CHILD_DATA_TYPES.copy()
+            for data_type, input_type_dict in self.GENERIC_DATA_TYPES.items():
+                if data_type not in self.DATA_TYPES:
+                    self.DATA_TYPES[data_type] = input_type_dict
+                elif data_type in self.DATA_TYPES:
+                    for input_type in input_type_dict.keys():
+                        if input_type not in self.DATA_TYPES[data_type]:
+                            self.DATA_TYPES[data_type][input_type] = input_type_dict[input_type]
+
+    @property
+    def _data_type_parser(self):
+        data_type_literals = [Literal(d_type) for d_type in self.DATA_TYPES.keys()]
+        data_type = reduce(lambda x, y: x | y, data_type_literals)
+        return data_type
 
     def _set_attribute(self, target, value):
         setattr(self, target, value)
@@ -42,6 +68,18 @@ class TemplateParameter(object):
     def _set_custom_data_type(self, value):
         self.custom_data_type_str = value
         return 'custom'
+
+    def _make_single_value(self, pre_value):
+        if self.data_type == 'custom':
+            return self.custom_data_type_str % pre_value
+        else:
+            return self.DATA_TYPES[self.data_type][type(pre_value)](pre_value)
+
+    def _make_value_list(self, parameter_value):
+        parameter_value = list(set(parameter_value))
+        val_str = ", ".join(str(self._make_single_value(x)) for x in parameter_value)
+        val_str = "(%s)" % val_str
+        return val_str
 
     def _initial_parse(self):
         # Parameter expression in brackets...
@@ -59,66 +97,17 @@ class TemplateParameter(object):
         container_type = (value_list | value)
         container_type.addParseAction(lambda x: self._set_attribute(target='container_type', value=x[0]))
 
-        # Data types
-        num = Literal('num')
-        _int = Literal('int')
-        _float = Literal('float')
-        _str = Literal('str')
-        _date = Literal('date')
-
         custom = (Suppress('custom[') + SkipTo(Suppress(']'), include=True))
         custom.addParseAction(lambda x: self._set_custom_data_type(x[0]))
-
-        data_type = (num | _int | _float | _str | _date | custom)
+        data_type = (self._data_type_parser | custom)
+        # data_type = (num | _int | _float | _str | _date | custom)
         data_type.addParseAction(lambda x: self._set_attribute(target='data_type', value=x[0]))
 
         parameter_block = (param_declaration + Suppress("|") + container_type + Suppress(":") + data_type)
         try:
-            parameter_block.parseString(self.param_str)
+            parameter_block.parseString(self.parameter_str)
         except ParseException:
             raise ParameterParseException
-
-    def _make_single_date(self, value):
-        if isinstance(self.db_connector, SQLite):
-            return "date('%s')" % value.strftime('%Y-%m-%d')
-        elif isinstance(self.db_connector, MySQL):
-            return "date(%s)" % value.strftime('%Y-%m-%d')
-        elif isinstance(self.db_connector, Postgres):
-            return "date '%s'" % value.strftime('%Y-%m-%d')
-        elif isinstance(self.db_connector, MsSQL):
-            return "'%s'" % value.strftime('%Y-%m-%d')
-
-    def _make_single_datetime(self, value):
-        if isinstance(self.db_connector, SQLite):
-            return "datetime(%s)" % value.strftime('%Y-%m-%d %H:%M:%S')
-        elif isinstance(self.db_connector, MySQL):
-            return "datetime(%s)" % value.strftime('%Y-%m-%d %H:%M:%S')
-        elif isinstance(self.db_connector, Postgres):
-            return "timestamp '%s'" % value.strftime('%Y-%m-%d %H:%M:%S')
-        elif isinstance(self.db_connector, MsSQL):
-            return "'%s'" % value.strftime('%Y-%m-%d %H:%M:%S')
-
-    def _make_single_custom(self, value):
-        if '%s' in self.custom_data_type_str:
-            return self.custom_data_type_str % value
-        else:
-            return value
-
-    def _make_single_value(self, value):
-        data_type_formatter = {'num': lambda x: x,
-                               'int': lambda x: int(x),
-                               'float': lambda x: float(x),
-                               'str': lambda x: "'%s'" % x,
-                               'date': lambda x: self._make_single_date(x),
-                               'datetime': lambda x: self._make_single_datetime(x),
-                               'custom': lambda x: self._make_single_custom(x)}
-        return data_type_formatter[self.data_type](value)
-
-    def _make_value_list(self, parameter_value):
-        parameter_value = list(set(parameter_value))
-        val_str = ", ".join(str(self._make_single_value(x)) for x in parameter_value)
-        val_str = "(%s)" % val_str
-        return val_str
 
     def _make_query_value(self, pre_value):
         if self.container_type == 'value_list':
@@ -150,18 +139,18 @@ class TemplateParameter(object):
         """
         # If the parameter is independent, and no independent parameter values are given,
         # raise exception.
-        if self.param_type == 'independent' and independent_params is None:
+        if self.parameter_type == 'independent' and independent_params is None:
             raise TemplateParameterException("Independent template parameter '%s' cannot be defined because no "
                                              "independent parameter values were given." % self.name)
         # If the parameter is dependent, and no dataframe is given, raise exception.
-        if self.param_type == 'dependent' and df is None:
+        if self.parameter_type == 'dependent' and df is None:
             raise TemplateParameterException("Dependent template parameter '%s' cannot be defined because no "
                                              "parent dataframe was given." % self.name)
 
-        if self.param_type == 'independent' and self.param_expr_str is None:
+        if self.parameter_type == 'independent' and self.param_expr_str is None:
             pre_value = independent_params[self.name]
             return self._make_query_value(pre_value=pre_value)
-        elif self.param_type == 'dependent' and self.param_expr_str is None:
+        elif self.parameter_type == 'dependent' and self.param_expr_str is None:
             pre_value = df[self.name]
             return self._make_query_value(pre_value=pre_value)
         else:

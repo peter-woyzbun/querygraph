@@ -47,6 +47,7 @@ class JoinContext(object):
         return joined_df
 
     def __str__(self):
+
         # join_context_str = '<%s JOIN <BR /><BR />' % self.join_type.upper()
         join_context_str = '<<TABLE BORDER="0" CELLBORDER="0"><TR><TD VALIGN="top" HEIGHT="10" CELLPADDING="5">%s JOIN</TD></TR>' % self.join_type.upper()
         for parent_col, child_col in zip(self.parent_cols, self.child_cols):
