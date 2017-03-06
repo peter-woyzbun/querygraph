@@ -40,3 +40,24 @@ def create_postgres_daily_ts():
             vendor_name VARCHAR(255) NOT NULL
         )
     """
+
+
+def create_mongo_season_data():
+
+    from pymongo import MongoClient
+
+    client = MongoClient()
+
+    db = client['querygraph-test']
+    seasons = db['seasons']
+
+    seasons_data = [{'season': 'Spring',
+                     'tags': ['growing', 'melting', 'warm', 'dog poop']},
+                    {'season': 'Summer',
+                     'tags': ['sunny', 'hot', 'fun', 'beach', 'vacation']},
+                    {'season': 'Fall',
+                     'tags': ['colours', 'colder', 'leaves', 'halloween']},
+                    {'season': 'Winter',
+                     'tags': ['cold', 'snow', 'christmas', 'skiing']}]
+
+    result = seasons.insert_many(seasons_data)

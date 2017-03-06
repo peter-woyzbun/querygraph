@@ -1,8 +1,7 @@
 import unittest
 import datetime
 
-from querygraph.query.db_types.sqlite.template_parameter import SqliteParameter
-from querygraph.query.db_types.sqlite.query_template import SqliteTemplate
+from querygraph.query.templates.sqlite.query_template import SqliteParameter, SqliteTemplate
 from querygraph.db.test_data.connectors import daily_ts_connector, hourly_ts_connector
 
 
