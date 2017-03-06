@@ -205,4 +205,3 @@ JOIN
 query_parser = QglQuery(qgl_str=test_query)
 query_graph = query_parser.parse()
 
-print query_graph.nodes
