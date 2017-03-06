@@ -10,11 +10,10 @@ class ConnectBlock(object):
     def __init__(self):
         self.db_connectors = dict()
 
-    def __call__(self):
-        print "CONNECTOR BLOCK CALLED!"
+    def __call__(self, connect_block_str):
         block_name = pp.Suppress("CONNECT")
         parser = block_name + pp.OneOrMore(self._connector())
-        return parser
+        parser.parseString(connect_block_str)
 
     @property
     def connector_names(self):
@@ -59,10 +58,11 @@ class RetrieveBlock(object):
         self.query_graph = query_graph
         self.nodes = dict()
 
-    def __call__(self):
+    def __call__(self, retrieve_block_str):
         print "Retrieve block called!"
         single_query_node = self._query_node()
-        return pp.OneOrMore(self._query_node())
+        parser = pp.OneOrMore(self._query_node())
+        parser.parseString(retrieve_block_str)
 
     def _create_query_node(self, query_value, connector_name, node_name, manipulation_set=None):
         print "CREATED QUERY NODE!"
@@ -110,10 +110,10 @@ class JoinBlock(object):
             raise Exception
         self.query_graph = query_graph
 
-    def __call__(self):
+    def __call__(self, join_block_str):
         print "Join block called!"
         join_block = pp.delimitedList(self._node_join(), delim=";")
-        return join_block
+        join_block.parseString(join_block_str)
 
     def _add_join(self, join_type, child_node_name, child_cols, parent_node_name, parent_cols):
         print "CHILD COLS!"
@@ -163,21 +163,18 @@ class QglQuery(object):
         blocks = self.qgl_str.split('RETRIEVE\n')
         connect_block_str = blocks[0]
         connect_block = ConnectBlock()
-        connect_block_parser = connect_block()
-        connect_block_parser.parseString(connect_block_str)
+        connect_block(connect_block_str=connect_block_str)
         print connect_block.db_connectors
         blocks = blocks[1].split('JOIN\n')
         retrieve_block_str = blocks[0]
         print retrieve_block_str
         retrieve_block = RetrieveBlock(connect_block=connect_block, query_graph=self.query_graph)
-        retrieve_block_parser = retrieve_block()
-        retrieve_block_parser.parseString(retrieve_block_str)
+        retrieve_block(retrieve_block_str=retrieve_block_str)
 
         join_block_str = blocks[1]
         print join_block_str
         join_block = JoinBlock(retrieve_block=retrieve_block, query_graph=self.query_graph)
-        join_block_parser = join_block()
-        join_block_parser.parseString(join_block_str)
+        join_block(join_block_str=join_block_str)
         return self.query_graph
 
 
