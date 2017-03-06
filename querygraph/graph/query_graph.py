@@ -73,7 +73,7 @@ class QueryGraph(object):
             raise GraphException("Can only check if graph __contains__ a QueryNode instance.")
         return item in self.nodes.values()
 
-    def _join(self, child_node, parent_node, join_type, on_columns):
+    def join(self, child_node, parent_node, join_type, on_columns):
         if not isinstance(child_node, QueryNode):
             raise GraphConfigException("Can't join an instance that is not a QueryNode - %s." % child_node)
         if not isinstance(parent_node, QueryNode):
@@ -90,16 +90,16 @@ class QueryGraph(object):
                                                        child_col_name=pair_dict[child_node.name])
 
     def inner_join(self, child_node, parent_node, *on_columns):
-        self._join(child_node, parent_node, join_type='inner', *on_columns)
+        self.join(child_node, parent_node, join_type='inner', *on_columns)
 
     def outer_join(self, child_node, parent_node, *on_columns):
-        self._join(child_node=child_node, parent_node=parent_node, join_type='outer', *on_columns)
+        self.join(child_node=child_node, parent_node=parent_node, join_type='outer', *on_columns)
 
     def left_join(self, child_node, parent_node, on_columns):
-        self._join(child_node, parent_node, 'left', on_columns)
+        self.join(child_node, parent_node, 'left', on_columns)
 
     def right_join(self, child_node, parent_node, on_columns):
-        self._join(child_node=child_node, parent_node=parent_node, join_type='right', on_columns=on_columns)
+        self.join(child_node=child_node, parent_node=parent_node, join_type='right', on_columns=on_columns)
 
     def _join_checks(self, child_node, parent_node):
         if child_node not in self:
