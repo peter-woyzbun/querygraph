@@ -1,3 +1,5 @@
+import re
+
 import pyparsing as pp
 
 from querygraph.db.connectors import SQLite, MySQL, Postgres, MongoDb
@@ -6,11 +8,22 @@ from querygraph.graph import QueryGraph
 
 
 class ConnectBlock(object):
+    """
+    Compiler for the CONNECT block of a GQL query. The body of the
+    CONNECT block takes the form:
+
+        <connector_name> <- <connector_type>(<connector kwargs>)
+        ...
+
+    Each connector will be created and stored in the db_connectors
+    dict.
+
+    """
 
     def __init__(self):
         self.db_connectors = dict()
 
-    def __call__(self, connect_block_str):
+    def compile(self, connect_block_str):
         block_name = pp.Suppress("CONNECT")
         parser = block_name + pp.OneOrMore(self._connector())
         parser.parseString(connect_block_str)
@@ -48,6 +61,10 @@ class ConnectBlock(object):
 
 
 class RetrieveBlock(object):
+    """
+    Compiler for the RETRIEVE block string.
+
+    """
 
     def __init__(self, connect_block, query_graph):
         if not isinstance(connect_block, ConnectBlock):
@@ -59,16 +76,14 @@ class RetrieveBlock(object):
         self.nodes = dict()
 
     def __call__(self, retrieve_block_str):
-        print "Retrieve block called!"
-        single_query_node = self._query_node()
+        parser = pp.OneOrMore(self._query_node())
+        parser.parseString(retrieve_block_str)
+
+    def compile(self, retrieve_block_str):
         parser = pp.OneOrMore(self._query_node())
         parser.parseString(retrieve_block_str)
 
     def _create_query_node(self, query_value, connector_name, node_name, manipulation_set=None):
-        print "CREATED QUERY NODE!"
-        print node_name
-        print "QUERY VALUE"
-        print query_value
         db_connector = self.connect_block.db_connectors[connector_name]
         self.nodes[node_name] = QueryNode(name=node_name, query=query_value, db_connector=db_connector)
         self.query_graph.add_node(self.nodes[node_name])
@@ -111,13 +126,14 @@ class JoinBlock(object):
         self.query_graph = query_graph
 
     def __call__(self, join_block_str):
-        print "Join block called!"
+        join_block = pp.delimitedList(self._node_join(), delim=";")
+        join_block.parseString(join_block_str)
+
+    def compile(self, join_block_str):
         join_block = pp.delimitedList(self._node_join(), delim=";")
         join_block.parseString(join_block_str)
 
     def _add_join(self, join_type, child_node_name, child_cols, parent_node_name, parent_cols):
-        print "CHILD COLS!"
-        print child_cols
         child_node = self.query_graph.nodes[child_node_name]
         parent_node = self.query_graph.nodes[parent_node_name]
         on_columns = list()
@@ -160,27 +176,25 @@ class QglQuery(object):
         self.query_graph = QueryGraph()
 
     def parse(self):
-        blocks = self.qgl_str.split('RETRIEVE\n')
+        blocks = re.split("\s*(CONNECT|RETRIEVE|JOIN)\s*[\n]", self.qgl_str)
+        blocks = [block_str for block_str in blocks if block_str not in ('CONNECT', 'RETRIEVE', 'JOIN', '')]
+
         connect_block_str = blocks[0]
         connect_block = ConnectBlock()
-        connect_block(connect_block_str=connect_block_str)
-        print connect_block.db_connectors
-        blocks = blocks[1].split('JOIN\n')
-        retrieve_block_str = blocks[0]
-        print retrieve_block_str
-        retrieve_block = RetrieveBlock(connect_block=connect_block, query_graph=self.query_graph)
-        retrieve_block(retrieve_block_str=retrieve_block_str)
+        connect_block.compile(connect_block_str=connect_block_str)
 
-        join_block_str = blocks[1]
-        print join_block_str
+        retrieve_block_str = blocks[1]
+        retrieve_block = RetrieveBlock(connect_block=connect_block, query_graph=self.query_graph)
+        retrieve_block.compile(retrieve_block_str=retrieve_block_str)
+
+        join_block_str = blocks[2]
         join_block = JoinBlock(retrieve_block=retrieve_block, query_graph=self.query_graph)
-        join_block(join_block_str=join_block_str)
+        join_block.compile(join_block_str=join_block_str)
         return self.query_graph
 
 
 
-test_query = """
-CONNECT
+test_query = """CONNECT
     sqlite_conn <- Sqlite(host='fun host!')
     sqlite_conn_2 <- Sqlite(host='fun host!')
 RETRIEVE
@@ -202,3 +216,6 @@ JOIN
 query_parser = QglQuery(qgl_str=test_query)
 query_graph = query_parser.parse()
 
+
+
+connect_block = pp.nestedExpr(opener="CONNECT", closer="RETRIEVE")
