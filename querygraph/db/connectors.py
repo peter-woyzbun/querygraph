@@ -1,12 +1,24 @@
 from abc import ABCMeta, abstractmethod
 
-
 import sqlite3
 import pandas as pd
 import psycopg2
 import pymssql
 import mysql.connector
-from pymongo import MongoClient
+
+from querygraph.exceptions import QueryGraphException
+
+
+# =================================================
+# Exceptions
+# -------------------------------------------------
+
+class ConnectorError(QueryGraphException):
+    pass
+
+
+class ConnectorImportError(ConnectorError):
+    pass
 
 
 # =================================================
@@ -118,14 +130,14 @@ class MongoDb(DatabaseConnector):
         DatabaseConnector.__init__(self, database_type='Mongodb', host=host, db_name=db_name)
 
     def execute_query(self, query, **kwargs):
+
+        from pymongo import MongoClient
+
         fields = kwargs.get('fields')
         projection_fields = {k: 1 for k in fields}
         client = MongoClient()
-        print self.db_name
         db = client[self.db_name]
-        print db
         collection = db[self.collection]
-        print collection
         results = collection.find(query, projection_fields)
         df = pd.DataFrame(list(results))
         return df

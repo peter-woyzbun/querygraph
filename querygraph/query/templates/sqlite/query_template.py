@@ -30,7 +30,7 @@ class SqliteParameter(BaseTemplateParameter):
 # SQLite Query Template
 # ---------------------------------------------
 
-class SqliteTemplate(BaseQueryTemplate):
+class QueryTemplate(BaseQueryTemplate):
 
     def __init__(self, template_str, db_connector):
         BaseQueryTemplate.__init__(self,

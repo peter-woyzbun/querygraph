@@ -26,7 +26,7 @@ class MongoDbParameter(BaseTemplateParameter):
 # ---------------------------------------------
 
 
-class MongoDbTemplate(BaseQueryTemplate):
+class QueryTemplate(BaseQueryTemplate):
 
     def __init__(self, template_str, db_connector, fields):
         self.fields = fields

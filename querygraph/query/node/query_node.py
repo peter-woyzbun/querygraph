@@ -5,10 +5,10 @@ import pandas as pd
 
 from querygraph.exceptions import QueryGraphException
 from querygraph.query.template import QueryTemplate
+from querygraph.query.templates import sqlite, postgres, mysql, mongodb
 from querygraph.query.node.join_context import JoinContext, OnColumn
 from querygraph.query.node.execution_thread import ExecutionThread
-from querygraph.db.connectors import DatabaseConnector
-from querygraph.db.test_data import connectors
+from querygraph.db import connectors
 from querygraph.manipulation.expression.evaluator import Evaluator
 from querygraph.manipulation.set import ManipulationSet
 
@@ -35,13 +35,14 @@ class AddColumnException(QueryGraphException):
 
 class QueryNode(object):
 
-    def __init__(self, name, query, db_connector):
+    def __init__(self, name, query, db_connector, mongo_fields=None):
         self.name = name
         self.query = query
-        if not isinstance(db_connector, DatabaseConnector):
+        if not isinstance(db_connector, connectors.DatabaseConnector):
             raise QueryGraphException("The db_connector for node '%s' must be a "
                                       "DatabaseConnector instance." % self.name)
         self.db_connector = db_connector
+        self.mongo_fields = mongo_fields
         self.children = list()
         self.parent = None
         self.join_context = JoinContext(child_node_name=self.name)
@@ -140,6 +141,18 @@ class QueryNode(object):
         for query_node in reverse_topological_ordering:
             query_node.join_with_parent()
 
+    def _make_query_template(self):
+        if isinstance(self.db_connector, connectors.SQLite):
+            return sqlite.QueryTemplate(template_str=self.query, db_connector=self.db_connector)
+        elif isinstance(self.db_connector, connectors.Postgres):
+            return postgres.QueryTemplate(template_str=self.query, db_connector=self.db_connector)
+        elif isinstance(self.db_connector, connectors.MySQL):
+            return mysql.QueryTemplate(template_str=self.query, db_connector=self.db_connector)
+        elif isinstance(self.db_connector, connectors.MongoDb):
+            return mongodb.QueryTemplate(template_str=self.query,
+                                         db_connector=self.db_connector,
+                                         fields=self.mongo_fields)
+
     def _execute(self, **independent_param_vals):
         """
         Execute this QueryNode's query. This requires:
@@ -156,7 +169,7 @@ class QueryNode(object):
 
 
         """
-        query_template = QueryTemplate(query=self.query, db_connector=self.db_connector)
+        query_template = self._make_query_template()
         if self.parent is not None:
             parent_df = self.parent.df
             df = query_template.execute(df=parent_df, **independent_param_vals)
@@ -168,7 +181,8 @@ class QueryNode(object):
         self.already_executed = True
 
     def execution_thread(self, results_df_container, **independent_param_vals):
-        thread_query_template = QueryTemplate(query=self.query, db_connector=copy.deepcopy(self.db_connector))
+        thread_query_template = self._make_query_template()
+        thread_query_template.db_connector = copy.deepcopy(self.db_connector)
         if self.parent is None:
             parent_df = None
         else:
@@ -201,7 +215,7 @@ class QueryNode(object):
 
 
 
-parent_node = QueryNode(query='', db_connector=connectors.daily_ts_connector, name='parent_node')
-child_node = QueryNode(query='', db_connector=connectors.daily_ts_connector, name='child_node')
+# parent_node = QueryNode(query='', db_connector=connectors.daily_ts_connector, name='parent_node')
+# child_node = QueryNode(query='', db_connector=connectors.daily_ts_connector, name='child_node')
 
-print parent_node['parent_col'] >> child_node['child_col']
+# print parent_node['parent_col'] >> child_node['child_col']

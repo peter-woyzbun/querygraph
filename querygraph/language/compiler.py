@@ -24,8 +24,7 @@ class ConnectBlock(object):
         self.db_connectors = dict()
 
     def compile(self, connect_block_str):
-        block_name = pp.Suppress("CONNECT")
-        parser = block_name + pp.OneOrMore(self._connector())
+        parser = pp.OneOrMore(self._connector())
         parser.parseString(connect_block_str)
 
     @property
@@ -169,27 +168,27 @@ class JoinBlock(object):
         return single_join
 
 
-class QglQuery(object):
+class QGLCompiler(object):
 
     def __init__(self, qgl_str):
         self.qgl_str = qgl_str
         self.query_graph = QueryGraph()
+        self.connect_block = ConnectBlock()
+        self.retrieve_block = RetrieveBlock(connect_block=self.connect_block, query_graph=self.query_graph)
+        self.join_block = JoinBlock(retrieve_block=self.retrieve_block, query_graph=self.query_graph)
 
-    def parse(self):
+    def compile(self):
         blocks = re.split("\s*(CONNECT|RETRIEVE|JOIN)\s*[\n]", self.qgl_str)
         blocks = [block_str for block_str in blocks if block_str not in ('CONNECT', 'RETRIEVE', 'JOIN', '')]
 
         connect_block_str = blocks[0]
-        connect_block = ConnectBlock()
-        connect_block.compile(connect_block_str=connect_block_str)
+        self.connect_block.compile(connect_block_str=connect_block_str)
 
         retrieve_block_str = blocks[1]
-        retrieve_block = RetrieveBlock(connect_block=connect_block, query_graph=self.query_graph)
-        retrieve_block.compile(retrieve_block_str=retrieve_block_str)
+        self.retrieve_block.compile(retrieve_block_str=retrieve_block_str)
 
         join_block_str = blocks[2]
-        join_block = JoinBlock(retrieve_block=retrieve_block, query_graph=self.query_graph)
-        join_block.compile(join_block_str=join_block_str)
+        self.join_block.compile(join_block_str=join_block_str)
         return self.query_graph
 
 
@@ -213,7 +212,7 @@ JOIN
 """
 
 
-query_parser = QglQuery(qgl_str=test_query)
+query_parser = QGLCompiler(qgl_str=test_query)
 query_graph = query_parser.parse()
 
 
