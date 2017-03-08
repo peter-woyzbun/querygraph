@@ -89,14 +89,14 @@ class QueryGraph(object):
             child_node.join_context.add_on_column_pair(parent_col_name=pair_dict[parent_node.name],
                                                        child_col_name=pair_dict[child_node.name])
 
-    def inner_join(self, child_node, parent_node, *on_columns):
-        self.join(child_node, parent_node, join_type='inner', *on_columns)
+    def inner_join(self, child_node, parent_node, on_columns):
+        self.join(child_node=child_node, parent_node=parent_node, join_type='inner', on_columns=on_columns)
 
-    def outer_join(self, child_node, parent_node, *on_columns):
-        self.join(child_node=child_node, parent_node=parent_node, join_type='outer', *on_columns)
+    def outer_join(self, child_node, parent_node, on_columns):
+        self.join(child_node=child_node, parent_node=parent_node, join_type='outer', on_columns=on_columns)
 
     def left_join(self, child_node, parent_node, on_columns):
-        self.join(child_node, parent_node, 'left', on_columns)
+        self.join(child_node=child_node, parent_node=parent_node, join_type='left', on_columns=on_columns)
 
     def right_join(self, child_node, parent_node, on_columns):
         self.join(child_node=child_node, parent_node=parent_node, join_type='right', on_columns=on_columns)

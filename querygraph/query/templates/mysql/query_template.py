@@ -1,15 +1,14 @@
 import datetime
 
 
-from querygraph.query.templates.base_parameter import BaseTemplateParameter
-from querygraph.query.templates.base_template import BaseQueryTemplate
+from querygraph.query.templates import base
 
 
 # =============================================
 # MySql Template Parameter
 # ---------------------------------------------
 
-class MySqlParameter(BaseTemplateParameter):
+class MySqlParameter(base.TemplateParameter):
 
     CHILD_DATA_TYPES = {
         'datetime': {datetime.datetime: lambda x: "'%s'" % x.strftime('%Y-%m-%d %H:%M:%S'),
@@ -21,7 +20,7 @@ class MySqlParameter(BaseTemplateParameter):
     }
 
     def __init__(self, parameter_str, parameter_type):
-        BaseTemplateParameter.__init__(self,
+        base.TemplateParameter.__init__(self,
                                        parameter_str=parameter_str,
                                        parameter_type=parameter_type)
 
@@ -30,10 +29,10 @@ class MySqlParameter(BaseTemplateParameter):
 # MySql Query Template
 # ---------------------------------------------
 
-class QueryTemplate(BaseQueryTemplate):
+class QueryTemplate(base.QueryTemplate):
 
     def __init__(self, template_str, db_connector):
-        BaseQueryTemplate.__init__(self,
+        base.QueryTemplate.__init__(self,
                                    template_str=template_str,
                                    db_connector=db_connector,
                                    parameter_class=MySqlParameter)

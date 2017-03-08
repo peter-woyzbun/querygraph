@@ -82,7 +82,8 @@ class QueryNode(object):
         """
         yield self
         for child in self.children:
-            yield child
+            for child_child in child:
+                yield child_child
 
     def creates_cycle(self, child_node):
         """
@@ -202,7 +203,6 @@ class QueryNode(object):
         :param kwargs:
         :return:
         """
-        print "Executing!"
         for query_node in self:
             query_node._execute(**independent_param_vals)
         if self.is_root_node:

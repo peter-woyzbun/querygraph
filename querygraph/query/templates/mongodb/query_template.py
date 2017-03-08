@@ -1,18 +1,17 @@
 import datetime
 import ast
 
-from querygraph.query.templates.base_parameter import BaseTemplateParameter
-from querygraph.query.templates.base_template import BaseQueryTemplate
+from querygraph.query.templates import base
 
 
 # =============================================
 # MongoDb Template Parameter
 # ---------------------------------------------
 
-class MongoDbParameter(BaseTemplateParameter):
+class MongoDbParameter(base.TemplateParameter):
 
     def __init__(self, parameter_str, parameter_type):
-        BaseTemplateParameter.__init__(self, parameter_str, parameter_type)
+        base.TemplateParameter.__init__(self, parameter_str, parameter_type)
 
     def _make_value_list(self, parameter_value):
         parameter_value = list(set(parameter_value))
@@ -26,11 +25,11 @@ class MongoDbParameter(BaseTemplateParameter):
 # ---------------------------------------------
 
 
-class QueryTemplate(BaseQueryTemplate):
+class QueryTemplate(base.QueryTemplate):
 
     def __init__(self, template_str, db_connector, fields):
         self.fields = fields
-        BaseQueryTemplate.__init__(self,
+        base.QueryTemplate.__init__(self,
                                    template_str=template_str,
                                    db_connector=db_connector,
                                    parameter_class=MongoDbParameter)

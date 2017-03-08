@@ -89,10 +89,12 @@ class MySQL(DatabaseConnector):
                                    db_name=db_name, user=user, password=password)
 
     def execute_query(self, query):
+        print "executed mysql query!"
         conn = mysql.connector.connect(user=self.user, password=self.password,
                                        host=self.host,
                                        database=self.db_name)
         df = pd.read_sql_query(query, conn)
+        print df
         conn.close()
         return df
 
@@ -179,6 +181,16 @@ class MongoDb(DatabaseConnector):
 # =================================================
 # TEST CONNECTOR
 # -------------------------------------------------
+
+
+class NullConnector(DatabaseConnector):
+
+    def __init__(self):
+        DatabaseConnector.__init__(self, database_type='null')
+
+    def execute_query(self, query):
+        return None
+
 
 class TestConnector(DatabaseConnector):
 

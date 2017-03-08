@@ -34,6 +34,7 @@ class JoinContext(object):
         return column_name in list(df.columns.values)
 
     def _column_check(self, parent_df, child_df):
+        """ Check if that dataframes contain the columns needed for joining."""
         for col in self.parent_cols:
             if not self.df_contains_column(parent_df, col):
                 raise JoinContextException("Column does not exist.")
@@ -41,9 +42,14 @@ class JoinContext(object):
             if not self.df_contains_column(child_df, col):
                 raise JoinContextException("Column does not exist.")
 
+    def _rename_duplicates(self, parent_df, child_df):
+        pass
+
     def apply_join(self, parent_df, child_df):
+        print "Joining! Type: %s" % self.join_type
         self._column_check(parent_df, child_df)
-        joined_df = parent_df.merge(child_df, how=self.join_type, left_on=self.parent_cols, right_on=self.child_cols)
+        joined_df = parent_df.merge(child_df, how=self.join_type, left_on=self.parent_cols,
+                                    right_on=self.child_cols, copy=False)
         return joined_df
 
     def __str__(self):
