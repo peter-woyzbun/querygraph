@@ -2,7 +2,6 @@ import re
 from abc import abstractmethod
 
 from querygraph.exceptions import QueryGraphException
-from querygraph.query.template.parameter import TemplateParameter
 
 
 # =============================================

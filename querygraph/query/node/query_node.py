@@ -4,7 +4,6 @@ import copy
 import pandas as pd
 
 from querygraph.exceptions import QueryGraphException
-from querygraph.query.template import QueryTemplate
 from querygraph.query.templates import sqlite, postgres, mysql, mongodb
 from querygraph.query.node.join_context import JoinContext, OnColumn
 from querygraph.query.node.execution_thread import ExecutionThread
@@ -52,11 +51,8 @@ class QueryNode(object):
         self.manipulation_set = ManipulationSet()
 
     def is_independent(self):
-        if self.is_root_node:
-            return True
-        else:
-            query_template = QueryTemplate(query=self.query, db_connector=self.db_connector)
-            return not query_template.has_dependent_parameters()
+        # Todo: this.
+        pass
 
     def root_node(self):
         if self.parent is None:

@@ -1,1 +1,1 @@
-from query_template import QueryTemplate
+from query_template import QueryTemplate, PostgresParameter

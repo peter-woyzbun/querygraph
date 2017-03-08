@@ -12,7 +12,7 @@ class ConnectBlock(object):
     Compiler for the CONNECT block of a GQL query. The body of the
     CONNECT block takes the form:
 
-        <connector_name> <- <connector_type>(<connector kwargs>)
+        <connector_name> <- <connector_type>(<**kwargs>)
         ...
 
     Each connector will be created and stored in the db_connectors
@@ -61,7 +61,22 @@ class ConnectBlock(object):
 
 class RetrieveBlock(object):
     """
-    Compiler for the RETRIEVE block string.
+    Compiler for the RETRIEVE block string. The body of the RETRIEVE block
+    takes the form:
+
+        QUERY |
+            <query_template_string>;
+        USING <connector_name>
+        THEN |
+            <manipulation_1_type>(<**kwargs>) >>
+            ...
+            <manipulation_n_type>(<**kwargs>);
+        AS <node_name>
+        ---
+        ...
+
+    where the 'THEN|...;' block is the optional manipulation set.
+
 
     """
 
@@ -74,12 +89,8 @@ class RetrieveBlock(object):
         self.query_graph = query_graph
         self.nodes = dict()
 
-    def __call__(self, retrieve_block_str):
-        parser = pp.OneOrMore(self._query_node())
-        parser.parseString(retrieve_block_str)
-
     def compile(self, retrieve_block_str):
-        parser = pp.OneOrMore(self._query_node())
+        parser = pp.delimitedList(self._query_node(), delim="---")
         parser.parseString(retrieve_block_str)
 
     def _create_query_node(self, query_value, connector_name, node_name, manipulation_set=None):
@@ -91,9 +102,7 @@ class RetrieveBlock(object):
         query_key = pp.Suppress("QUERY")
         query_value = pp.Suppress("|") + pp.SkipTo(pp.Suppress(";"), include=True)
 
-        connector_names = [pp.Literal(conn_name) for conn_name in self.connect_block.connector_names]
         connector_name = pp.oneOf(" ".join(self.connect_block.connector_names))
-        # connector_name = reduce(lambda x, y: x | y, connector_names)
 
         using_block = pp.Suppress("USING") + connector_name
 
@@ -115,6 +124,14 @@ class RetrieveBlock(object):
 
 
 class JoinBlock(object):
+    """
+    Compiler for the JOIN block string. The body of the JOIN block
+    takes the form:
+
+        <join_type> (<child_node_name>[<col_1>,...,<col_n>] ==> <parent_node_name>[<col_1>,...,<col_n>]);
+        ...
+
+    """
 
     def __init__(self, retrieve_block, query_graph):
         if not isinstance(retrieve_block, RetrieveBlock):
@@ -123,10 +140,6 @@ class JoinBlock(object):
         if not isinstance(query_graph, QueryGraph):
             raise Exception
         self.query_graph = query_graph
-
-    def __call__(self, join_block_str):
-        join_block = pp.delimitedList(self._node_join(), delim=";")
-        join_block.parseString(join_block_str)
 
     def compile(self, join_block_str):
         join_block = pp.delimitedList(self._node_join(), delim=";")
@@ -203,6 +216,7 @@ RETRIEVE
         WHERE season IN {% seasons|value_list:str %};
 	USING sqlite_conn
 	AS NODE_X
+	---
 	QUERY |
 		{"tags" : {"$in" : {{ seasons_tags|value_list:str }} }};
 	USING sqlite_conn_2
@@ -213,8 +227,6 @@ JOIN
 
 
 query_parser = QGLCompiler(qgl_str=test_query)
-query_graph = query_parser.parse()
+query_graph = query_parser.compile()
 
-
-
-connect_block = pp.nestedExpr(opener="CONNECT", closer="RETRIEVE")
+print query_graph.nodes
