@@ -156,7 +156,6 @@ class MongoDb(DatabaseConnector):
         DatabaseConnector.__init__(self, database_type='Mongodb', host=host, db_name=db_name)
 
     def execute_query(self, query, **kwargs):
-
         from pymongo import MongoClient
 
         fields = kwargs.get('fields')
@@ -176,6 +175,35 @@ class MongoDb(DatabaseConnector):
         collection = db[self.collection]
 
         result = collection.insert_many(data)
+
+
+class ElasticSearch(DatabaseConnector):
+
+    def __init__(self, host, port, doc_type):
+        self.port = port
+        self.doc_type = doc_type
+        DatabaseConnector.__init__(self, database_type='ElasticSearch', host=host)
+
+    def execute_query(self, query):
+
+        from elasticsearch import Elasticsearch
+
+        es = Elasticsearch([{'host': self.host, 'port': self.port}])
+
+    def insert_entry(self, index, id, data):
+
+        from elasticsearch import Elasticsearch
+
+        es = Elasticsearch([{'host': self.host, 'port': self.port}])
+        es.index(index=index, doc_type=self.doc_type, id=id, body=data)
+
+
+class InfluxDb(DatabaseConnector):
+
+    def __init__(self, host, port, user, password, db_name):
+        self.port = port
+        DatabaseConnector.__init__(self, database_type='InfluxDb',
+                                   host=host, db_name=db_name, user=user, password=password)
 
 
 # =================================================

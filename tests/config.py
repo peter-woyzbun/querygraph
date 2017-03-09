@@ -39,5 +39,9 @@ DATABASES = {
         'HOST': 'localhost',
         'PORT': 27017,
         'DB_NAME': 'querygraph-test'
+    },
+    'elasticsearch': {
+        'HOST': 'localhost',
+        'PORT': 9200
     }
 }
