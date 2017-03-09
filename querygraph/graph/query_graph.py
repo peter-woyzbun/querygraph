@@ -74,6 +74,31 @@ class QueryGraph(object):
         return item in self.nodes.values()
 
     def join(self, child_node, parent_node, join_type, on_columns):
+        """
+        Join a child QueryNode to a parent QueryNode. The actual 'edge' data is handled
+        by the QueryNode class - the child node is assigned the parent node, and the
+        child node is added to the parent node's list of 'children' nodes. The data
+        pertaining to how the child node's dataframe is to be joined with the parent
+        node's dataframe is stored in the child node's 'join context'.
+
+        Parameters
+        ----------
+        child_node : QueryNode
+            The node to be joined with the parent node after its query is executed
+            and resulting dataframe obtained.
+        parent_node : QueryNode
+            Node child will be joined with.
+        join_type : str {'left' or 'right' or 'inner' or 'outer'}
+            The type of join to use.
+        on_columns : list of dictionaries
+            A list of dictionaries, each dictionary containing two key-value pairs:
+            (1) a key mapping the parent node's name to a single column to join on,
+            and (2) a key mapping the child node's name to a single column to be
+            joined with the given parent column. E.g:
+
+                {'parent_node_name': 'col_x', 'child_node_name': 'col_y'}
+
+        """
         if not isinstance(child_node, QueryNode):
             raise GraphConfigException("Can't join an instance that is not a QueryNode - %s." % child_node)
         if not isinstance(parent_node, QueryNode):
