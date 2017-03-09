@@ -2,8 +2,6 @@ import datetime
 
 
 from querygraph.query.templates import base
-from querygraph.query.templates.base_template import BaseQueryTemplate
-from querygraph.query.templates.base_parameter import BaseTemplateParameter
 
 
 # =============================================
@@ -23,8 +21,8 @@ class SqliteParameter(base.TemplateParameter):
 
     def __init__(self, parameter_str, parameter_type):
         base.TemplateParameter.__init__(self,
-                                       parameter_str=parameter_str,
-                                       parameter_type=parameter_type)
+                                        parameter_str=parameter_str,
+                                        parameter_type=parameter_type)
 
 
 # =============================================
@@ -35,9 +33,9 @@ class QueryTemplate(base.QueryTemplate):
 
     def __init__(self, template_str, db_connector):
         base.QueryTemplate.__init__(self,
-                                   template_str=template_str,
-                                   db_connector=db_connector,
-                                   parameter_class=SqliteParameter)
+                                    template_str=template_str,
+                                    db_connector=db_connector,
+                                    parameter_class=SqliteParameter)
 
     def execute(self, df=None, **independent_param_vals):
         if self.rendered_query is not None:

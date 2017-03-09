@@ -1,7 +1,7 @@
 import threading
 
 from querygraph.exceptions import QueryGraphException
-from querygraph.query.templates.base_template import BaseQueryTemplate
+from querygraph.query.templates import base
 
 
 class ExecutionThread(threading.Thread):
@@ -10,7 +10,7 @@ class ExecutionThread(threading.Thread):
 
     def __init__(self, query_template, node_name, result_df_container, independent_param_vals):
         threading.Thread.__init__(self)
-        if not isinstance(query_template, BaseQueryTemplate):
+        if not isinstance(query_template, base.QueryTemplate):
             raise QueryGraphException
         self.query_template = query_template
         self.node_name = node_name

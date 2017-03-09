@@ -30,9 +30,9 @@ class QueryTemplate(base.QueryTemplate):
     def __init__(self, template_str, db_connector, fields):
         self.fields = fields
         base.QueryTemplate.__init__(self,
-                                   template_str=template_str,
-                                   db_connector=db_connector,
-                                   parameter_class=MongoDbParameter)
+                                    template_str=template_str,
+                                    db_connector=db_connector,
+                                    parameter_class=MongoDbParameter)
 
     def _post_render_value(self, render_value):
         post_value = ast.literal_eval(render_value)

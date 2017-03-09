@@ -24,11 +24,11 @@ class DisconnectedNodes(GraphException):
 class QueryGraph(object):
 
     def __init__(self):
+        # Dictionary that maps node names to their instances.
         self.nodes = dict()
 
     def add_node(self, query_node):
-        """
-        Add a QueryNode to the QueryGraph.
+        """ Add a QueryNode to the QueryGraph.
 
         Parameters
         ----------
@@ -115,7 +115,25 @@ class QueryGraph(object):
             raise CycleException("Joining parent node '%s' with child node '%s' would"
                                  " create a cycle in the graph." % (parent_node.name, child_node.name))
 
-    def _parallel_execute(self, **independent_param_vals):
+    def _parallel_execute(self, independent_param_vals):
+        """
+        Execution the QueryGraph in 'parallel'. For each node generation
+        contained in the graph, this requires:
+
+            (1) Creating execution threads for each node, passing them each
+                a dict for storing their retrieval result.
+            (2) Running and completing each thread process.
+            (3) Mapping the retrieval output to the appropriate nodes.
+            (4) Execution each node's manipulation set (if non-empty).
+
+
+        Parameters
+        ----------
+        independent_param_vals : dict
+            Dictionary mapping independent parameter names to values - for
+            use in template rendering.
+
+        """
         for generation in self.node_generations():
             results_df_container = dict()
             threads = [node.execution_thread(results_df_container, **independent_param_vals) for node in generation]
@@ -130,13 +148,32 @@ class QueryGraph(object):
                     node._execute_manipulation_set()
 
     def parallel_execute(self, **independent_param_vals):
-        self._parallel_execute(**independent_param_vals)
+        self._parallel_execute(independent_param_vals=independent_param_vals)
         self.root_node.fold_children()
         return self.root_node.df
 
     def node_generations(self):
         """
-        Iterable that returns...
+        Iterable that returns lists containing each 'generation' of
+        nodes contained in the graph. In the example graph below,
+        the first generation contains the node labeled '1', the second
+        generation contains both nodes labeled '2', and the third
+        generation contains only the node labeled '3'.
+
+                      +---+
+                  +---+ 1 +---+
+                  |   +---+   |
+                  |           |
+                +-v-+       +-v-+
+                | 2 |       | 2 |
+                +-+-+       +---+
+                  |
+                +-v-+
+                | 3 |
+                +---+
+
+        Each generation is yielded as a list containing the node
+        instances.
 
         """
         parent_generation = [self.root_node]
@@ -187,70 +224,3 @@ class QueryGraph(object):
                 g.edge(child_node.name, node.name, label='%s' % str(child_node.join_context), fontsize='6',
                          style='dashed', minlen='4')
         g.render(save_path)
-
-
-class MalformedYaml(GraphException):
-    pass
-
-
-class YamlQueryGraph(QueryGraph):
-
-    DB_CONNECTORS = {'sqlite': SQLite,
-                     'mysql': MySQL,
-                     'postgres': Postgres}
-
-    MANIPULATION_TYPES = {'CREATE': Create}
-
-    def __init__(self, yaml_path=None, yaml_str=None):
-        self.yaml_path = yaml_path
-        self.yaml_str = yaml_str
-        self.db_connectors = dict()
-        QueryGraph.__init__(self)
-
-    def _create_graph(self):
-        if self.yaml_path:
-            graph_data = yaml.load(file('%s' % self.yaml_path, 'r'))
-        else:
-            graph_data = yaml.load(self.yaml_str)
-        self._key_check(data=graph_data, required_keys=('DATABASES', 'QUERY_NODES'), container_name='Query Graph')
-
-    def _create_db_connectors(self, graph_data):
-        connector_dict = graph_data['DATABASES']
-        for conn_name, conn_dict in connector_dict.item():
-            self._key_check(conn_dict, required_keys=('TYPE', ), container_name="'%s' connector" % conn_name)
-            db_type = conn_dict.pop('TYPE')
-            self.db_connectors[conn_name] = self._db_connector(conn_name, db_type, conn_dict)
-
-    def _db_connector(self, conn_name, db_type, conn_dict):
-        conn_class = self.DB_CONNECTORS[db_type]
-        required_keys = [key.upper() for key in inspect.getargspec(conn_class.__init__)]
-        self._key_check(data=conn_dict, required_keys=required_keys, container_name='%s connector' % conn_name)
-        return conn_class(**conn_dict)
-
-    def _create_nodes(self, graph_data):
-        query_nodes_dict = graph_data['QUERY_NODES']
-        for node_name, node_dict in query_nodes_dict.items():
-            self._key_check(data=node_dict, required_keys=['DATABASE', 'QUERY'], container_name='%s node' % node_name)
-            if node_dict['DATABASE'] not in self.db_connectors.keys():
-                raise MalformedYaml("The database connector '%s' for query node"
-                                    " '%s' is not defined." % (node_dict['DATABASE'], node_name))
-
-    def _query_node(self, node_name, node_dict):
-        db_connector_name = node_dict['DATABASE']
-        query_node = QueryNode(name=node_name,
-                               query=node_dict['QUERY'],
-                               db_connector=self.db_connectors[db_connector_name])
-        if 'MANIPULATION_SET' in node_dict:
-            for manipulation_dict in node_dict['MANIPULATION_SET']:
-                manipulation_type = manipulation_dict.keys()[0]
-                if manipulation_type == 'CREATE':
-                    col_list = manipulation_dict.values()[0]
-                    for create_col in col_list:
-                        query_node.manipulation_set += Create(new_col_name=create_col.keys()[0],
-                                                              new_col_expression=create_col.values()[0])
-
-    @staticmethod
-    def _key_check(data, required_keys, container_name):
-        for key in required_keys:
-            if key not in data:
-                raise MalformedYaml("'%s' missing in %s data." % (key, container_name))
