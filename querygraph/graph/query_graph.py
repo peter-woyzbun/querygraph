@@ -3,6 +3,7 @@ import inspect
 import yaml
 from graphviz import Digraph
 
+from querygraph.language.compiler import QGLCompiler
 from querygraph.query.node import QueryNode
 from querygraph.graph.exceptions import GraphException, GraphConfigException, CycleException
 from querygraph.db.connectors import SQLite, MySQL, Postgres
@@ -23,12 +24,23 @@ class DisconnectedNodes(GraphException):
 
 class QueryGraph(object):
 
-    def __init__(self):
+    """
+    QueryGraph class containing core logic for creating and executing
+    query graphs.
+
+
+    """
+
+    def __init__(self, qgl_str=None):
         # Dictionary that maps node names to their instances.
         self.nodes = dict()
+        if qgl_str is not None:
+            compiler = QGLCompiler(qgl_str=qgl_str, query_graph=self)
+            compiler.compile()
 
     def add_node(self, query_node):
-        """ Add a QueryNode to the QueryGraph.
+        """
+        Add a QueryNode to the QueryGraph.
 
         Parameters
         ----------

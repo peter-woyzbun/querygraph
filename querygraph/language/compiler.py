@@ -4,7 +4,6 @@ import pyparsing as pp
 
 from querygraph.db.connectors import SQLite, MySQL, Postgres, MongoDb
 from querygraph.query.node import QueryNode
-from querygraph.graph import QueryGraph
 
 
 class ConnectBlock(object):
@@ -84,8 +83,6 @@ class RetrieveBlock(object):
         if not isinstance(connect_block, ConnectBlock):
             raise Exception
         self.connect_block = connect_block
-        if not isinstance(query_graph, QueryGraph):
-            raise Exception
         self.query_graph = query_graph
         self.nodes = dict()
 
@@ -137,8 +134,6 @@ class JoinBlock(object):
         if not isinstance(retrieve_block, RetrieveBlock):
             raise Exception
         self.retrieve_block = retrieve_block
-        if not isinstance(query_graph, QueryGraph):
-            raise Exception
         self.query_graph = query_graph
 
     def compile(self, join_block_str):
@@ -183,9 +178,9 @@ class JoinBlock(object):
 
 class QGLCompiler(object):
 
-    def __init__(self, qgl_str):
+    def __init__(self, qgl_str, query_graph):
         self.qgl_str = qgl_str
-        self.query_graph = QueryGraph()
+        self.query_graph = query_graph
         self.connect_block = ConnectBlock()
         self.retrieve_block = RetrieveBlock(connect_block=self.connect_block, query_graph=self.query_graph)
         self.join_block = JoinBlock(retrieve_block=self.retrieve_block, query_graph=self.query_graph)
@@ -226,7 +221,7 @@ JOIN
 """
 
 
-query_parser = QGLCompiler(qgl_str=test_query)
-query_graph = query_parser.compile()
+# query_parser = QGLCompiler(qgl_str=test_query)
+# query_graph = query_parser.compile()
 
-print query_graph.nodes
+# print query_graph.nodes
