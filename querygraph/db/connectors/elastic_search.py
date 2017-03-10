@@ -17,6 +17,5 @@ class ElasticSearch(base.DatabaseConnector):
 
     def insert_entry(self, index, id, data):
 
-
         es = Elasticsearch([{'host': self.host, 'port': self.port}])
         es.index(index=index, doc_type=self.doc_type, id=id, body=data)

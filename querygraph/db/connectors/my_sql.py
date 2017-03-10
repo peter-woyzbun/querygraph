@@ -5,10 +5,9 @@ from querygraph.db.connectors import base
 
 
 class MySQL(base.DatabaseConnector):
-
     def __init__(self, host, db_name, user, password):
         base.DatabaseConnector.__init__(self, database_type='MySql', host=host,
-                                   db_name=db_name, user=user, password=password)
+                                        db_name=db_name, user=user, password=password)
 
     def execute_query(self, query):
         conn = mysql.connector.connect(user=self.user, password=self.password,

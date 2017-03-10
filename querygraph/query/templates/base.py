@@ -2,7 +2,7 @@ import re
 from abc import abstractmethod
 
 import numpy as np
-from pyparsing import Suppress, Word, alphanums, alphas, SkipTo, Literal, ParseException
+from pyparsing import Suppress, Word, alphanums, alphas, SkipTo, Literal, ParseException, Keyword
 
 from querygraph.manipulation.expression.evaluator import Evaluator
 from querygraph.exceptions import QueryGraphException
@@ -30,11 +30,12 @@ class IndependentParameterException(QueryTemplateException):
 
 class QueryTemplate(object):
 
-    def __init__(self, template_str, db_connector, parameter_class):
+    def __init__(self, template_str, db_connector, parameter_class, fields=None):
         self.template_str = template_str
         self.db_connector = db_connector
         self.rendered_query = None
         self.parameter_class = parameter_class
+        self.fields = fields
 
     def render(self, df=None, **independent_param_vals):
         """
@@ -96,6 +97,43 @@ class ParameterParseException(TemplateParameterException):
 
 class TemplateParameter(object):
 
+    """
+    Base query template parameter class. This class handles the conversion
+    of given parameter values into the form required for query execution.
+    Parameter strings have one of two possible forms:
+
+        <parameter_name>|<container_type>:<data_type>
+
+        or
+
+        [<manipulation_expression>]|<container_type>:<data_type>
+
+
+    Parameters
+    ----------
+    parameter_str : str
+        The raw parameter string.
+    parameter_type : str
+        The type of parameter: independent or dependent
+
+    Attributes
+    ----------
+    name : str or None
+        The name assigned to the parameter - this will be None if a
+        manipulation expression is provided in place of a parameter
+        name (see above).
+    data_type : str (after initial parse)
+        The data type of the parameter query value - this determines
+        how the value is rendered. For example, a 'str' data type
+        will likely require quotes (e.g. in SQL queries).
+    custom_data_type_str : str (after initial parse)
+        Desc
+    container_type : str (after initial parse)
+        Desc
+
+
+    """
+
     GENERIC_DATA_TYPES = {'int': {int: lambda x: x,
                                   np.int64: lambda x: x,
                                   np.int32: lambda x: x,
@@ -117,6 +155,7 @@ class TemplateParameter(object):
     CONTAINER_TYPES = dict()
 
     def __init__(self, parameter_str, parameter_type):
+        # Todo: make parameter type bool (independent t/f)
         self.parameter_str = parameter_str
         self.name = None
         self.parameter_type = parameter_type
@@ -142,8 +181,11 @@ class TemplateParameter(object):
 
     @property
     def _data_type_parser(self):
-        data_type_literals = [Literal(d_type) for d_type in self.DATA_TYPES.keys()]
-        data_type = reduce(lambda x, y: x | y, data_type_literals)
+        """ Return Pyparsing parser object for parsing data type. """
+        # Create a keyword for each data type.
+        data_type_keywords = [Keyword(d_type) for d_type in self.DATA_TYPES.keys()]
+        # This is equivalent to: (<keyword_1> | <keyword_2> | ... | <keyword_n>)
+        data_type = reduce(lambda x, y: x | y, data_type_keywords)
         return data_type
 
     def _set_attribute(self, target, value):
@@ -188,6 +230,7 @@ class TemplateParameter(object):
         data_type.addParseAction(lambda x: self._set_attribute(target='data_type', value=x[0]))
 
         parameter_block = (param_declaration + Suppress("|") + container_type + Suppress(":") + data_type)
+
         try:
             parameter_block.parseString(self.parameter_str)
         except ParseException:
