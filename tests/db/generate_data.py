@@ -47,4 +47,7 @@ def insert_elastic_search_album_data():
     connector = connectors.elastic_search_albums
 
     for id, data in enumerate(nosql_data):
-        connector.insert_entry(index='album', id=id, data=data)
+        connector.insert_entry(id=id, data=data)
+
+
+print connectors.elastic_search_albums.execute_query(query={"terms": {"tags": ['rock', 'germany']}})

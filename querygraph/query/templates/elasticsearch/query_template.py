@@ -8,7 +8,7 @@ from querygraph.query.templates import base
 # MongoDb Template Parameter
 # ---------------------------------------------
 
-class MongoDbParameter(base.TemplateParameter):
+class ElasticSearchParameter(base.TemplateParameter):
 
     def __init__(self, parameter_str, parameter_type):
         base.TemplateParameter.__init__(self, parameter_str, parameter_type)
@@ -31,7 +31,7 @@ class QueryTemplate(base.QueryTemplate):
         base.QueryTemplate.__init__(self,
                                     template_str=template_str,
                                     db_connector=db_connector,
-                                    parameter_class=MongoDbParameter,
+                                    parameter_class=ElasticSearchParameter,
                                     fields=fields)
 
     def _post_render_value(self, render_value):

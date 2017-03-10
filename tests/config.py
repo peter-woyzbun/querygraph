@@ -42,6 +42,8 @@ DATABASES = {
     },
     'elasticsearch': {
         'HOST': 'localhost',
-        'PORT': 9200
+        'PORT': 9200,
+        'DOC_TYPE': 'chinook',
+        'INDEX': 'album'
     }
 }

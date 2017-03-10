@@ -4,9 +4,9 @@ Query Graph
 
 ```
 CONNECT
-    sqlite_chinook <- Sqlite(host='%s')
-    postgres_chinook <- Postgres(host='%s', user='%s', password='%s', db_name='%s', port='%s')
-    mysql_chinook <- MySql(host='%s', user='%s', password='%s', db_name='%s')
+    sqlite_conn <- Sqlite(host=...)
+    postgres_conn <- Postgres(host=..., user=...)
+    mysql_conn <- MySql(host=...user=...)
 RETRIEVE
     QUERY |
         SELECT *
@@ -31,4 +31,26 @@ RETRIEVE
 JOIN
     RIGHT (postgres_node[ArtistId] ==> sqlite_node[ArtistId]);
     INNER (mysql_node[AlbumId] ==> postgres_node[AlbumId]);
+```
+
+
+```
+CONNECT
+    mongodb_conn <- MongDb(host='', client='',...)
+    postgres_conn <- Postgres(host='', user='',...)
+RETRIEVE
+    QUERY |
+        {"tags" : {"$in" : {% user_tags|value_list:str %} }};
+    FIELDS user_id, field_x
+    USING mongodb_conn
+    AS mongo_node
+    ---
+    QUERY |
+        SELECT *
+        FROM user
+        WHERE user_id IN {{ mongo_node.user_id|value_list:int }};
+    USING postgres_conn
+    AS postgres_node
+JOIN
+    LEFT (postgres_node[user_id] ==> mongo_node[user_id]);
 ```

@@ -38,7 +38,3 @@ class DatabaseConnector(object):
         self.host = host
         self.user = user
         self.password = password
-
-    @abstractmethod
-    def execute_query(self, query):
-        """ Execute query and return dataframe or ...  """

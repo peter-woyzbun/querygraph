@@ -26,4 +26,5 @@ mongodb_albums = connectors.MongoDb(host=config.DATABASES['mongodb']['HOST'],
 
 elastic_search_albums = connectors.ElasticSearch(host=config.DATABASES['elasticsearch']['HOST'],
                                                  port=config.DATABASES['elasticsearch']['PORT'],
-                                                 doc_type='chinook')
+                                                 doc_type=config.DATABASES['elasticsearch']['DOC_TYPE'],
+                                                 index=config.DATABASES['elasticsearch']['INDEX'])
