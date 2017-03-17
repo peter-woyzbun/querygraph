@@ -1,4 +1,4 @@
-from querygraph.manipulation.expression.functions import function_groups
+from querygraph.manipulation.expression.functions import function_classes
 
 
 class Evaluator(object):
@@ -6,7 +6,7 @@ class Evaluator(object):
     """ Evaluator for user-defined 'manipulation expressions'. """
 
     def __init__(self):
-        self.funcs = {func_group_cls.GROUP_LABEL: func_group_cls() for func_group_cls in function_groups}
+        self.funcs = {func_class.name: func_class() for func_class in function_classes}
 
     def _create_locals(self, df=None, independent_param_vals=None):
         """

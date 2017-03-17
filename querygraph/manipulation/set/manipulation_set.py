@@ -44,7 +44,7 @@ class Manipulation(object):
 # Manipulation Types
 # ---------------------------------------------
 
-class Create(Manipulation):
+class Mutate(Manipulation):
 
     def __init__(self, new_col_name, new_col_expression):
         self.new_col_name = new_col_name

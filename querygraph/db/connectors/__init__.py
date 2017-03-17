@@ -1,37 +1,31 @@
-from querygraph.utils import optional_imports
+from querygraph.utils import optional_import
 
 
 try:
-    from sqlite import SQLite
+    from _sqlite import SqliteConnector as Sqlite
 except ImportError:
-    SQLite = optional_imports.NotInstalled(name='sqlite3')
+    Sqlite = optional_import.NotInstalled(name='sqlite3')
 
 
 try:
-    from my_sql import MySQL
+    from _postgres import PostgresConnector as Postgres
 except ImportError:
-    MySQL = optional_imports.NotInstalled(name='mysql')
+    Postgres = optional_import.NotInstalled(name='psycopg2')
 
 
 try:
-    from postgres import Postgres
+    from _mysql import MySqlConnector as MySql
 except ImportError:
-    Postgres = optional_imports.NotInstalled(name='psycopg2')
+    MySql = optional_import.NotInstalled(name='mysql-connector-python')
 
 
 try:
-    from elastic_search import ElasticSearch
+    from _mongodb import MongoDbConnector as MongoDb
 except ImportError:
-    ElasticSearch = optional_imports.NotInstalled(name='elasticsearch')
+    MongoDb = optional_import.NotInstalled(name='pymongo')
 
 
 try:
-    from mongo_db import MongoDb
+    from _elasticsearch import ElasticSearchConnector as ElasticSearch
 except ImportError:
-    MongoDb = optional_imports.NotInstalled(name='pymongo')
-
-
-try:
-    from influx_db import InfluxDb
-except ImportError:
-    InfluxDb = optional_imports.NotInstalled(name='influxdb')
+    ElasticSearch = optional_import.NotInstalled(name='elasticsearch')

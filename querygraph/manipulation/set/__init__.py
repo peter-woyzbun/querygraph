@@ -1,1 +1,1 @@
-from manipulation_set import ManipulationSet, Create
+from querygraph.manipulation.set.manipulation_set import ManipulationSet
