@@ -3,6 +3,16 @@ import os
 
 TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# =================================================
+# DATABASE TEST SETTINGS
+# -------------------------------------------------
+
+SQLITE_DISABLED = False
+MYSQL_DISABLED = False
+POSTGRES_DISABLED = False
+MONGODB_DISABLED = False
+ELASTIC_SEARCH_DISABLED = False
+
 
 # =================================================
 # TEST DATA CONFIG

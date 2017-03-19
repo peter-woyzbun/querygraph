@@ -82,7 +82,15 @@ class TemplateParameter(object):
     DATA_TYPES = dict()
     CONTAINER_TYPES = dict()
 
-    def __init__(self, parameter_str, parameter_type):
+    def __init__(self,
+                 parameter_str,
+                 parameter_type,
+                 int_converters=None,
+                 float_converters=None,
+                 str_converters=None,
+                 datetime_converters=None,
+                 date_converters=None,
+                 time_converters=None):
         # Todo: make parameter type bool (independent t/f)
         self.parameter_str = parameter_str
         self.name = None
@@ -93,6 +101,15 @@ class TemplateParameter(object):
         self.container_type = None
         self._make_data_types()
         self._initial_parse()
+
+    def _set_type_converters(self,
+                             int_converters=None,
+                             float_converters=None,
+                             str_converters=None,
+                             datetime_converters=None,
+                             date_converters=None,
+                             time_converters=None):
+        pass
 
     def _make_data_types(self):
         if not self.CHILD_DATA_TYPES:
