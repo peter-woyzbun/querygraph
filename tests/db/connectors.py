@@ -15,7 +15,8 @@ postgres_chinook = connectors.Postgres(host=config.DATABASES['postgres']['HOST']
 mysql_chinook = connectors.MySql(host=config.DATABASES['mysql']['HOST'],
                                  user=config.DATABASES['mysql']['USER'],
                                  password=config.DATABASES['mysql']['PASSWORD'],
-                                 db_name=config.DATABASES['mysql']['DB_NAME'])
+                                 db_name=config.DATABASES['mysql']['DB_NAME'],
+                                 port=config.DATABASES['mysql']['PORT'])
 
 
 mongodb_albums = connectors.MongoDb(host=config.DATABASES['mongodb']['HOST'],

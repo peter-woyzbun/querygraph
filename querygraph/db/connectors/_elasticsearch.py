@@ -1,5 +1,6 @@
 import elasticsearch
 import pandas as pd
+from pandas.io.json import json_normalize
 
 from querygraph.db.connector import NoSqlDbConnector
 
@@ -22,7 +23,10 @@ class ElasticSearchConnector(NoSqlDbConnector):
 
     def _execute_query(self, query, fields):
         es = self.conn()
-        return es.search(index=self.index, body={"_source": fields, "query": query})['hits']['hits']
+        df = json_normalize(es.search(index=self.index, body={"_source": fields, "query": query})['hits']['hits'])
+        df.rename(columns={'_source.%s' % field_name: field_name for field_name in fields}, inplace=True)
+        df = df[fields]
+        return df
 
     def execute_insert_query(self, id, data):
         es = self.conn()

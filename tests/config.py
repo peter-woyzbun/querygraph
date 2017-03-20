@@ -44,6 +44,7 @@ DATABASES = {
         'USER': 'admin',
         'PASSWORD': 'MySql-126',
         'DB_NAME': 'chinook',
+        'PORT': 3306
     },
     'mongodb': {
         'HOST': 'localhost',

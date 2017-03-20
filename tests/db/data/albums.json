@@ -1,0 +1,65 @@
+{
+  "albums": [
+    {
+      "album": "For Those About To Rock We Salute You",
+      "tags": [
+        "rock",
+        "classic rock",
+        "australia",
+        "band"
+      ]
+    },
+    {
+      "album": "Balls to the Wall",
+      "tags": [
+        "metal",
+        "heavy metal",
+        "germany",
+        "band"
+      ]
+    },
+    {
+      "album": "Restless and Wild",
+      "tags": [
+        "metal",
+        "heavy metal",
+        "germany",
+        "band"
+      ]
+    },
+    {
+      "album": "Let There Be Rock",
+      "tags": [
+        "rock",
+        "classic rock",
+        "australia",
+        "band"
+      ]
+    },
+    {
+      "album": "Big Ones",
+      "tags": [
+        "rock",
+        "united states",
+        "band"
+      ]
+    },
+    {
+      "album": "Jagged Little Pill",
+      "tags": [
+        "canada",
+        "pop rock",
+        "post-grunge",
+        "female"
+      ]
+    },
+    {
+      "album": "Facelift",
+      "tags": [
+        "rock",
+        "united states",
+        "band"
+      ]
+    }
+  ]
+}
