@@ -3,30 +3,10 @@ import inspect
 import yaml
 from graphviz import Digraph
 
-from querygraph.exceptions import QueryGraphException
+from querygraph import exceptions
 from querygraph.language.compiler import QGLCompiler
 from querygraph.query_node import QueryNode
 from querygraph.db import connectors
-
-
-# =================================================
-# Exceptions
-# -------------------------------------------------
-
-class GraphException(QueryGraphException):
-    pass
-
-
-class GraphConfigException(GraphException):
-    pass
-
-
-class CycleException(GraphConfigException):
-    pass
-
-
-class DisconnectedNodes(GraphException):
-    pass
 
 
 # =================================================
@@ -60,7 +40,7 @@ class QueryGraph(object):
 
         """
         if not isinstance(query_node, QueryNode):
-            raise GraphConfigException("When adding a graph node, the 'query_node' argument must be a "
+            raise exceptions.GraphConfigException("When adding a graph node, the 'query_node' argument must be a "
                                        "QueryNode instance.")
         self.nodes[query_node.name] = query_node
 
@@ -93,7 +73,7 @@ class QueryGraph(object):
     def __contains__(self, item):
         """ Check if graph contains given QueryNode instance. """
         if not isinstance(item, QueryNode):
-            raise GraphException("Can only check if graph __contains__ a QueryNode instance.")
+            raise exceptions.GraphException("Can only check if graph __contains__ a QueryNode instance.")
         return item in self.nodes.values()
 
     def join(self, child_node, parent_node, join_type, on_columns):
@@ -123,9 +103,9 @@ class QueryGraph(object):
 
         """
         if not isinstance(child_node, QueryNode):
-            raise GraphConfigException("Can't join an instance that is not a QueryNode - %s." % child_node)
+            raise exceptions.GraphConfigException("Can't join an instance that is not a QueryNode - %s." % child_node)
         if not isinstance(parent_node, QueryNode):
-            raise GraphConfigException("Can't join an instance that is not a QueryNode.")
+            raise exceptions.GraphConfigException("Can't join an instance that is not a QueryNode.")
         # Check for bad join conditions.
         self._join_checks(child_node, parent_node)
 
@@ -151,16 +131,16 @@ class QueryGraph(object):
 
     def _join_checks(self, child_node, parent_node):
         if child_node not in self:
-            raise GraphConfigException("The child node attempting to be joined, '%s',"
+            raise exceptions.GraphConfigException("The child node attempting to be joined, '%s',"
                                        " is not a node in this graph." % child_node.name)
         if parent_node not in self:
-            raise GraphConfigException("The parent node attempting to be joined,"
+            raise exceptions.GraphConfigException("The parent node attempting to be joined,"
                                        " '%s', is not a node in this graph." % parent_node.name)
         if child_node.parent is not None:
-            raise GraphConfigException("The child node attempting to be joined,"
+            raise exceptions.GraphConfigException("The child node attempting to be joined,"
                                        " '%s', already has a parent node." % child_node.name)
         if parent_node in child_node:
-            raise CycleException("Joining parent node '%s' with child node '%s' would"
+            raise exceptions.CycleException("Joining parent node '%s' with child node '%s' would"
                                  " create a cycle in the graph." % (parent_node.name, child_node.name))
 
     def _parallel_execute(self, independent_param_vals):
@@ -224,7 +204,7 @@ class QueryGraph(object):
 
     def execute(self, **independent_param_vals):
         if not self.is_spanning_tree:
-            raise DisconnectedNodes("Cannot execute: QueryGraph is not a minimum spanning "
+            raise exceptions.DisconnectedNodes("Cannot execute: QueryGraph is not a minimum spanning "
                                     "tree - there are disconnected nodes.")
         root_node = self.root_node
         root_node.execute(**independent_param_vals)

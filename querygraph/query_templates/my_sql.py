@@ -10,19 +10,27 @@ from querygraph.query_template import QueryTemplate
 
 class MySqlParameter(TemplateParameter):
 
-    CHILD_DATA_TYPES = {
-        'datetime': {datetime.datetime: lambda x: "'%s'" % x.strftime('%Y-%m-%d %H:%M:%S'),
-                     str: lambda x: "'%s'" % x},
-        'date': {datetime.datetime: lambda x: "'%s'" % x.strftime('%Y-%m-%d'),
-                 str: lambda x: "'%s'" % x},
-        'time': {datetime.datetime: lambda x: "'%s'" % x.strftime('%H:%M:%S'),
-                 str: lambda x: "'%s'" % x}
-    }
-
     def __init__(self, parameter_str, parameter_type):
         TemplateParameter.__init__(self,
                                    parameter_str=parameter_str,
                                    parameter_type=parameter_type)
+
+    def _setup_db_specific_converters(self):
+
+        self.type_converter.add_datetime_converters(
+            {datetime.datetime: lambda x: "'%s'" % x.strftime('%Y-%m-%d %H:%M:%S'),
+             str: lambda x: "'%s'" % x}
+        )
+
+        self.type_converter.add_date_converters(
+            {datetime.datetime: lambda x: "'%s'" % x.strftime('%Y-%m-%d'),
+             str: lambda x: "'%s'" % x}
+        )
+
+        self.type_converter.add_time_converters(
+            {datetime.datetime: lambda x: "'%s'" % x.strftime('%H:%M:%S'),
+             str: lambda x: "'%s'" % x}
+        )
 
 
 # =============================================

@@ -1,7 +1,21 @@
 import pyparsing as pp
 
+from querygraph.db import connectors
+from querygraph.query_node import QueryNode
+
 
 class ConnectBlock(object):
+    """
+    Compiler for the CONNECT block of a GQL query. The body of the
+    CONNECT block takes the form:
+
+        <connector_name> <- <connector_type>(<**kwargs>)
+        ...
+
+    Data for each connector is stored in the 'connector' dict. Actual
+    DbConnector instances are created by the QGLCompiler class.
+
+    """
 
     def __init__(self):
         self.connectors = dict()
@@ -31,8 +45,164 @@ class ConnectBlock(object):
 
 class RetrieveBlock(object):
 
+    """
+    Compiler for the RETRIEVE block string. The body of the RETRIEVE block
+    takes the form:
+
+        QUERY |
+            <query_template_string>;
+        FIELDS <field_name_1>, <field_name_2>,...
+        USING <connector_name>
+        THEN |
+            <manipulation_1_type>(<**kwargs>) >>
+            ...
+            <manipulation_n_type>(<**kwargs>);
+        AS <node_name>
+        ---
+        ...
+    where the 'FIELDS ..." block is the optional field select for NOSQL
+    databases, and the 'THEN|...;' block is the optional manipulation set.
+    Data for each query node are stored in dicts and created later by the
+    QGLCompiler class.
+
+
+    """
+
     def __init__(self):
         self.nodes = dict()
 
+    def _add_query_node(self, query_value, connector_name, node_name, fields=None, manipulation_set=None):
+        self.nodes[node_name] = {'query_value': query_value, 'connector_name': connector_name, 'fields': fields}
+
     def parser(self):
-        pass
+        query_key = pp.Keyword("QUERY")
+        query_value = pp.Suppress("|") + pp.SkipTo(pp.Suppress(";"), include=True)
+
+        fields_key = pp.Keyword("FIELDS")
+        field_name = pp.Word(pp.alphas, pp.alphanums + "_$")
+        field_name_list = pp.Group(pp.delimitedList(field_name, delim=","))
+
+        fields_block = (pp.Suppress(fields_key) + field_name_list)
+
+        connector_name = pp.Word(pp.alphas, pp.alphanums + "_$")
+        using_block = pp.Suppress("USING") + connector_name
+
+        then_key = pp.Suppress("THEN")
+        manipulation_set = pp.Suppress("|") + pp.SkipTo(pp.Suppress(";"), include=True)
+        then_block = then_key + manipulation_set
+
+        as_key = pp.Suppress("AS")
+        node_name = pp.Word(pp.alphas, pp.alphanums + "_$")
+        as_block = as_key + node_name
+
+        query_node_block = (pp.Suppress(query_key) + query_value + pp.Optional(fields_block, default=None) + using_block + pp.Optional(then_block, default=None) + as_block)
+        query_node_block.setParseAction(lambda x: self._add_query_node(query_value=x[0],
+                                                                       connector_name=x[2],
+                                                                       node_name=x[4],
+                                                                       fields=x[1],
+                                                                       manipulation_set=x[3]))
+        single_query_node = query_node_block + pp.Optional(pp.Suppress("---"))
+        retrieve_block = pp.OneOrMore(single_query_node)
+        return retrieve_block
+
+
+class JoinBlock(object):
+
+    """
+    Compiler for the JOIN block string. The body of the JOIN block
+    takes the form:
+
+        <join_type> (<child_node_name>[<col_1>,...,<col_n>] ==> <parent_node_name>[<col_1>,...,<col_n>])
+        ...
+
+    Data for each join are stored in dicts and actual joins applied
+    later by QGLCompiler class.
+
+    """
+
+    def __init__(self):
+        self.joins = list()
+
+    def _add_join(self, join_type, child_node_name, child_cols, parent_node_name, parent_cols):
+        self.joins.append({'join_type': join_type,
+                           'child_node': child_node_name,
+                           'child_cols': child_cols,
+                           'parent_node': parent_node_name,
+                           'parent_cols': parent_cols})
+
+    def parser(self):
+        join_type = (pp.Literal("LEFT") | pp.Literal("RIGHT") | pp.Literal("INNER") | pp.Literal("OUTER"))
+        node_name = pp.Word(pp.alphas, pp.alphanums + "_$")
+
+        col_name = pp.Word(pp.alphas, pp.alphanums + "_$")
+        col_name_list = pp.Group(pp.delimitedList(col_name, delim=","))
+
+        l_brac = pp.Suppress("[")
+        r_brac = pp.Suppress("]")
+
+        single_join = (join_type + pp.Suppress("(") + node_name + l_brac +
+                       col_name_list + r_brac + pp.Suppress("==>") + node_name +
+                       l_brac + col_name_list + r_brac + pp.Suppress(")"))
+
+        single_join.addParseAction(lambda x: self._add_join(join_type=x[0],
+                                                            child_node_name=x[1],
+                                                            child_cols=x[2],
+                                                            parent_node_name=x[3],
+                                                            parent_cols=x[4]))
+        join_block = pp.OneOrMore(single_join)
+        return join_block
+
+
+class QGLCompiler(object):
+
+    connector_map = {'sqlite': connectors.Sqlite,
+                     'mysql': connectors.MySql,
+                     'postgres': connectors.Postgres,
+                     'mongodb': connectors.MongoDb,
+                     'elasticsearch': connectors.ElasticSearch}
+
+    def __init__(self, qgl_str, query_graph):
+        self.qgl_str = qgl_str
+        self.query_graph = query_graph
+
+        self.connect_block = ConnectBlock()
+        self.retrieve_block = RetrieveBlock()
+        self.join_block = JoinBlock()
+
+        self.connectors = dict()
+
+    def compile(self):
+        parser = (pp.Keyword("CONNECT") + self.connect_block.parser() +
+                  pp.Keyword("RETRIEVE") + self.retrieve_block.parser() +
+                  pp.Keyword("JOIN") + self.join_block.parser())
+
+        parser.parseString(self.qgl_str)
+        self._create_connectors()
+        self._create_query_nodes()
+        self._create_joins()
+
+    def _create_connectors(self):
+        for conn_name, conn_dict in self.connect_block.connectors.items():
+            conn_type = conn_dict['conn_type'].lower()
+            conn_kwargs = conn_dict['conn_kwargs']
+            self.connectors[conn_name] = self.connector_map[conn_type](**conn_kwargs)
+
+    def _create_query_nodes(self):
+        for node_name, node_dict in self.retrieve_block.nodes.items():
+            self.query_graph.nodes[node_name] = QueryNode(name=node_name, query=node_dict['query_value'],
+                                                          db_connector=self.connectors[node_dict['connector_name']],
+                                                          fields=node_dict['fields'])
+
+    def _create_joins(self):
+        for join_dict in self.join_block.joins:
+            parent_node_name = join_dict['parent_node']
+            parent_cols = join_dict['parent_cols']
+            child_node_name = join_dict['child_node']
+            child_cols = join_dict['child_cols']
+            on_columns = list()
+            for parent_col, child_col in zip(parent_cols, child_cols):
+                on_columns.append({parent_node_name: parent_col, child_node_name: child_col})
+            self.query_graph.join(child_node=self.query_graph.nodes[child_node_name],
+                                  parent_node=self.query_graph.nodes[parent_node_name],
+                                  join_type=join_dict['join_type'].lower(),
+                                  on_columns=on_columns)

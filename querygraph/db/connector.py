@@ -1,22 +1,6 @@
 from abc import abstractmethod
 
-from querygraph.exceptions import QueryGraphException
-
-
-# =================================================
-# Exceptions
-# -------------------------------------------------
-
-class DatabaseError(QueryGraphException):
-    pass
-
-
-class ConnectionError(DatabaseError):
-    pass
-
-
-class ExecutionError(DatabaseError):
-    pass
+from querygraph import exceptions
 
 
 # =================================================
@@ -34,7 +18,7 @@ class DbConnector(object):
         try:
             return self._conn()
         except self.conn_exception:
-            raise ConnectionError
+            raise exceptions.ConnectionError
 
     @abstractmethod
     def _conn(self):
@@ -44,7 +28,7 @@ class DbConnector(object):
         try:
             return self._execute_query(*args, **kwargs)
         except self.execution_exception:
-            raise ExecutionError
+            raise exceptions.ExecutionError
 
     @abstractmethod
     def _execute_query(self, *args, **kwargs):

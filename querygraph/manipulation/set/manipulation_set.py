@@ -57,6 +57,17 @@ class Mutate(Manipulation):
         return df
 
 
+class Rename(Manipulation):
+
+    def __init__(self, old_column_name, new_column_name):
+        self.old_column_name = old_column_name
+        self.new_column_name = new_column_name
+
+    def _execute(self, df, evaluator=None):
+        df = df.rename(columns={self.old_column_name: self.new_column_name})
+        return df
+
+
 # =============================================
 # Manipulation Set
 # ---------------------------------------------

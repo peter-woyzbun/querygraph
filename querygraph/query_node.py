@@ -35,14 +35,14 @@ class AddColumnException(QueryGraphException):
 
 class QueryNode(object):
 
-    def __init__(self, name, query, db_connector, mongo_fields=None):
+    def __init__(self, name, query, db_connector, fields=None):
         self.name = name
         self.query = query
         if not isinstance(db_connector, DbConnector):
             raise QueryGraphException("The db_connector for node '%s' must be a "
                                       "DbConnector instance." % self.name)
         self.db_connector = db_connector
-        self.mongo_fields = mongo_fields
+        self.fields = fields
         self.children = list()
         self.parent = None
         self.join_context = JoinContext(child_node_name=self.name)
@@ -149,7 +149,11 @@ class QueryNode(object):
         elif isinstance(self.db_connector, connectors.MongoDb):
             return query_templates.MongoDb(template_str=self.query,
                                            db_connector=self.db_connector,
-                                           fields=self.mongo_fields)
+                                           fields=self.fields)
+        elif isinstance(self.db_connector, connectors.ElasticSearch):
+            return query_templates.ElasticSearch(template_str=self.query,
+                                                 db_connector=self.db_connector,
+                                                 fields=self.fields)
 
     def _execute(self, **independent_param_vals):
         """
@@ -175,7 +179,7 @@ class QueryNode(object):
             df = query_template.execute(**independent_param_vals)
         self.df = df
         if self.manipulation_set:
-            self._execute_manipulation_set()
+            self.execute_manipulation_set()
         self.already_executed = True
 
     def execution_thread(self, threads, **independent_param_vals):

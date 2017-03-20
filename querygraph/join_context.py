@@ -1,13 +1,4 @@
-from querygraph.exceptions import QueryGraphException
-
-
-# =============================================
-# Exceptions
-# ---------------------------------------------
-
-
-class JoinContextException(QueryGraphException):
-    pass
+from querygraph import exceptions
 
 
 # =============================================
@@ -30,7 +21,8 @@ class JoinContext(object):
     @join_type.setter
     def join_type(self, value):
         if value not in ('inner', 'left', 'right', 'outer'):
-            raise JoinContextException("Tried to set join context join type to invalid join type: '%s'." % value)
+            raise exceptions.JoinContextException("Tried to set join context join type to"
+                                                  " invalid join type: '%s'." % value)
         else:
             self._join_type = value
 
@@ -46,10 +38,10 @@ class JoinContext(object):
         """ Check if that dataframes contain the columns needed for joining."""
         for col in self.parent_cols:
             if not self.df_contains_column(parent_df, col):
-                raise JoinContextException("Column does not exist.")
+                raise exceptions.JoinContextException("Column does not exist.")
         for col in self.child_cols:
             if not self.df_contains_column(child_df, col):
-                raise JoinContextException("Column does not exist.")
+                raise exceptions.JoinContextException("Column does not exist.")
 
     def _rename_duplicates(self, parent_df, child_df):
         pass

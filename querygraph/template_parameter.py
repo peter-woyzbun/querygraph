@@ -4,6 +4,7 @@ import numpy as np
 from pyparsing import Suppress, Word, alphanums, alphas, SkipTo, Literal, ParseException, Keyword
 
 from querygraph.exceptions import QueryGraphException
+from querygraph.type_converter import TypeConverter
 from querygraph.manipulation.expression.evaluator import Evaluator
 
 
@@ -84,13 +85,7 @@ class TemplateParameter(object):
 
     def __init__(self,
                  parameter_str,
-                 parameter_type,
-                 int_converters=None,
-                 float_converters=None,
-                 str_converters=None,
-                 datetime_converters=None,
-                 date_converters=None,
-                 time_converters=None):
+                 parameter_type):
         # Todo: make parameter type bool (independent t/f)
         self.parameter_str = parameter_str
         self.name = None
@@ -99,17 +94,12 @@ class TemplateParameter(object):
         self.data_type = None
         self.custom_data_type_str = None
         self.container_type = None
+        self.type_converter = TypeConverter()
+
+        self._setup_generic_converters()
+        self._setup_db_specific_converters()
         self._make_data_types()
         self._initial_parse()
-
-    def _set_type_converters(self,
-                             int_converters=None,
-                             float_converters=None,
-                             str_converters=None,
-                             datetime_converters=None,
-                             date_converters=None,
-                             time_converters=None):
-        pass
 
     def _make_data_types(self):
         if not self.CHILD_DATA_TYPES:
@@ -123,6 +113,29 @@ class TemplateParameter(object):
                     for input_type in input_type_dict.keys():
                         if input_type not in self.DATA_TYPES[data_type]:
                             self.DATA_TYPES[data_type][input_type] = input_type_dict[input_type]
+
+    def _setup_generic_converters(self):
+        # Setup generic converters for 'int' type converters.
+        self.type_converter.add_int_converters({int: lambda x: x,
+                                                np.int64: lambda x: x,
+                                                np.int32: lambda x: x,
+                                                np.int16: lambda x: x,
+                                                np.int8: lambda x: x,
+                                                float: lambda x: int(x),
+                                                str: lambda x: int(x)})
+        # Setup generic converters for 'float' type converters.
+        self.type_converter.add_float_converters({int: lambda x: float(x),
+                                                  np.int64: lambda x: float(x),
+                                                  np.float64: lambda x: x,
+                                                  float: lambda x: x,
+                                                  str: lambda x: float(x)})
+        # Setup generic converters for 'str' type converters.
+        self.type_converter.add_str_converters({str: lambda x: "'%s'" % x,
+                                                float: lambda x: "'%s'" % x,
+                                                int: lambda x: "'%s'" % x})
+
+    def _setup_db_specific_converters(self):
+        pass
 
     @property
     def _data_type_parser(self):
@@ -144,7 +157,8 @@ class TemplateParameter(object):
         if self.data_type == 'custom':
             return self.custom_data_type_str % pre_value
         else:
-            return self.DATA_TYPES[self.data_type][type(pre_value)](pre_value)
+            # return self.DATA_TYPES[self.data_type][type(pre_value)](pre_value)
+            return self.type_converter.convert(data_type=self.data_type, value=pre_value)
 
     def _make_value_list(self, parameter_value):
         parameter_value = list(set(parameter_value))
