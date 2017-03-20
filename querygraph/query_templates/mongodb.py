@@ -20,6 +20,9 @@ class MongoDbParameter(TemplateParameter):
         val_str = "[%s]" % val_str
         return val_str
 
+    def _setup_db_specific_converters(self):
+        self.type_converter.add_datetime_converters({datetime.datetime: lambda x: repr(x)})
+
 
 # =============================================
 # MongoDb Query Template

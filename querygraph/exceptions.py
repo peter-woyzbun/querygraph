@@ -63,5 +63,6 @@ class ParameterException(QueryGraphException):
 class ParameterConfigException(ParameterException):
     pass
 
+
 class TypeConversionError(QueryGraphException):
     pass

@@ -6,6 +6,7 @@ from pyparsing import Suppress, Word, alphanums, alphas, SkipTo, Literal, ParseE
 from querygraph.exceptions import QueryGraphException
 from querygraph.type_converter import TypeConverter
 from querygraph.manipulation.expression.evaluator import Evaluator
+from querygraph.utils.deserializer import Deserializer
 
 
 # =============================================
@@ -95,6 +96,7 @@ class TemplateParameter(object):
         self.custom_data_type_str = None
         self.container_type = None
         self.type_converter = TypeConverter()
+        self.deserialize = Deserializer()
 
         self._setup_generic_converters()
         self._setup_db_specific_converters()

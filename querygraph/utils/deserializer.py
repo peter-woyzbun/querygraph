@@ -3,7 +3,7 @@ import datetime
 import pyparsing as pp
 
 
-class ValueParser(object):
+class Deserializer(object):
 
     def __init__(self):
         pass
@@ -27,11 +27,16 @@ class ValueParser(object):
             .setName("real") \
             .setParseAction(lambda toks: float(toks[0]))
 
+        _datetime_arg = (integer | real)
+        datetime_args = pp.commaSeparatedList(_datetime_arg)
+        _datetime = pp.Suppress(pp.Literal('datetime') + pp.Literal("(")) + datetime_args + pp.Suppress(")")
+        _datetime.setParseAction(lambda x: datetime.datetime(*x[0]))
+
         tuple_str = pp.Forward()
         list_str = pp.Forward()
         dict_str = pp.Forward()
 
-        list_item = real | integer | pp.quotedString.setParseAction(pp.removeQuotes) | \
+        list_item = real | integer | _datetime | pp.quotedString.setParseAction(pp.removeQuotes) | \
                     pp.Group(list_str) | tuple_str | dict_str
 
         tuple_str << (pp.Suppress("(") + pp.Optional(pp.delimitedList(list_item)) +

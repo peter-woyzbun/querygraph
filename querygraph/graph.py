@@ -132,16 +132,16 @@ class QueryGraph(object):
     def _join_checks(self, child_node, parent_node):
         if child_node not in self:
             raise exceptions.GraphConfigException("The child node attempting to be joined, '%s',"
-                                       " is not a node in this graph." % child_node.name)
+                                                  " is not a node in this graph." % child_node.name)
         if parent_node not in self:
             raise exceptions.GraphConfigException("The parent node attempting to be joined,"
-                                       " '%s', is not a node in this graph." % parent_node.name)
+                                                  " '%s', is not a node in this graph." % parent_node.name)
         if child_node.parent is not None:
             raise exceptions.GraphConfigException("The child node attempting to be joined,"
-                                       " '%s', already has a parent node." % child_node.name)
+                                                  " '%s', already has a parent node." % child_node.name)
         if parent_node in child_node:
             raise exceptions.CycleException("Joining parent node '%s' with child node '%s' would"
-                                 " create a cycle in the graph." % (parent_node.name, child_node.name))
+                                            " create a cycle in the graph." % (parent_node.name, child_node.name))
 
     def _parallel_execute(self, independent_param_vals):
         """
@@ -205,7 +205,7 @@ class QueryGraph(object):
     def execute(self, **independent_param_vals):
         if not self.is_spanning_tree:
             raise exceptions.DisconnectedNodes("Cannot execute: QueryGraph is not a minimum spanning "
-                                    "tree - there are disconnected nodes.")
+                                               "tree - there are disconnected nodes.")
         root_node = self.root_node
         root_node.execute(**independent_param_vals)
         return root_node.df
