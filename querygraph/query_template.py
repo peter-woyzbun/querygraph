@@ -50,6 +50,20 @@ class QueryTemplate(object):
         self.parameter_class = parameter_class
         self.fields = fields
 
+    def _render_independent_param(self, param_str, independent_param_vals):
+        if not independent_param_vals:
+            raise IndependentParameterException("Independent parameters present in query and no independent"
+                                                "parameter values given.")
+        independent_parameter = self.parameter_class(parameter_str=param_str, independent=True)
+        return str(independent_parameter.query_value(independent_params=independent_param_vals))
+
+    def _render_dependent_param(self, param_str, df):
+        if df is None:
+            raise DependentParameterException("No dataframe was given from which to generate dependent"
+                                              "parameter value(s).")
+        dependent_parameter = self.parameter_class(parameter_str=param_str, independent=False)
+        return dependent_parameter.query_value(df=df)
+
     def render(self, df=None, **independent_param_vals):
         """
         Returns parsed query template string.
@@ -61,23 +75,15 @@ class QueryTemplate(object):
             # Dependent parameter.
             if token.startswith('{{'):
                 tok_expr = token[2:-2].strip()
-                # dependent_parameter = QueryParameter(parameter_str=tok_expr)
-                dependent_parameter = self.parameter_class(parameter_str=tok_expr, parameter_type='dependent')
-                if df is None:
-                    raise DependentParameterException("No dataframe was given from which to generate dependent"
-                                                      "parameter value(s).")
-                parsed_query += dependent_parameter.query_value(df=df)
+                parsed_query += self._render_dependent_param(param_str=tok_expr, df=df)
             # Comment.
             elif token.startswith('{#'):
                 pass
             # Independent parameter.
             elif token.startswith('{%'):
                 tok_expr = token[2:-2].strip()
-                independent_parameter = self.parameter_class(parameter_str=tok_expr, parameter_type='independent')
-                if not independent_param_vals:
-                    raise IndependentParameterException("Independent parameters present in query and no independent"
-                                                        "parameter values given.")
-                parsed_query += str(independent_parameter.query_value(independent_params=independent_param_vals))
+                parsed_query += self._render_independent_param(param_str=tok_expr,
+                                                               independent_param_vals=independent_param_vals)
             else:
                 parsed_query += token
         return self._post_render_value(parsed_query)

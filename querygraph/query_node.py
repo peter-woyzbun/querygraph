@@ -139,6 +139,10 @@ class QueryNode(object):
         for query_node in reverse_topological_ordering:
             query_node.join_with_parent()
 
+    @property
+    def query_template(self):
+        return self._make_query_template()
+
     def _make_query_template(self):
         if isinstance(self.db_connector, connectors.Sqlite):
             return query_templates.Sqlite(template_str=self.query, db_connector=self.db_connector)
@@ -191,6 +195,7 @@ class QueryNode(object):
             parent_df = self.parent.df
         thread_query_template.pre_render(df=parent_df, **independent_param_vals)
         exec_thread = ExecutionThread(query_node=self,
+                                      query_template=thread_query_template,
                                       threads=threads,
                                       independent_param_vals=independent_param_vals)
         return exec_thread

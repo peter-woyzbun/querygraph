@@ -203,12 +203,7 @@ class QueryGraph(object):
             parent_generation = child_generation
 
     def execute(self, **independent_param_vals):
-        if not self.is_spanning_tree:
-            raise exceptions.DisconnectedNodes("Cannot execute: QueryGraph is not a minimum spanning "
-                                               "tree - there are disconnected nodes.")
-        root_node = self.root_node
-        root_node.execute(**independent_param_vals)
-        return root_node.df
+        self.parallel_execute(**independent_param_vals)
 
     def render_viz(self, save_path):
         dot = Digraph(comment='Query Graph Visualization')

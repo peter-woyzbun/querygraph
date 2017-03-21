@@ -1,7 +1,15 @@
 import re
 
 import numpy as np
-from pyparsing import Suppress, Word, alphanums, alphas, SkipTo, Literal, ParseException, Keyword
+from pyparsing import (Suppress,
+                       Word,
+                       alphanums,
+                       alphas,
+                       SkipTo,
+                       Literal,
+                       ParseException,
+                       Keyword,
+                       Optional)
 
 from querygraph.exceptions import QueryGraphException
 from querygraph.type_converter import TypeConverter
@@ -41,7 +49,7 @@ class TemplateParameter(object):
 
     Parameters
     ----------
-    parameter_str : str
+    param_str : str
         The raw parameter string.
     parameter_type : str
         The type of parameter: independent or dependent
@@ -64,57 +72,32 @@ class TemplateParameter(object):
 
     """
 
-    GENERIC_DATA_TYPES = {'int': {int: lambda x: x,
-                                  np.int64: lambda x: x,
-                                  np.int32: lambda x: x,
-                                  np.int16: lambda x: x,
-                                  np.int8: lambda x: x,
-                                  float: lambda x: int(x),
-                                  str: lambda x: int(x)},
-                          'float': {int: lambda x: float(x),
-                                    np.int64: lambda x: float(x),
-                                    np.float64: lambda x: x,
-                                    float: lambda x: x,
-                                    str: lambda x: float(x)},
-                          'str': {str: lambda x: "'%s'" % x,
-                                  float: lambda x: "'%s'" % x,
-                                  int: lambda x: "'%s'" % x}}
-
-    CHILD_DATA_TYPES = dict()
-    DATA_TYPES = dict()
-    CONTAINER_TYPES = dict()
+    DATA_TYPES = ('int',
+                  'str',
+                  'float',
+                  'datetime',
+                  'date',
+                  'time',
+                  'custom')
 
     def __init__(self,
-                 parameter_str,
-                 parameter_type):
-        # Todo: make parameter type bool (independent t/f)
-        self.parameter_str = parameter_str
+                 param_str,
+                 independent=True):
+        self.param_str = param_str
         self.name = None
-        self.parameter_type = parameter_type
+        self.independent = independent
         self.param_expr_str = None
         self.data_type = None
         self.custom_data_type_str = None
         self.container_type = None
+        self.pre_value = None
+
         self.type_converter = TypeConverter()
         self.deserialize = Deserializer()
 
         self._setup_generic_converters()
         self._setup_db_specific_converters()
-        self._make_data_types()
-        self._initial_parse()
-
-    def _make_data_types(self):
-        if not self.CHILD_DATA_TYPES:
-            self.DATA_TYPES = self.GENERIC_DATA_TYPES
-        else:
-            self.DATA_TYPES = self.CHILD_DATA_TYPES.copy()
-            for data_type, input_type_dict in self.GENERIC_DATA_TYPES.items():
-                if data_type not in self.DATA_TYPES:
-                    self.DATA_TYPES[data_type] = input_type_dict
-                elif data_type in self.DATA_TYPES:
-                    for input_type in input_type_dict.keys():
-                        if input_type not in self.DATA_TYPES[data_type]:
-                            self.DATA_TYPES[data_type][input_type] = input_type_dict[input_type]
+        # self._initial_parse()
 
     def _setup_generic_converters(self):
         # Setup generic converters for 'int' type converters.
@@ -143,7 +126,7 @@ class TemplateParameter(object):
     def _data_type_parser(self):
         """ Return Pyparsing parser object for parsing data type. """
         # Create a keyword for each data type.
-        data_type_keywords = [Keyword(d_type) for d_type in self.DATA_TYPES.keys()]
+        data_type_keywords = [Keyword(d_type) for d_type in self.DATA_TYPES]
         # This is equivalent to: (<keyword_1> | <keyword_2> | ... | <keyword_n>)
         data_type = reduce(lambda x, y: x | y, data_type_keywords)
         return data_type
@@ -181,7 +164,7 @@ class TemplateParameter(object):
         # Container types.
         value_list = Literal('value_list')
         value = Literal('value')
-        container_type = (value_list | value)
+        container_type = Optional(value_list | value)
         container_type.addParseAction(lambda x: self._set_attribute(target='container_type', value=x[0]))
 
         custom = (Suppress('custom[') + SkipTo(Suppress(']'), include=True))
@@ -193,17 +176,37 @@ class TemplateParameter(object):
         parameter_block = (param_declaration + Suppress("|") + container_type + Suppress(":") + data_type)
 
         try:
-            parameter_block.parseString(self.parameter_str)
+            parameter_block.parseString(self.param_str)
         except ParseException:
             raise ParameterParseException
 
-    def _make_query_value(self, pre_value):
-        if self.container_type == 'value_list':
-            return self._make_value_list(pre_value)
-        elif self.container_type == 'value':
-            return self._make_single_value(pre_value)
+    def _parse(self, parent_node_name=None, df=None, independent_param_vals=None):
+        if self.independent:
+            expr_evaluator = Evaluator(name_dict=independent_param_vals)
+        else:
+            expr_evaluator = Evaluator(df=df, df_name=parent_node_name)
+        param_expr = expr_evaluator.parser()
 
-    def query_value(self, df=None, independent_params=None):
+        container_type = (Optional('value', default='value') | Literal("list"))
+        container_type.addParseAction(lambda x: self._set_attribute(target='container_type', value=x[0]))
+
+        custom = (Suppress('custom[') + SkipTo(Suppress(']'), include=True))
+        custom.addParseAction(lambda x: self._set_custom_data_type(x[0]))
+        data_type = (self._data_type_parser | custom)
+        # data_type = (num | _int | _float | _str | _date | custom)
+        data_type.addParseAction(lambda x: self._set_attribute(target='data_type', value=x[0]))
+
+        parameter_block = (param_expr + Suppress("|") + container_type + Suppress(":") + data_type)
+        parameter_block.parseString(self.param_str)
+        self.pre_value = expr_evaluator.output_value()
+
+    def _make_query_value(self):
+        if self.container_type == 'list':
+            return self._make_value_list(self.pre_value)
+        elif self.container_type == 'value':
+            return self._make_single_value(self.pre_value)
+
+    def query_value(self, df=None, parent_node_name=None, independent_param_vals=None):
         """
         Return TemplateParameter query value. This involves:
 
@@ -220,28 +223,24 @@ class TemplateParameter(object):
         df : Pandas DataFrame or None
             If not None, the DataFrame of the parent node of the QueryNode this
             TemplateParameter is associated with.
-        independent_params : dict
+        parent_node_name : str
+            The name of the parent node: used for...
+        independent_param_vals : dict
             A dictionary mapping independent parameter names to given parameter
             values.
 
         """
         # If the parameter is independent, and no independent parameter values are given,
         # raise exception.
-        if self.parameter_type == 'independent' and independent_params is None:
+        if self.independent and independent_param_vals is None:
             raise TemplateParameterException("Independent template parameter '%s' cannot be defined because no "
                                              "independent parameter values were given." % self.name)
         # If the parameter is dependent, and no dataframe is given, raise exception.
-        if self.parameter_type == 'dependent' and df is None:
+        if not self.independent and df is None:
             raise TemplateParameterException("Dependent template parameter '%s' cannot be defined because no "
                                              "parent dataframe was given." % self.name)
 
-        if self.parameter_type == 'independent' and self.param_expr_str is None:
-            pre_value = independent_params[self.name]
-            return self._make_query_value(pre_value=pre_value)
-        elif self.parameter_type == 'dependent' and self.param_expr_str is None:
-            pre_value = df[self.name]
-            return self._make_query_value(pre_value=pre_value)
-        else:
-            evaluator = Evaluator()
-            pre_value = evaluator.eval(eval_str=self.param_expr_str, df=df, independent_param_vals=independent_params)
-            return self._make_query_value(pre_value=pre_value)
+        self._parse(df=df,
+                    parent_node_name=parent_node_name,
+                    independent_param_vals=independent_param_vals)
+        return self._make_query_value()

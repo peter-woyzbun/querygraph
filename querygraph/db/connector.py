@@ -8,6 +8,34 @@ from querygraph import exceptions
 # -------------------------------------------------
 
 class DbConnector(object):
+    """
+    Base class for all database connectors. It provides a common
+    interface for:
+
+        (1) Catching 'connection' exceptions - errors connecting
+            to databases.
+        (2) Catching 'execution' exceptions - errors executing
+            queries on databases.
+
+    The goal...
+
+
+    Parameters
+    ----------
+
+    db_type : str
+        A string indicating the database type (e.g. 'mysql').
+    conn_exception : Exception
+        For the given connector, the exception that will be raised by the
+        associated connector package (e.g. 'psycopg2' is the connector package
+        for Postgres) in the event of a database connector error.
+    execution_exception : Exception
+        For the given connector, the exception that will be raised by the
+        associated connector package in the event of an error executing
+        a query.
+
+
+    """
 
     def __init__(self, db_type, conn_exception, execution_exception):
         self.db_type = db_type

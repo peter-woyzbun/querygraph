@@ -22,7 +22,7 @@ mysql_chinook = connectors.MySql(host=config.DATABASES['mysql']['HOST'],
 mongodb_albums = connectors.MongoDb(host=config.DATABASES['mongodb']['HOST'],
                                     port=config.DATABASES['mongodb']['PORT'],
                                     db_name=config.DATABASES['mongodb']['DB_NAME'],
-                                    collection='albums')
+                                    collection=config.DATABASES['mongodb']['COLLECTION'])
 
 
 elastic_search_albums = connectors.ElasticSearch(host=config.DATABASES['elasticsearch']['HOST'],

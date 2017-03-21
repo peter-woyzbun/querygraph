@@ -1,33 +1,47 @@
 
 
-registry = {}
+class multimethod(object):
+    """Decorator for multiple dispatch of functions and methods.
 
+    """
 
-class MultiMethod(object):
+    def __init__(self, *types, **kwargs):
+        self.types = types
+        self.condition = kwargs.pop('condition', None)
+        if kwargs:
+            raise TypeError("multimethod() got an unexpected keyword argument {0!r}".format(kwargs.keys()[0]))
 
-    def __init__(self, name):
-        self.name = name
-        self.typemap = {}
+    class _Dispatcher(object):
 
-    def __call__(self, *args):
-        types = tuple(arg.__class__ for arg in args) # a generator expression!
-        function = self.typemap.get(types)
-        if function is None:
-            raise TypeError("no match")
-        return function(*args)
+        def __init__(self):
+            self.typemap = []
+            self.ismethod = False
 
-    def register(self, types, function):
-        if types in self.typemap:
-            raise TypeError("duplicate registration")
-        self.typemap[types] = function
+        def __get__(self, obj, type=None):
+            if obj is None:
+                return self
+            from functools import partial
+            self.ismethod = True
+            return partial(self, obj)
 
+        def __call__(self, *args):
+            matchable = args[1:] if self.ismethod else args
+            for types, condition, function, argspec in self.typemap:
+                if len(matchable) == len(types) and all(isinstance(m, t) for m, t in zip(matchable, types)):
+                    if condition is None:
+                        return function(*args)
+                    else:
+                        l = dict(zip(argspec.args, args))
+                        if eval(condition, globals(), l):
+                            return function(*args)
+            raise ValueError("multimethod: no matching method found")
 
-def multimethod(*types):
-    def register(function):
-        name = function.__name__
-        mm = registry.get(name)
-        if mm is None:
-            mm = registry[name] = MultiMethod(name)
-        mm.register(types, function)
-        return mm
-    return register
+    def __call__(self, function):
+        import inspect
+        frame = inspect.currentframe()
+        try:
+            dispatcher = frame.f_back.f_locals.get(function.__name__, self._Dispatcher())
+        finally:
+            del frame
+        dispatcher.typemap.append((self.types, self.condition, function, inspect.getargspec(function)))
+        return dispatcher

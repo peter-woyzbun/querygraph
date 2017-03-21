@@ -27,22 +27,21 @@ class Deserializer(object):
             .setName("real") \
             .setParseAction(lambda toks: float(toks[0]))
 
-        _datetime_arg = (integer | real)
-        datetime_args = pp.commaSeparatedList(_datetime_arg)
-        _datetime = pp.Suppress(pp.Literal('datetime') + pp.Literal("(")) + datetime_args + pp.Suppress(")")
-        _datetime.setParseAction(lambda x: datetime.datetime(*x[0]))
+        # _datetime_arg = (integer | real)
+        # datetime_args = pp.commaSeparatedList(_datetime_arg)
+        # _datetime = pp.Suppress(pp.Literal('datetime') + pp.Literal("(")) + datetime_args + pp.Suppress(")")
+        # _datetime.setParseAction(lambda x: datetime.datetime(*x))
 
         tuple_str = pp.Forward()
         list_str = pp.Forward()
         dict_str = pp.Forward()
 
-        list_item = real | integer | _datetime | pp.quotedString.setParseAction(pp.removeQuotes) | \
+        list_item = real | integer | pp.quotedString.setParseAction(pp.removeQuotes) | \
                     pp.Group(list_str) | tuple_str | dict_str
 
         tuple_str << (pp.Suppress("(") + pp.Optional(pp.delimitedList(list_item)) +
                       pp.Optional(pp.Suppress(",")) + pp.Suppress(")"))
         tuple_str.setParseAction(lambda toks : tuple(toks.asList()))
-
         list_str << (lbrack + pp.Optional(pp.delimitedList(list_item) +
                                           pp.Optional(pp.Suppress(","))) + rbrack)
 
@@ -53,6 +52,6 @@ class Deserializer(object):
         return list_item
 
 
-parse_value = ValueParser()
+parse_value = Deserializer()
 
 print parse_value("{ 'A':1, 'B':2, 'C': {'a': 1.2, 'b': 3.4} }")[0]

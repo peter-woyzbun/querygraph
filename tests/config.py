@@ -49,7 +49,8 @@ DATABASES = {
     'mongodb': {
         'HOST': 'localhost',
         'PORT': 27017,
-        'DB_NAME': 'querygraph-test'
+        'DB_NAME': 'querygraph-test',
+        'COLLECTION': 'albums'
     },
     'elasticsearch': {
         'HOST': 'localhost',
