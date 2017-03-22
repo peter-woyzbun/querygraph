@@ -58,6 +58,10 @@ JOIN
 ## Query Graph Language
 
 A QGL query consists of three primary 'blocks': the `CONNECT` block, 
-the `RETRIEVE` block, and the `JOIN` block.
+the `RETRIEVE` block, and the `JOIN` block. The `CONNECT` block 
+established database connections, the `RETRIEVE` block creates query
+nodes, and the `JOIN` describes how the nodes are joined.
 
 ![QGL Syntax Railroad Diagram](docs/_static/images/qgl_syntax.png)
+
+### Connect Block
