@@ -1,11 +1,7 @@
-import inspect
-
-import yaml
 
 from querygraph import exceptions
 from querygraph.language.compiler import QGLCompiler
 from querygraph.query_node import QueryNode
-from querygraph.db import connectors
 
 
 # =================================================
