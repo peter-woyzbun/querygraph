@@ -55,7 +55,6 @@ class ReadTests(unittest.TestCase):
                     LEFT (postgres_node[Title] ==> mongo_node[album])
                 """
         query_graph = QueryGraph(qgl_str=query)
-        print query_graph.nodes['mongo_node'].manipulation_set
         self.assertTrue(Mutate in query_graph.nodes['mongo_node'].manipulation_set)
 
 

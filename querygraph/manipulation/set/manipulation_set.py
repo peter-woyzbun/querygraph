@@ -69,6 +69,15 @@ class Rename(Manipulation):
         return df
 
 
+class Select(Manipulation):
+
+    def __init__(self, columns):
+        self.columns = columns
+
+    def _execute(self, df, evaluator=None):
+        return df[self.columns]
+
+
 # =============================================
 # Manipulation Set
 # ---------------------------------------------
