@@ -78,6 +78,15 @@ class Select(Manipulation):
         return df[self.columns]
 
 
+class Remove(Manipulation):
+
+    def __init__(self, columns):
+        self.columns = columns
+
+    def _execute(self, df, evaluator=None):
+        return df.drop(self.columns, inplace=False, axis=1)
+
+
 # =============================================
 # Manipulation Set
 # ---------------------------------------------

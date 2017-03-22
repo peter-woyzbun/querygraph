@@ -3,7 +3,7 @@ import datetime
 
 import pandas as pd
 
-from querygraph.manipulation.set import ManipulationSet, Mutate, Rename, Select
+from querygraph.manipulation.set import ManipulationSet, Mutate, Rename, Select, Remove
 
 
 test_df = pd.DataFrame({'A': [1, 2, 3, 4],
@@ -41,6 +41,12 @@ class ExecutionTests(unittest.TestCase):
         manipulation_set += Select(columns=['A'])
         result_df = manipulation_set.execute(df=test_df)
         self.assertTrue('B' not in result_df)
+
+    def test_remove(self):
+        manipulation_set = ManipulationSet()
+        manipulation_set += Remove(columns=['A'])
+        result_df = manipulation_set.execute(df=test_df)
+        self.assertTrue('A' not in result_df)
 
 
 def main():
