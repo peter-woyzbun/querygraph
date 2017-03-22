@@ -43,4 +43,8 @@ Each connector in the `CONNECT` block points a name to a database
 type and associated credentials. The railroad diagram below outlines
 the syntax.
 
-![QGL Syntax Railroad Diagram](docs/_static/images/connect_block.png)
+![Connect Block Railroad Diagram](docs/_static/images/connect_block.png)
+
+### Retrieve Block
+
+![Retrieve Block Railroad Diagram](docs/_static/images/retrieve_block.png)

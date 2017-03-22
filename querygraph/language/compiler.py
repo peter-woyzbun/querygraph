@@ -3,7 +3,7 @@ import pyparsing as pp
 from querygraph.db import connectors
 from querygraph.query_node import QueryNode
 from querygraph.manipulation.expression.evaluator import Evaluator
-from querygraph.manipulation.set import ManipulationSet, Mutate
+from querygraph.manipulation.set import ManipulationSet, Mutate, Rename
 
 
 class ConnectBlock(object):
@@ -47,7 +47,8 @@ class ConnectBlock(object):
 
 class ManipulationSetParser(object):
 
-    manipulation_type_map = {'mutate': Mutate}
+    manipulation_type_map = {'mutate': Mutate,
+                             'rename': Rename}
 
     def __init__(self):
         self.manipulations = list()
@@ -60,6 +61,18 @@ class ManipulationSetParser(object):
 
     def _add_manipulation(self, manipulation_type, kwargs):
         self.manipulation_set += self.manipulation_type_map[manipulation_type](**kwargs)
+
+    def _rename_parser(self):
+        lpar = pp.Suppress("(")
+        rpar = pp.Suppress(")")
+        rename = pp.Suppress('rename')
+        old_col_name = pp.Word(pp.alphas, pp.alphanums + "_$")
+        new_col_name = pp.Word(pp.alphas, pp.alphanums + "_$")
+        parser = rename + lpar + old_col_name + pp.Suppress("=") + new_col_name + rpar
+        parser.setParseAction(lambda x: self._add_manipulation(manipulation_type='rename',
+                                                               kwargs={'old_column_name': x[0],
+                                                                       'new_column_name': x[1]}))
+        return parser
 
     def _mutate_parser(self):
         lpar = pp.Suppress("(")
@@ -76,7 +89,7 @@ class ManipulationSetParser(object):
         return parser
 
     def parser(self):
-        single_manipulation = self._mutate_parser()
+        single_manipulation = (self._mutate_parser() | self._rename_parser())
         manipulation_set = pp.delimitedList(single_manipulation, delim='>>')
         return manipulation_set
 
