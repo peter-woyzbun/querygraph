@@ -208,7 +208,7 @@ class TemplateParameter(object):
         expr_evaluator = self._expr_evaluator(parent_node_name, df, independent_param_vals)
         param_expr = expr_evaluator.parser()
 
-        container_type = (Optional('value', default='value') | Literal("list"))
+        container_type = (Literal('value') | Literal("list"))
         container_type.addParseAction(lambda x: self._set_attribute(target='container_type', value=x[0]))
 
         custom = (Suppress('custom[') + SkipTo(Suppress(']'), include=True))
@@ -218,6 +218,7 @@ class TemplateParameter(object):
         data_type.addParseAction(lambda x: self._set_attribute(target='data_type', value=x[0]))
 
         parameter_block = (param_expr + Suppress("|") + container_type + Suppress(":") + data_type)
+        print self.param_str
         parameter_block.parseString(self.param_str)
         self.prep_value = expr_evaluator.output_value()
 
@@ -229,7 +230,7 @@ class TemplateParameter(object):
             return self._convert_prep_value(prep_value=prep_value)
 
     def _make_list_query_value(self):
-        parameter_value = list(set(self.prep_value))
+        parameter_value = self.prep_value
         val_str = ", ".join(str(self._make_atomic_query_value(x)) for x in parameter_value)
         val_str = "(%s)" % val_str
         return val_str

@@ -1,6 +1,11 @@
 Query Graph
 ===========
 
+Query Graph is a framework/language for joining data from different
+database management systems - i.e. joins that can't typically be 
+accomplished with a single query. For example, joining Postgres data
+and Mongo Db data.
+
 
 ```
 CONNECT
@@ -67,6 +72,7 @@ nodes, and the `JOIN` describes how the nodes are joined.
 ### Connect Block
 
 Each connector in the `CONNECT` block points a name to a database
-type and associated credentials.
+type and associated credentials. The railroad diagram below outlines
+the syntax.
 
 ![QGL Syntax Railroad Diagram](docs/_static/images/connect_block.png)
