@@ -1,7 +1,6 @@
 import inspect
 
 import yaml
-from graphviz import Digraph
 
 from querygraph import exceptions
 from querygraph.language.compiler import QGLCompiler
@@ -206,35 +205,3 @@ class QueryGraph(object):
 
     def execute(self, **independent_param_vals):
         self.parallel_execute(**independent_param_vals)
-
-    def render_viz(self, save_path):
-        dot = Digraph(comment='Query Graph Visualization')
-        for node in self:
-            dot.node(node.name)
-        for node in self:
-            for child_node in node.children:
-                dot.edge(node.name, child_node.name)
-                dot.edge(child_node.name, node.name, label='%s' % str(child_node.join_context), fontsize='6',
-                         style='dashed', minlen='4')
-        dot.render(save_path)
-
-    def render_parallel_viz(self, save_path):
-        sub_graphs = list()
-        for generation_num, generation in enumerate(self.node_generations()):
-            generation_subgraph = Digraph('Generation %s' % generation_num)
-            generation_subgraph.body.append('style=filled')
-            generation_subgraph.body.append('color=lightgrey')
-            generation_subgraph.body.append('label = "process #1"')
-            for node in generation:
-                if node.parent is not None:
-                    generation_subgraph.edge(tail_name=node.name, head_name=node.parent.name)
-            sub_graphs.append(generation_subgraph)
-        g = Digraph('Query Graph')
-        for sub_graph in sub_graphs:
-            g.subgraph(sub_graph)
-        for node in self:
-            for child_node in node.children:
-                g.edge(node.name, child_node.name)
-                g.edge(child_node.name, node.name, label='%s' % str(child_node.join_context), fontsize='6',
-                         style='dashed', minlen='4')
-        g.render(save_path)
