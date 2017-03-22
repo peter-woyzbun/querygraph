@@ -65,3 +65,5 @@ nodes, and the `JOIN` describes how the nodes are joined.
 ![QGL Syntax Railroad Diagram](docs/_static/images/qgl_syntax.png)
 
 ### Connect Block
+
+![QGL Syntax Railroad Diagram](docs/_static/images/connect_block.png)
