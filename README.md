@@ -48,3 +48,7 @@ the syntax.
 ### Retrieve Block
 
 ![Retrieve Block Railroad Diagram](docs/_static/images/retrieve_block.png)
+
+### Join Block
+
+![Join Block Railroad Diagram](docs/_static/images/join_block.png)
