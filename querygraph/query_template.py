@@ -98,4 +98,5 @@ class QueryTemplate(object):
         return render_value
 
     def execute(self, df=None, independent_param_vals=None):
-        pass
+        """ Should be implemented by child class. """
+        raise NotImplementedError

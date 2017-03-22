@@ -3,8 +3,21 @@ import math
 import re
 
 import pandas as pd
-from pyparsing import Literal, CaselessLiteral, Word, Combine, Group, Optional, \
-    ZeroOrMore, Forward, nums, alphas, quotedString, Suppress, delimitedList, Keyword, removeQuotes
+from pyparsing import (Literal,
+                       CaselessLiteral,
+                       Word,
+                       Combine,
+                       Optional,
+                       ZeroOrMore,
+                       Forward,
+                       nums,
+                       alphas,
+                       quotedString,
+                       Suppress,
+                       delimitedList,
+                       Keyword,
+                       removeQuotes,
+                       originalTextFor)
 
 from functions import all_functions
 
@@ -27,7 +40,8 @@ class Evaluator(object):
 
     funcs = {func.name: func for func in all_functions}
 
-    def __init__(self, df=None, df_name=None, name_dict=None):
+    def __init__(self, deferred_eval=False, df=None, df_name=None, name_dict=None):
+        self.deferred_eval = deferred_eval
         self.df = df
         self.df_name = df_name
         self.name_dict = name_dict
@@ -36,6 +50,11 @@ class Evaluator(object):
 
         if self.df is not None:
             self._clean_col_names()
+
+    def eval(self, expr_str):
+        parser = self.parser()
+        parser.parseString(expr_str)
+        return self.output_value()
 
     def output_value(self):
         return self._evaluate_stack()
@@ -61,13 +80,17 @@ class Evaluator(object):
         return self.df.columns.values.tolist()
 
     def col_name_parser(self):
-        if self.df_name is not None:
-            df_prefix = Suppress("%s." % self.df_name)
-            col_names = [Optional(df_prefix) + Literal("%s" % col_name) for col_name in self.col_names]
+        if not self.deferred_eval:
+            if self.df_name is not None:
+                df_prefix = Suppress("%s." % self.df_name)
+                col_names = [Optional(df_prefix) + Literal("%s" % col_name) for col_name in self.col_names]
+            else:
+                col_names = [Literal("%s" % col_name) for col_name in self.col_names]
+            parser = reduce(lambda x, y: x | y, col_names)
+            return parser
         else:
-            col_names = [Literal("%s" % col_name) for col_name in self.col_names]
-        parser = reduce(lambda x, y: x | y, col_names)
-        return parser
+            parser = Word(alphas, alphas + nums + "_$")
+            return parser
 
     def named_val_parser(self):
         names = [Literal("%s" % val_key) for val_key in self.name_dict.keys()]
@@ -75,16 +98,19 @@ class Evaluator(object):
         return parser
 
     def value_parser(self):
-        if self.df is not None:
-            column = self.col_name_parser()
-            if self.name_dict is not None:
-                named_val = self.named_val_parser()
-                value = column | named_val
-                return value
-            else:
-                return column
-        elif self.name_dict is not None:
-            return self.named_val_parser()
+        if not self.deferred_eval:
+            if self.df is not None:
+                column = self.col_name_parser()
+                if self.name_dict is not None:
+                    named_val = self.named_val_parser()
+                    value = column | named_val
+                    return value
+                else:
+                    return column
+            elif self.name_dict is not None:
+                return self.named_val_parser()
+        else:
+            return self.col_name_parser()
 
     @property
     def op_strings(self):
@@ -173,6 +199,8 @@ class Evaluator(object):
 
         term = factor + ZeroOrMore((multop + factor).setParseAction(lambda x: self.push_first(tok=x[0])))
         expr << term + ZeroOrMore((addop + term).setParseAction(lambda x: self.push_first(tok=x[0])))
+        if self.deferred_eval:
+            expr.setParseAction(lambda x: originalTextFor(expr))
         return expr
 
     def _evaluate_stack(self):

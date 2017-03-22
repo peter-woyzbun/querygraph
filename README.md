@@ -54,3 +54,10 @@ RETRIEVE
 JOIN
     LEFT (postgres_node[user_id] ==> mongo_node[user_id]);
 ```
+
+## Query Graph Language
+
+A QGL query consists of three primary 'blocks': the `CONNECT` block, 
+the `RETRIEVE` block, and the `JOIN` block.
+
+![QGL Syntax Railroad Diagram](docs/_static/images/qgl_syntax.png)

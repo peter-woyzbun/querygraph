@@ -2,6 +2,7 @@ import pyparsing as pp
 
 from querygraph.db import connectors
 from querygraph.query_node import QueryNode
+from querygraph.manipulation.expression.evaluator import Evaluator
 
 
 class ConnectBlock(object):
@@ -41,6 +42,33 @@ class ConnectBlock(object):
 
         connector_block = pp.OneOrMore(single_connector)
         return connector_block
+
+
+class ManipulationSet(object):
+
+    def __init__(self):
+        self.manipulations = list()
+
+    def _add_manipulation(self, manipulation_type, kwargs):
+        self.manipulations.append({'manipulation_type': manipulation_type, 'kwargs': kwargs})
+
+    def _mutate_parser(self):
+        lpar = pp.Suppress("(")
+        rpar = pp.Suppress(")")
+        mutate = pp.Suppress('mutate')
+        col_name = pp.Word(pp.alphas, pp.alphanums + "_$")
+
+        expr_evaluator = Evaluator(deferred_eval=True)
+        col_expr = expr_evaluator.parser()
+
+        parser = mutate + lpar + col_name + pp.Suppress("=") + col_expr + rpar
+        parser.setParseAction(lambda x: self._add_manipulation(manipulation_type='mutate',
+                                                               kwargs={'col_name': x[0], 'col_expr': x[1]}))
+        return parser
+
+    def parser(self):
+        single_manipulation = self._mutate_parser()
+        manipulation_set = pp.delimitedList(single_manipulation, delim='>>')
 
 
 class RetrieveBlock(object):

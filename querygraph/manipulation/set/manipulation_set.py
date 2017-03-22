@@ -46,14 +46,15 @@ class Manipulation(object):
 
 class Mutate(Manipulation):
 
-    def __init__(self, new_col_name, new_col_expression):
-        self.new_col_name = new_col_name
-        self.new_col_expression = new_col_expression
+    def __init__(self, col_name, col_expr):
+        self.col_name = col_name
+        self.col_expr = col_expr
 
     def _execute(self, df, evaluator=None):
         if not isinstance(evaluator, Evaluator):
             raise ManipulationException
-        df[self.new_col_name] = evaluator.eval(df=df, eval_str=self.new_col_expression)
+        expr_evaluator = Evaluator(df=df)
+        df[self.col_name] = expr_evaluator.eval(expr_str=self.col_expr)
         return df
 
 
