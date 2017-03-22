@@ -66,4 +66,7 @@ nodes, and the `JOIN` describes how the nodes are joined.
 
 ### Connect Block
 
+Each connector in the `CONNECT` block points a name to a database
+type and associated credentials.
+
 ![QGL Syntax Railroad Diagram](docs/_static/images/connect_block.png)
