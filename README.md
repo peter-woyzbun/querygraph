@@ -47,8 +47,12 @@ the syntax.
 
 ### Retrieve Block
 
+The `RETRIEVE` block defines the graph's query nodes.
+
 ![Retrieve Block Railroad Diagram](docs/_static/images/retrieve_block.png)
 
 ### Join Block
+
+The `JOIN` block defines how the graph's query nodes are joined.
 
 ![Join Block Railroad Diagram](docs/_static/images/join_block.png)
