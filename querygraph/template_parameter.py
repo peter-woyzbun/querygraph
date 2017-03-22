@@ -1,4 +1,5 @@
 import re
+from collections import defaultdict
 
 import numpy as np
 from pyparsing import (Suppress,
@@ -11,17 +12,15 @@ from pyparsing import (Suppress,
                        Keyword,
                        Optional)
 
-from querygraph.exceptions import QueryGraphException
-from querygraph.type_converter import TypeConverter
+from querygraph import exceptions
 from querygraph.manipulation.expression.evaluator import Evaluator
-from querygraph.utils.deserializer import Deserializer
 
 
 # =============================================
 # Template Parameter Exceptions
 # ---------------------------------------------
 
-class TemplateParameterException(QueryGraphException):
+class TemplateParameterException(exceptions.QueryGraphException):
     pass
 
 
@@ -80,49 +79,109 @@ class TemplateParameter(object):
                   'time',
                   'custom')
 
-    def __init__(self,
-                 param_str,
-                 independent=True):
+    def __init__(self, param_str, independent=True):
         self.param_str = param_str
-        self.name = None
         self.independent = independent
-        self.param_expr_str = None
+
+        self.container_type = None
         self.data_type = None
         self.custom_data_type_str = None
-        self.container_type = None
-        self.pre_value = None
 
-        self.type_converter = TypeConverter()
-        self.deserialize = Deserializer()
+        self.type_converters = defaultdict(dict)
 
         self._setup_generic_converters()
         self._setup_db_specific_converters()
-        # self._initial_parse()
+
+        self.prep_value = None
+
+    # =============================================
+    # Type Conversion Handling
+    # ---------------------------------------------
 
     def _setup_generic_converters(self):
         # Setup generic converters for 'int' type converters.
-        self.type_converter.add_int_converters({int: lambda x: x,
-                                                np.int64: lambda x: x,
-                                                np.int32: lambda x: x,
-                                                np.int16: lambda x: x,
-                                                np.int8: lambda x: x,
-                                                float: lambda x: int(x),
-                                                str: lambda x: int(x)})
+        self._add_int_converters(
+            {int: lambda x: x,
+             np.int64: lambda x: x,
+             np.int32: lambda x: x,
+             np.int16: lambda x: x,
+             np.int8: lambda x: x,
+             float: lambda x: int(x),
+             str: lambda x: int(x)}
+        )
         # Setup generic converters for 'float' type converters.
-        self.type_converter.add_float_converters({int: lambda x: float(x),
-                                                  np.int64: lambda x: float(x),
-                                                  np.float64: lambda x: x,
-                                                  float: lambda x: x,
-                                                  str: lambda x: float(x)})
+        self._add_float_converters(
+            {int: lambda x: float(x),
+             np.int64: lambda x: float(x),
+             np.float64: lambda x: x,
+             float: lambda x: x,
+             str: lambda x: float(x)}
+        )
         # Setup generic converters for 'str' type converters.
-        self.type_converter.add_str_converters({str: lambda x: "'%s'" % x,
-                                                float: lambda x: "'%s'" % x,
-                                                int: lambda x: "'%s'" % x})
+        self._add_str_converters(
+            {str: lambda x: "'%s'" % x,
+             float: lambda x: "'%s'" % x,
+             int: lambda x: "'%s'" % x}
+        )
 
     def _setup_db_specific_converters(self):
         pass
 
-    @property
+    def convert(self, data_type, value):
+        if data_type not in self.type_converters:
+            raise exceptions.TypeConversionError("There are no converters defined for parameter "
+                                                 "data type '%s'." % data_type)
+        if type(value) not in self.type_converters[data_type]:
+            raise exceptions.TypeConversionError("There is no converter defined for parameter data type '%s', "
+                                                 "input type '%s'." % (data_type, type(value)))
+        return self.type_converters[data_type][type(value)](value)
+
+    def _convert_prep_value(self, prep_value):
+        if type(prep_value) not in self.type_converters[self.data_type]:
+            raise exceptions.TypeConversionError("There is no converter defined for parameter data type '%s', "
+                                                 "input type '%s'." % (self.data_type, type(prep_value)))
+        return self.type_converters[self.data_type][type(prep_value)](prep_value)
+
+    def _add_type_converter(self, data_type, input_type, converter):
+        """
+        Add a single type converter to the 'type_converters' dict.
+
+        """
+        if data_type not in self.DATA_TYPES:
+            raise exceptions.ParameterConfigException("Trying to add converter for data type ('%s')"
+                                                      " that does not exist." % data_type)
+        if not callable(converter):
+            raise exceptions.ParameterConfigException("Tried to add a 'converter' that is not callable.")
+        self.type_converters[data_type][input_type] = converter
+
+    def _add_type_converters(self, data_type, converter_dict):
+        for input_type, converter in converter_dict.items():
+            self._add_type_converter(data_type=data_type,
+                                     input_type=input_type,
+                                     converter=converter)
+
+    def _add_int_converters(self, converter_dict):
+        self._add_type_converters(data_type='int', converter_dict=converter_dict)
+
+    def _add_float_converters(self, converter_dict):
+        self._add_type_converters(data_type='float', converter_dict=converter_dict)
+
+    def _add_str_converters(self, converter_dict):
+        self._add_type_converters(data_type='str', converter_dict=converter_dict)
+
+    def _add_datetime_converters(self, converter_dict):
+        self._add_type_converters(data_type='datetime', converter_dict=converter_dict)
+
+    def _add_date_converters(self, converter_dict):
+        self._add_type_converters(data_type='date', converter_dict=converter_dict)
+
+    def _add_time_converters(self, converter_dict):
+        self._add_type_converters(data_type='time', converter_dict=converter_dict)
+
+    # =============================================
+    # Parsing/Rendering
+    # ---------------------------------------------
+
     def _data_type_parser(self):
         """ Return Pyparsing parser object for parsing data type. """
         # Create a keyword for each data type.
@@ -138,53 +197,15 @@ class TemplateParameter(object):
         self.custom_data_type_str = value
         return 'custom'
 
-    def _make_single_value(self, pre_value):
-        if self.data_type == 'custom':
-            return self.custom_data_type_str % pre_value
-        else:
-            # return self.DATA_TYPES[self.data_type][type(pre_value)](pre_value)
-            return self.type_converter.convert(data_type=self.data_type, value=pre_value)
-
-    def _make_value_list(self, parameter_value):
-        parameter_value = list(set(parameter_value))
-        val_str = ", ".join(str(self._make_single_value(x)) for x in parameter_value)
-        val_str = "(%s)" % val_str
-        return val_str
-
-    def _initial_parse(self):
-        # Parameter expression in brackets...
-        param_expr = (Suppress('[') + SkipTo(Suppress(']'), include=True))
-        param_expr.addParseAction(lambda x: self._set_attribute('param_expr_str', value=x[0]))
-
-        param_name = Word(alphas, alphanums + "_$")
-        param_name.addParseAction(lambda x: self._set_attribute(target='name', value=x[0]))
-
-        param_declaration = (param_expr | param_name)
-
-        # Container types.
-        value_list = Literal('value_list')
-        value = Literal('value')
-        container_type = Optional(value_list | value)
-        container_type.addParseAction(lambda x: self._set_attribute(target='container_type', value=x[0]))
-
-        custom = (Suppress('custom[') + SkipTo(Suppress(']'), include=True))
-        custom.addParseAction(lambda x: self._set_custom_data_type(x[0]))
-        data_type = (self._data_type_parser | custom)
-        # data_type = (num | _int | _float | _str | _date | custom)
-        data_type.addParseAction(lambda x: self._set_attribute(target='data_type', value=x[0]))
-
-        parameter_block = (param_declaration + Suppress("|") + container_type + Suppress(":") + data_type)
-
-        try:
-            parameter_block.parseString(self.param_str)
-        except ParseException:
-            raise ParameterParseException
-
-    def _parse(self, parent_node_name=None, df=None, independent_param_vals=None):
+    def _expr_evaluator(self, parent_node_name=None, df=None, independent_param_vals=None):
         if self.independent:
             expr_evaluator = Evaluator(name_dict=independent_param_vals)
         else:
             expr_evaluator = Evaluator(df=df, df_name=parent_node_name)
+        return expr_evaluator
+
+    def _make_prep_value(self, parent_node_name=None, df=None, independent_param_vals=None):
+        expr_evaluator = self._expr_evaluator(parent_node_name, df, independent_param_vals)
         param_expr = expr_evaluator.parser()
 
         container_type = (Optional('value', default='value') | Literal("list"))
@@ -192,31 +213,41 @@ class TemplateParameter(object):
 
         custom = (Suppress('custom[') + SkipTo(Suppress(']'), include=True))
         custom.addParseAction(lambda x: self._set_custom_data_type(x[0]))
-        data_type = (self._data_type_parser | custom)
+        data_type = (self._data_type_parser() | custom)
         # data_type = (num | _int | _float | _str | _date | custom)
         data_type.addParseAction(lambda x: self._set_attribute(target='data_type', value=x[0]))
 
         parameter_block = (param_expr + Suppress("|") + container_type + Suppress(":") + data_type)
         parameter_block.parseString(self.param_str)
-        self.pre_value = expr_evaluator.output_value()
+        self.prep_value = expr_evaluator.output_value()
 
-    def _make_query_value(self):
-        if self.container_type == 'list':
-            return self._make_value_list(self.pre_value)
-        elif self.container_type == 'value':
-            return self._make_single_value(self.pre_value)
+    def _make_atomic_query_value(self, prep_value):
+        if self.data_type == 'custom':
+            return self.custom_data_type_str % prep_value
+        else:
+            # return self.DATA_TYPES[self.data_type][type(pre_value)](pre_value)
+            return self._convert_prep_value(prep_value=prep_value)
+
+    def _make_list_query_value(self):
+        parameter_value = list(set(self.prep_value))
+        val_str = ", ".join(str(self._make_atomic_query_value(x)) for x in parameter_value)
+        val_str = "(%s)" % val_str
+        return val_str
+
+    def _data_requirement_check(self, df=None, independent_param_vals=None):
+        # If the parameter is independent, and no independent parameter values are given,
+        # raise exception.
+        if self.independent and independent_param_vals is None:
+            raise TemplateParameterException("Independent template parameter cannot be defined because no "
+                                             "independent parameter values were given.")
+        # If the parameter is dependent, and no dataframe is given, raise exception.
+        if not self.independent and df is None:
+            raise TemplateParameterException("Dependent template parameter cannot be defined because no "
+                                             "parent dataframe was given.")
 
     def query_value(self, df=None, parent_node_name=None, independent_param_vals=None):
         """
-        Return TemplateParameter query value. This involves:
-
-            (1) Creating the query 'pre_value', which is either
-                derived from evaluating the parameter's expression
-                string, or taken directly from the independent_params
-                dict.
-            (2) Converting the pre_value into its actualy query value,
-                which is based on the parameter 'data_type' and
-                'container_type' (single value, or list of values).
+        ...
 
         Parameters
         ----------
@@ -230,17 +261,14 @@ class TemplateParameter(object):
             values.
 
         """
-        # If the parameter is independent, and no independent parameter values are given,
-        # raise exception.
-        if self.independent and independent_param_vals is None:
-            raise TemplateParameterException("Independent template parameter '%s' cannot be defined because no "
-                                             "independent parameter values were given." % self.name)
-        # If the parameter is dependent, and no dataframe is given, raise exception.
-        if not self.independent and df is None:
-            raise TemplateParameterException("Dependent template parameter '%s' cannot be defined because no "
-                                             "parent dataframe was given." % self.name)
+        self._data_requirement_check(df=df, independent_param_vals=independent_param_vals)
 
-        self._parse(df=df,
-                    parent_node_name=parent_node_name,
-                    independent_param_vals=independent_param_vals)
-        return self._make_query_value()
+        self._make_prep_value(df=df,
+                              parent_node_name=parent_node_name,
+                              independent_param_vals=independent_param_vals)
+        if self.container_type == 'list':
+            value = self._make_list_query_value()
+            return value
+        elif self.container_type == 'value':
+            value = self._make_atomic_query_value(prep_value=self.prep_value)
+            return value

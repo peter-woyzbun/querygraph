@@ -5,10 +5,10 @@ from querygraph.query_template import QueryTemplate
 
 
 # =============================================
-# Postgres Template Parameter
+# Cassandra Template Parameter
 # ---------------------------------------------
 
-class PostgresParameter(TemplateParameter):
+class CassandraParameter(TemplateParameter):
 
     def __init__(self, param_str, independent=True):
         TemplateParameter.__init__(self,
@@ -18,32 +18,22 @@ class PostgresParameter(TemplateParameter):
     def _setup_db_specific_converters(self):
 
         self._add_datetime_converters(
-            {datetime.datetime: lambda x: "'%s'" % x.strftime('%Y-%m-%d %H:%M:%S'),
-             str: lambda x: "'%s'" % x}
-        )
-
-        self._add_date_converters(
-            {datetime.datetime: lambda x: "'%s'" % x.strftime('%Y-%m-%d'),
-             str: lambda x: "'%s'" % x}
-        )
-
-        self._add_time_converters(
-            {datetime.datetime: lambda x: "'%s'" % x.strftime('%H:%M:%S'),
+            {datetime.datetime: lambda x: "'%s'" % x.isoformat(' '),
              str: lambda x: "'%s'" % x}
         )
 
 
 # =============================================
-# Postgres Template Parameter
+# Cassandra Query Template
 # ---------------------------------------------
 
-class PostgresTemplate(QueryTemplate):
+class CassandraTemplate(QueryTemplate):
 
     def __init__(self, template_str, db_connector):
         QueryTemplate.__init__(self,
                                template_str=template_str,
                                db_connector=db_connector,
-                               parameter_class=PostgresParameter)
+                               parameter_class=CassandraParameter)
 
     def execute(self, df=None, **independent_param_vals):
         if self.rendered_query is not None:

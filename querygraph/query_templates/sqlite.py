@@ -11,24 +11,24 @@ from querygraph.query_template import QueryTemplate
 
 class SqliteParameter(TemplateParameter):
 
-    def __init__(self, parameter_str, parameter_type):
+    def __init__(self, param_str, independent=True):
         TemplateParameter.__init__(self,
-                                   parameter_str=parameter_str,
-                                   parameter_type=parameter_type)
+                                   param_str=param_str,
+                                   independent=independent)
 
     def _setup_db_specific_converters(self):
 
-        self.type_converter.add_datetime_converters(
+        self._add_datetime_converters(
             {datetime.datetime: lambda x: "'%s'" % x.strftime('%Y-%m-%d %H:%M:%S'),
              str: lambda x: "'%s'" % x}
         )
 
-        self.type_converter.add_date_converters(
+        self._add_date_converters(
             {datetime.datetime: lambda x: "'%s'" % x.strftime('%Y-%m-%d'),
              str: lambda x: "'%s'" % x}
         )
 
-        self.type_converter.add_time_converters(
+        self._add_time_converters(
             {datetime.datetime: lambda x: "'%s'" % x.strftime('%H:%M:%S'),
              str: lambda x: "'%s'" % x}
         )

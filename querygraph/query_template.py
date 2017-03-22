@@ -1,6 +1,7 @@
 import re
 
 from querygraph.exceptions import QueryGraphException
+from querygraph.utils.deserializer import Deserializer
 
 
 # =============================================
@@ -49,6 +50,8 @@ class QueryTemplate(object):
         self.rendered_query = None
         self.parameter_class = parameter_class
         self.fields = fields
+
+        self.deserialize = Deserializer()
 
     def _render_independent_param(self, param_str, independent_param_vals):
         if not independent_param_vals:

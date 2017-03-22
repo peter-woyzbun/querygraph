@@ -11,12 +11,14 @@ from querygraph.query_template import QueryTemplate
 
 class ElasticSearchParameter(TemplateParameter):
 
-    def __init__(self, parameter_str, parameter_type):
-        TemplateParameter.__init__(self, parameter_str, parameter_type)
+    def __init__(self, param_str, independent=True):
+        TemplateParameter.__init__(self,
+                                   param_str=param_str,
+                                   independent=independent)
 
     def _make_value_list(self, parameter_value):
         parameter_value = list(set(parameter_value))
-        val_str = ", ".join(str(self._make_single_value(x)) for x in parameter_value)
+        val_str = ", ".join(str(self._make_atomic_query_value(x)) for x in parameter_value)
         val_str = "[%s]" % val_str
         return val_str
 
@@ -36,7 +38,7 @@ class ElasticSearchTemplate(QueryTemplate):
                                fields=fields)
 
     def _post_render_value(self, render_value):
-        post_value = ast.literal_eval(render_value)
+        post_value = self.deserialize(render_value)
         return post_value
 
     def execute(self, df=None, **independent_param_vals):

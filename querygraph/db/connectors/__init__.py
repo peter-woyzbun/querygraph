@@ -29,3 +29,13 @@ try:
     from _elasticsearch import ElasticSearchConnector as ElasticSearch
 except ImportError:
     ElasticSearch = optional_import.NotInstalled(name='elasticsearch')
+
+try:
+    from _cassandra import CassandraConnector as Cassandra
+except ImportError:
+    Cassandra = optional_import.NotInstalled(name='cassandra-driver')
+
+try:
+    from _redis import RedisConnector as Redis
+except ImportError:
+    Redis = optional_import.NotInstalled(name='redis')
