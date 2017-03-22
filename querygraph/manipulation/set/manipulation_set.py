@@ -79,6 +79,9 @@ class ManipulationSet(object):
     def __init__(self):
         self.manipulations = list()
 
+    def __contains__(self, manipulation_type):
+        return any(isinstance(x, manipulation_type) for x in self.manipulations)
+
     def __add__(self, other):
         if not isinstance(other, Manipulation):
             raise ConfigurationException("Only Manipulation instances can be added to ManipulationSet.")

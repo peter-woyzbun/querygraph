@@ -67,6 +67,8 @@ class QueryGraph(object):
     @property
     def root_node(self):
         """ Return the root QueryNode instance - the node with no parent."""
+        if not self.is_spanning_tree:
+            raise exceptions.DisconnectedNodes("Can't return the root node because not all nodes are connected.")
         arbitrary_node = self.nodes.values()[0]
         return arbitrary_node.root_node()
 

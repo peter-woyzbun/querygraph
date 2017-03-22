@@ -9,38 +9,6 @@ and Mongo Db data.
 
 ```
 CONNECT
-    sqlite_conn <- Sqlite(host=...)
-    postgres_conn <- Postgres(host=..., user=...)
-    mysql_conn <- MySql(host=...user=...)
-RETRIEVE
-    QUERY |
-        SELECT *
-        FROM Artist
-        WHERE Artist.Name == {%% artist_name|value:str %%};
-    USING sqlite_chinook
-    AS sqlite_node
-    ---
-    QUERY |
-        SELECT *
-        FROM "Album"
-        WHERE "ArtistId" IN {{ ArtistId|value_list:int }};
-    USING postgres_chinook
-    AS postgres_node
-    ---
-    QUERY |
-        SELECT *
-        FROM Track
-        WHERE AlbumId IN {{ AlbumId|value_list:int }};
-    USING mysql_chinook
-    AS mysql_node
-JOIN
-    RIGHT (postgres_node[ArtistId] ==> sqlite_node[ArtistId]);
-    INNER (mysql_node[AlbumId] ==> postgres_node[AlbumId]);
-```
-
-
-```
-CONNECT
     mongodb_conn <- MongDb(host='', client='',...)
     postgres_conn <- Postgres(host='', user='',...)
 RETRIEVE

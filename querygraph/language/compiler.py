@@ -3,6 +3,7 @@ import pyparsing as pp
 from querygraph.db import connectors
 from querygraph.query_node import QueryNode
 from querygraph.manipulation.expression.evaluator import Evaluator
+from querygraph.manipulation.set import ManipulationSet, Mutate
 
 
 class ConnectBlock(object):
@@ -44,13 +45,21 @@ class ConnectBlock(object):
         return connector_block
 
 
-class ManipulationSet(object):
+class ManipulationSetParser(object):
+
+    manipulation_type_map = {'mutate': Mutate}
 
     def __init__(self):
         self.manipulations = list()
+        self.manipulation_set = ManipulationSet()
+
+    def __call__(self, manipulation_set_str):
+        parser = self.parser()
+        parser.parseString(manipulation_set_str)
+        return self.manipulation_set
 
     def _add_manipulation(self, manipulation_type, kwargs):
-        self.manipulations.append({'manipulation_type': manipulation_type, 'kwargs': kwargs})
+        self.manipulation_set += self.manipulation_type_map[manipulation_type](**kwargs)
 
     def _mutate_parser(self):
         lpar = pp.Suppress("(")
@@ -69,6 +78,7 @@ class ManipulationSet(object):
     def parser(self):
         single_manipulation = self._mutate_parser()
         manipulation_set = pp.delimitedList(single_manipulation, delim='>>')
+        return manipulation_set
 
 
 class RetrieveBlock(object):
@@ -100,7 +110,10 @@ class RetrieveBlock(object):
         self.nodes = dict()
 
     def _add_query_node(self, query_value, connector_name, node_name, fields=None, manipulation_set=None):
-        self.nodes[node_name] = {'query_value': query_value, 'connector_name': connector_name, 'fields': fields}
+        self.nodes[node_name] = {'query_value': query_value,
+                                 'connector_name': connector_name,
+                                 'fields': fields,
+                                 'manipulation_set': manipulation_set}
 
     def parser(self):
         query_key = pp.Keyword("QUERY")
@@ -220,6 +233,10 @@ class QGLCompiler(object):
             self.query_graph.nodes[node_name] = QueryNode(name=node_name, query=node_dict['query_value'],
                                                           db_connector=self.connectors[node_dict['connector_name']],
                                                           fields=node_dict['fields'])
+            if node_dict['manipulation_set'] is not None:
+                manipulation_set_parser = ManipulationSetParser()
+                node_manipulation_set = manipulation_set_parser(node_dict['manipulation_set'])
+                self.query_graph.nodes[node_name].manipulation_set = node_manipulation_set
 
     def _create_joins(self):
         for join_dict in self.join_block.joins:

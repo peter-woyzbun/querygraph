@@ -14,6 +14,7 @@ from pyparsing import (Suppress,
 
 from querygraph import exceptions
 from querygraph.manipulation.expression.evaluator import Evaluator
+from querygraph.manipulation.expression import ManipulationExpression
 
 
 # =============================================
