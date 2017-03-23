@@ -132,6 +132,12 @@ class GenericExprTests(unittest.TestCase):
         result = test_param.query_value(df=test_df)
         self.assertEquals(result, np.square(2.4))
 
+    def test_round(self):
+        param_str = "round(2.45, 1) -> float"
+        test_param = TemplateParameter(param_str=param_str, independent=False)
+        result = test_param.query_value(df=test_df)
+        self.assertEquals(result, np.round_(2.45, 1))
+
     def test_to_date(self):
         param_str = 'to_date(test_param, "%Y/%m/%d") -> date'
         test_param = TemplateParameter(param_str=param_str, independent=True)

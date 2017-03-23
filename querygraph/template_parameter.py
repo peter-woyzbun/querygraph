@@ -94,6 +94,7 @@ class TemplateParameter(object):
              np.int8: lambda x: x,
              np.float64: lambda x: x,
              np.float32: lambda x: x,
+             np.float16: lambda x: x,
              float: lambda x: int(x),
              str: lambda x: int(x)}
         )
@@ -102,6 +103,8 @@ class TemplateParameter(object):
             {int: lambda x: float(x),
              np.int64: lambda x: float(x),
              np.float64: lambda x: x,
+             np.float32: lambda x: x,
+             np.float16: lambda x: x,
              float: lambda x: x,
              str: lambda x: float(x)}
         )

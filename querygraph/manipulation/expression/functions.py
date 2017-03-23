@@ -219,6 +219,24 @@ class Square(ExprFunc):
         return np.square(value)
 
 
+class Round(ExprFunc):
+
+    def __init__(self):
+        ExprFunc.__init__(self, name='round')
+
+    @multimethod(pd.Series, int)
+    def _execute(self, value, decimals):
+        return np.round_(value, decimals)
+
+    @multimethod(int, int)
+    def _execute(self, value, decimals):
+        return np.round_(value, decimals)
+
+    @multimethod(float, int)
+    def _execute(self, value, decimals):
+        return np.round_(value, decimals)
+
+
 # =============================================
 # String Functions
 # ---------------------------------------------
