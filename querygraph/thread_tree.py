@@ -14,7 +14,7 @@ class ExecutionThread(threading.Thread):
         self.independent_param_vals = independent_param_vals
 
     def run(self):
-        self.query_node.retrieve_dataframe()
+        self.query_node.retrieve_dataframe(independent_param_vals=self.independent_param_vals)
         for child_node in self.query_node.children:
             child_thread = self._create_child_thread(child_query_node=child_node)
             child_thread.start()

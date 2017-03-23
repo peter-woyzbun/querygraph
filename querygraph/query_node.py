@@ -142,9 +142,13 @@ class QueryNode(object):
     def retrieve_dataframe(self, independent_param_vals):
         query_template = self._make_query_template()
         if self.parent is not None:
-            self.df = query_template.execute(df=self.parent.df, independent_param_vals=independent_param_vals)
+            df = query_template.execute(df=self.parent.df, independent_param_vals=independent_param_vals)
+            print df
+            self.df = df
         else:
-            self.df = query_template.execute(independent_param_vals=independent_param_vals)
+            df = query_template.execute(independent_param_vals=independent_param_vals)
+            print df
+            self.df = df
 
     def _execute(self, **independent_param_vals):
         """

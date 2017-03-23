@@ -1,7 +1,22 @@
 import unittest
 import datetime
 
+import pandas as pd
+import numpy as np
+
 from querygraph.template_parameter import TemplateParameter
+
+
+test_df = pd.DataFrame({'A': [1, 2, 3, 4],
+                        'B': [0, 0, 0, 0],
+                        'C': ['a', 'b', 'c', 'd'],
+                        'D': ['A', 'B', 'C', 'D'],
+                        'E': ['Abc', 'Abc', 'Abc', 'Abc'],
+                        'F': ['abc', 'abc', 'abc', 'abc'],
+                        'G': ['ABC', 'ABC', 'ABC', 'ABC'],
+                        'H': [datetime.datetime(2009, 1, 6, 1, 1, 1) for i in range(0, 4)],
+                        'I': ['2009-01-06 01:01:01' for j in range(0, 4)],
+                        'J': ['2009-01-06' for k in range(0, 4)]})
 
 
 class GenericRenderingTests(unittest.TestCase):
@@ -30,6 +45,12 @@ class GenericRenderingTests(unittest.TestCase):
         result = test_param.query_value(independent_param_vals={'test_param': [1, 2]})
         self.assertEquals(result, "(1, 2)")
 
+    def test_dependent_param(self):
+        param_str = "A -> list:int"
+        test_param = TemplateParameter(param_str=param_str, independent=False)
+        result = test_param.query_value(df=test_df)
+        self.assertEquals(result, "(1, 2, 3, 4)")
+
 
 class GenericExprTests(unittest.TestCase):
 
@@ -50,6 +71,18 @@ class GenericExprTests(unittest.TestCase):
         test_param = TemplateParameter(param_str=param_str, independent=True)
         result = test_param.query_value(independent_param_vals={'test_param': 'test str'})
         self.assertEquals(result, "'Test str'")
+
+    def test_len(self):
+        param_str = "len(A) -> int"
+        test_param = TemplateParameter(param_str=param_str, independent=False)
+        result = test_param.query_value(df=test_df)
+        self.assertEquals(result, 4)
+
+    def test_log(self):
+        param_str = "log(2) -> float"
+        test_param = TemplateParameter(param_str=param_str, independent=False)
+        result = test_param.query_value(df=test_df)
+        self.assertEquals(result, np.log(2))
 
     def test_to_date(self):
         param_str = 'to_date(test_param, "%Y/%m/%d") -> date'

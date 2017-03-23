@@ -13,7 +13,7 @@ class MongoDbPostgresTests(unittest.TestCase):
                     mongodb_conn <- Mongodb(host='%s', port='%s', db_name='%s', collection='%s')
                 RETRIEVE
                     QUERY |
-                        {'tags': {'$in': {%% album_tags|value_list:str %%}}};
+                        {'tags': {'$in': {%% album_tags -> value_list:str %%}}};
                     FIELDS album
                     USING mongodb_conn
                     AS mongo_node
@@ -21,7 +21,7 @@ class MongoDbPostgresTests(unittest.TestCase):
                     QUERY |
                         SELECT *
                         FROM "Album"
-                        WHERE "Title" IN {{ album|value_list:str }};
+                        WHERE "Title" IN {{ album -> value_list:str }};
                     USING postgres_conn
                     AS postgres_node
                 JOIN

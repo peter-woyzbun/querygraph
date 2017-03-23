@@ -39,9 +39,40 @@ class Lag(ExprFunc):
         return value.shift(periods)
 
 
+class Length(ExprFunc):
+
+    def __init__(self):
+        ExprFunc.__init__(self, name='len')
+
+    @multimethod(pd.Series)
+    def _execute(self, value):
+        return len(value)
+
+    @multimethod(str)
+    def _execute(self, value):
+        return len(value)
+
+
 # =============================================
 # Math Functions
 # ---------------------------------------------
+
+class Log(ExprFunc):
+
+    def __init__(self):
+        ExprFunc.__init__(self, name='log')
+
+    @multimethod(pd.Series)
+    def _execute(self, value):
+        return np.log(value)
+
+    @multimethod(int)
+    def _execute(self, value):
+        return np.log(value)
+
+    @multimethod(float)
+    def _execute(self, value):
+        return np.log(value)
 
 
 # =============================================
