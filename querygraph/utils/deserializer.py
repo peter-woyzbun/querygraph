@@ -12,6 +12,10 @@ class Deserializer(object):
         parser = self.parser()
         return parser.parseString(value_str)[0]
 
+    def _make_datetime(self, toks):
+        print toks
+        return datetime.datetime(*toks)
+
     def parser(self):
         # Define punctuation as suppressed literals.
         lparen, rparen, lbrack, rbrack, lbrace, rbrace, colon = \
@@ -27,16 +31,16 @@ class Deserializer(object):
             .setName("real") \
             .setParseAction(lambda toks: float(toks[0]))
 
-        # _datetime_arg = (integer | real)
-        # datetime_args = pp.commaSeparatedList(_datetime_arg)
-        # _datetime = pp.Suppress(pp.Literal('datetime') + pp.Literal("(")) + datetime_args + pp.Suppress(")")
-        # _datetime.setParseAction(lambda x: datetime.datetime(*x))
+        _datetime_arg = (integer | real)
+        datetime_args = pp.Group(pp.delimitedList(_datetime_arg))
+        _datetime = pp.Suppress(pp.Literal('datetime') + pp.Literal("(")) + datetime_args + pp.Suppress(")")
+        _datetime.setParseAction(lambda x: self._make_datetime(x[0]))
 
         tuple_str = pp.Forward()
         list_str = pp.Forward()
         dict_str = pp.Forward()
 
-        list_item = real | integer | pp.quotedString.setParseAction(pp.removeQuotes) | \
+        list_item = real | integer | _datetime | pp.quotedString.setParseAction(pp.removeQuotes) | \
                     pp.Group(list_str) | tuple_str | dict_str
 
         tuple_str << (pp.Suppress("(") + pp.Optional(pp.delimitedList(list_item)) +
@@ -50,4 +54,3 @@ class Deserializer(object):
                                           pp.Optional(pp.Suppress(","))) + rbrace)
         dict_str.setParseAction(lambda toks: dict(toks.asList()))
         return list_item
-
