@@ -171,7 +171,7 @@ class Evaluator(object):
                               Optional(e + integer)
                               ).setParseAction(lambda x: float(x[0]))
 
-        arg = (integer | floatnumber | quotedString.addParseAction(removeQuotes)).setParseAction(lambda x: x[0])
+        arg = (integer | floatnumber | quotedString.addParseAction(removeQuotes).setParseAction(lambda x: x[0][1:-1])).setParseAction(lambda x: x[0])
 
         args = Optional(delimitedList(arg), default=None).setParseAction(lambda x: {'args': [z for z in x]})
         kwarg = (Word(alphas, alphas + nums + "_$") + Suppress("=") + arg).setParseAction(lambda x: {x[0]: x[1]})

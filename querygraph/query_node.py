@@ -93,20 +93,6 @@ class QueryNode(object):
         """
         return self in child_node
 
-    def add_column(self, **kwargs):
-        """
-        Add/modify a column to this node's dataframe after its query has been executed.
-        Only a single key-value argument should be given, where the key is the
-        name of the column to be added/modified, and the value is the expression
-        to evaluate that defines the column.
-
-        """
-        if len(kwargs.keys()) > 1:
-            raise AddColumnException("Only one column should be added at a time due to Python"
-                                     "kwargs being unordered.")
-        for k, v in kwargs.items():
-            self._new_columns[k] = v
-
     def execute_manipulation_set(self):
         self.df = self.manipulation_set.execute(self.df)
 

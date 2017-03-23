@@ -1,4 +1,5 @@
 import unittest
+import datetime
 
 from querygraph.template_parameter import TemplateParameter
 
@@ -37,6 +38,24 @@ class GenericExprTests(unittest.TestCase):
         test_param = TemplateParameter(param_str=param_str, independent=True)
         result = test_param.query_value(independent_param_vals={'test_param': 'test str'})
         self.assertEquals(result, "'TEST STR'")
+
+    def test_lowercase(self):
+        param_str = "lowercase(test_param)|str"
+        test_param = TemplateParameter(param_str=param_str, independent=True)
+        result = test_param.query_value(independent_param_vals={'test_param': 'TEST STR'})
+        self.assertEquals(result, "'test str'")
+
+    def test_capitalize(self):
+        param_str = "capitalize(test_param)|str"
+        test_param = TemplateParameter(param_str=param_str, independent=True)
+        result = test_param.query_value(independent_param_vals={'test_param': 'test str'})
+        self.assertEquals(result, "'Test str'")
+
+    def test_to_date(self):
+        param_str = 'to_date(test_param, "%Y/%m/%d")|date'
+        test_param = TemplateParameter(param_str=param_str, independent=True)
+        result = test_param.query_value(independent_param_vals={'test_param': '2009/01/06'})
+        self.assertEquals(result, "'2009-01-06'")
 
     def test_int_addition(self):
         param_str = "test_param_1 + test_param_2|int"

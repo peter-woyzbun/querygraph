@@ -209,7 +209,7 @@ class Slice(ExprFunc):
     def __init__(self):
         ExprFunc.__init__(self, name='slice')
 
-    @multimethod(pd.Series)
+    @multimethod(pd.Series, int, int)
     def _execute(self, value, start, stop):
         return value.str.slice(start=start, stop=stop)
 
@@ -224,6 +224,20 @@ class Slice(ExprFunc):
     @multimethod(int)
     def _execute(self, value, start, stop):
         return int(str(value)[start: stop])
+
+
+class ReformatDatetimeStr(ExprFunc):
+
+    # Todo: implement for pandas series, lists,...
+
+    def __init__(self):
+        ExprFunc.__init__(self, name='reformat_dt_str')
+
+    @multimethod(str, str, str)
+    def _execute(self, value, in_fmt, out_fmt):
+        dt_val = datetime.datetime.strptime(value, in_fmt)
+        str_val = dt_val.strftime(out_fmt)
+        return str_val
 
 
 # =============================================

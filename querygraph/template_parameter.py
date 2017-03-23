@@ -1,4 +1,5 @@
 import re
+import datetime
 from collections import defaultdict
 
 import numpy as np
@@ -107,6 +108,12 @@ class TemplateParameter(object):
             {str: lambda x: "'%s'" % x,
              float: lambda x: "'%s'" % x,
              int: lambda x: "'%s'" % x}
+        )
+
+        self._add_date_converters(
+            {datetime.datetime: lambda x: "'%s'" % x.strftime('%Y-%m-%d'),
+             datetime.date: lambda x: "'%s'" % x.strftime('%Y-%m-%d'),
+             str: lambda x: "'%s'" % x}
         )
 
     def _setup_db_specific_converters(self):
