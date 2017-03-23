@@ -51,23 +51,7 @@ class TemplateParameter(object):
     ----------
     param_str : str
         The raw parameter string.
-    parameter_type : str
-        The type of parameter: independent or dependent
 
-    Attributes
-    ----------
-    name : str or None
-        The name assigned to the parameter - this will be None if a
-        manipulation expression is provided in place of a parameter
-        name (see above).
-    data_type : str (after initial parse)
-        The data type of the parameter query value - this determines
-        how the value is rendered. For example, a 'str' data type
-        will likely require quotes (e.g. in SQL queries).
-    custom_data_type_str : str (after initial parse)
-        Desc
-    container_type : str (after initial parse)
-        Desc
 
 
     """
@@ -209,7 +193,7 @@ class TemplateParameter(object):
         expr_evaluator = self._expr_evaluator(parent_node_name, df, independent_param_vals)
         param_expr = expr_evaluator.parser()
 
-        container_type = (Literal('value') | Literal("list"))
+        container_type = Optional(Literal("list") + Suppress(":"), default='value')
         container_type.addParseAction(lambda x: self._set_attribute(target='container_type', value=x[0]))
 
         custom = (Suppress('custom[') + SkipTo(Suppress(']'), include=True))
@@ -218,8 +202,7 @@ class TemplateParameter(object):
         # data_type = (num | _int | _float | _str | _date | custom)
         data_type.addParseAction(lambda x: self._set_attribute(target='data_type', value=x[0]))
 
-        parameter_block = (param_expr + Suppress("|") + container_type + Suppress(":") + data_type)
-        print self.param_str
+        parameter_block = (param_expr + Suppress("|") + container_type + data_type)
         parameter_block.parseString(self.param_str)
         self.prep_value = expr_evaluator.output_value()
 
@@ -227,7 +210,6 @@ class TemplateParameter(object):
         if self.data_type == 'custom':
             return self.custom_data_type_str % prep_value
         else:
-            # return self.DATA_TYPES[self.data_type][type(pre_value)](pre_value)
             return self._convert_prep_value(prep_value=prep_value)
 
     def _make_list_query_value(self):

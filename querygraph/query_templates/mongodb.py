@@ -16,8 +16,8 @@ class MongoDbParameter(TemplateParameter):
                                    param_str=param_str,
                                    independent=independent)
 
-    def _make_value_list(self, parameter_value):
-        parameter_value = list(set(parameter_value))
+    def _make_list_query_value(self):
+        parameter_value = self.prep_value
         val_str = ", ".join(str(self._make_atomic_query_value(x)) for x in parameter_value)
         val_str = "[%s]" % val_str
         return val_str
@@ -42,6 +42,9 @@ class MongoDbTemplate(QueryTemplate):
 
     def _post_render_value(self, render_value):
         post_value = self.deserialize(render_value)
+        print "POST RENDER MONGODB VALUE!"
+        print type(post_value)
+        print post_value
         return post_value
 
     def execute(self, df=None, **independent_param_vals):

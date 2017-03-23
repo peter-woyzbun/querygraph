@@ -10,7 +10,7 @@ class Deserializer(object):
 
     def __call__(self, value_str):
         parser = self.parser()
-        return parser.parseString(value_str)
+        return parser.parseString(value_str)[0]
 
     def parser(self):
         # Define punctuation as suppressed literals.
@@ -51,7 +51,3 @@ class Deserializer(object):
         dict_str.setParseAction(lambda toks: dict(toks.asList()))
         return list_item
 
-
-parse_value = Deserializer()
-
-print parse_value("{ 'A':1, 'B':2, 'C': {'a': 1.2, 'b': 3.4} }")[0]

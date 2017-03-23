@@ -2,6 +2,7 @@ import re
 
 from querygraph.exceptions import QueryGraphException
 from querygraph.utils.deserializer import Deserializer
+from querygraph.template_parameter import TemplateParameter
 
 
 # =============================================
@@ -48,23 +49,19 @@ class QueryTemplate(object):
         self.template_str = template_str
         self.db_connector = db_connector
         self.rendered_query = None
+        if not issubclass(parameter_class, TemplateParameter):
+            raise Exception
         self.parameter_class = parameter_class
         self.fields = fields
 
         self.deserialize = Deserializer()
 
     def _render_independent_param(self, param_str, independent_param_vals):
-        if not independent_param_vals:
-            raise IndependentParameterException("Independent parameters present in query and no independent"
-                                                "parameter values given.")
-        independent_parameter = self.parameter_class(parameter_str=param_str, independent=True)
-        return str(independent_parameter.query_value(independent_params=independent_param_vals))
+        independent_parameter = self.parameter_class(param_str=param_str, independent=True)
+        return str(independent_parameter.query_value(independent_param_vals=independent_param_vals))
 
     def _render_dependent_param(self, param_str, df):
-        if df is None:
-            raise DependentParameterException("No dataframe was given from which to generate dependent"
-                                              "parameter value(s).")
-        dependent_parameter = self.parameter_class(parameter_str=param_str, independent=False)
+        dependent_parameter = self.parameter_class(param_str=param_str, independent=False)
         return dependent_parameter.query_value(df=df)
 
     def render(self, df=None, **independent_param_vals):
@@ -100,3 +97,4 @@ class QueryTemplate(object):
     def execute(self, df=None, independent_param_vals=None):
         """ Should be implemented by child class. """
         raise NotImplementedError
+

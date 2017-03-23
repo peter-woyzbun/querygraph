@@ -107,12 +107,6 @@ class QueryNode(object):
         for k, v in kwargs.items():
             self._new_columns[k] = v
 
-    def _create_added_columns(self):
-        """ Create any/all new columns that were defined. """
-        evaluator = Evaluator()
-        for k, v in self._new_columns.items():
-            self.df[k] = evaluator.eval(eval_str=v, df=self.df)
-
     def execute_manipulation_set(self):
         self.df = self.manipulation_set.execute(self.df)
 

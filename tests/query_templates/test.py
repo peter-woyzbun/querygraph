@@ -16,7 +16,7 @@ class SqliteTests(unittest.TestCase):
         query = """
         SELECT *
         FROM Album
-        WHERE AlbumId IN {% album_ids|value_list:int %}
+        WHERE AlbumId IN {% album_ids|list:int %}
         """
 
         query_template = query_templates.Sqlite(template_str=query, db_connector=sqlite_chinook)
@@ -31,7 +31,7 @@ class MySqlTests(unittest.TestCase):
         query = """
         SELECT *
         FROM Album
-        WHERE AlbumId IN {% album_ids|value_list:int %}
+        WHERE AlbumId IN {% album_ids|list:int %}
         """
 
         query_template = query_templates.Sqlite(template_str=query, db_connector=mysql_chinook)
@@ -46,7 +46,7 @@ class PostgresTests(unittest.TestCase):
         query = """
         SELECT *
         FROM "Album"
-        WHERE "AlbumId" IN {% album_ids|value_list:int %}
+        WHERE "AlbumId" IN {% album_ids|list:int %}
         """
 
         query_template = query_templates.Sqlite(template_str=query, db_connector=postgres_chinook)
@@ -62,7 +62,7 @@ class PostgresTests(unittest.TestCase):
 class MongoDbTests(unittest.TestCase):
 
     def test_execution(self):
-        query = """{'tags': {'$in': {% album_tags|value_list:str %}}}"""
+        query = """{'tags': {'$in': {% album_tags|list:str %}}}"""
 
         query_template = query_templates.MongoDb(template_str=query, db_connector=mongodb_albums, fields=['album'])
         df = query_template.execute(album_tags=["canada"])
@@ -73,7 +73,7 @@ class MongoDbTests(unittest.TestCase):
 class ElasticSearchTests(unittest.TestCase):
 
     def test_execution(self):
-        query = """{'terms': {'tags': {% album_tags|value_list:str %}}}"""
+        query = """{'terms': {'tags': {% album_tags|list:str %}}}"""
 
         query_template = query_templates.ElasticSearch(template_str=query,
                                                        db_connector=elastic_search_albums,
