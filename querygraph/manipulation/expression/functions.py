@@ -75,6 +75,24 @@ class Log(ExprFunc):
         return np.log(value)
 
 
+class Floor(ExprFunc):
+
+    def __init__(self):
+        ExprFunc.__init__(self, name='floor')
+
+    @multimethod(pd.Series)
+    def _execute(self, value):
+        return np.floor(value)
+
+    @multimethod(int)
+    def _execute(self, value):
+        return np.floor(value)
+
+    @multimethod(float)
+    def _execute(self, value):
+        return np.floor(value)
+
+
 # =============================================
 # String Functions
 # ---------------------------------------------
