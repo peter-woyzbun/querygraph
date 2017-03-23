@@ -93,6 +93,24 @@ class Floor(ExprFunc):
         return np.floor(value)
 
 
+class Ceiling(ExprFunc):
+
+    def __init__(self):
+        ExprFunc.__init__(self, name='ceil')
+
+    @multimethod(pd.Series)
+    def _execute(self, value):
+        return np.ceil(value)
+
+    @multimethod(int)
+    def _execute(self, value):
+        return np.ceil(value)
+
+    @multimethod(float)
+    def _execute(self, value):
+        return np.ceil(value)
+
+
 # =============================================
 # String Functions
 # ---------------------------------------------

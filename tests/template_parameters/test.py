@@ -90,6 +90,12 @@ class GenericExprTests(unittest.TestCase):
         result = test_param.query_value(df=test_df)
         self.assertEquals(result, 2)
 
+    def test_ceil(self):
+        param_str = "ceil(2.4) -> int"
+        test_param = TemplateParameter(param_str=param_str, independent=False)
+        result = test_param.query_value(df=test_df)
+        self.assertEquals(result, 3)
+
     def test_to_date(self):
         param_str = 'to_date(test_param, "%Y/%m/%d") -> date'
         test_param = TemplateParameter(param_str=param_str, independent=True)
