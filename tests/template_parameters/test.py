@@ -83,6 +83,12 @@ class GenericExprTests(unittest.TestCase):
         test_param = TemplateParameter(param_str=param_str, independent=False)
         result = test_param.query_value(df=test_df)
         self.assertEquals(result, np.log(2))
+        
+    def test_log10(self):
+        param_str = "log10(2) -> float"
+        test_param = TemplateParameter(param_str=param_str, independent=False)
+        result = test_param.query_value(df=test_df)
+        self.assertEquals(result, np.log10(2))
 
     def test_floor(self):
         param_str = "floor(2.4) -> int"
