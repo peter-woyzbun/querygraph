@@ -165,6 +165,24 @@ class Cos(ExprFunc):
         return np.cos(value)
 
 
+class Tan(ExprFunc):
+
+    def __init__(self):
+        ExprFunc.__init__(self, name='tan')
+
+    @multimethod(pd.Series)
+    def _execute(self, value):
+        return np.tan(value)
+
+    @multimethod(int)
+    def _execute(self, value):
+        return np.tan(value)
+
+    @multimethod(float)
+    def _execute(self, value):
+        return np.tan(value)
+
+
 # =============================================
 # String Functions
 # ---------------------------------------------
