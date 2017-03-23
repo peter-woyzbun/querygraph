@@ -83,7 +83,7 @@ class GenericExprTests(unittest.TestCase):
         test_param = TemplateParameter(param_str=param_str, independent=False)
         result = test_param.query_value(df=test_df)
         self.assertEquals(result, np.log(2))
-        
+
     def test_log10(self):
         param_str = "log10(2) -> float"
         test_param = TemplateParameter(param_str=param_str, independent=False)
@@ -101,6 +101,12 @@ class GenericExprTests(unittest.TestCase):
         test_param = TemplateParameter(param_str=param_str, independent=False)
         result = test_param.query_value(df=test_df)
         self.assertEquals(result, 3)
+
+    def test_sin(self):
+        param_str = "sin(2.4) -> float"
+        test_param = TemplateParameter(param_str=param_str, independent=False)
+        result = test_param.query_value(df=test_df)
+        self.assertEquals(result, np.sin(2.4))
 
     def test_to_date(self):
         param_str = 'to_date(test_param, "%Y/%m/%d") -> date'

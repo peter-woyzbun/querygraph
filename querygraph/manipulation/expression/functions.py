@@ -129,6 +129,24 @@ class Ceiling(ExprFunc):
         return np.ceil(value)
 
 
+class Sin(ExprFunc):
+
+    def __init__(self):
+        ExprFunc.__init__(self, name='sin')
+
+    @multimethod(pd.Series)
+    def _execute(self, value):
+        return np.sin(value)
+
+    @multimethod(int)
+    def _execute(self, value):
+        return np.sin(value)
+
+    @multimethod(float)
+    def _execute(self, value):
+        return np.sin(value)
+
+
 # =============================================
 # String Functions
 # ---------------------------------------------
