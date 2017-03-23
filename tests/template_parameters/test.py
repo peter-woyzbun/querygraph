@@ -126,6 +126,12 @@ class GenericExprTests(unittest.TestCase):
         result = test_param.query_value(df=test_df)
         self.assertEquals(result, np.sqrt(2.4))
 
+    def test_square(self):
+        param_str = "square(2.4) -> float"
+        test_param = TemplateParameter(param_str=param_str, independent=False)
+        result = test_param.query_value(df=test_df)
+        self.assertEquals(result, np.square(2.4))
+
     def test_to_date(self):
         param_str = 'to_date(test_param, "%Y/%m/%d") -> date'
         test_param = TemplateParameter(param_str=param_str, independent=True)

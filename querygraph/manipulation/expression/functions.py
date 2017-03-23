@@ -201,6 +201,24 @@ class Sqrt(ExprFunc):
         return np.sqrt(value)
 
 
+class Square(ExprFunc):
+
+    def __init__(self):
+        ExprFunc.__init__(self, name='square')
+
+    @multimethod(pd.Series)
+    def _execute(self, value):
+        return np.square(value)
+
+    @multimethod(int)
+    def _execute(self, value):
+        return np.square(value)
+
+    @multimethod(float)
+    def _execute(self, value):
+        return np.square(value)
+
+
 # =============================================
 # String Functions
 # ---------------------------------------------
