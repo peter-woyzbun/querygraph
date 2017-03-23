@@ -1,1 +1,1 @@
-from querygraph.manipulation.set.manipulation_set import ManipulationSet, Mutate, Rename, Select, Remove
+from querygraph.manipulation.set.manipulation_set import ManipulationSet, Mutate, Rename, Select, Remove, Flatten

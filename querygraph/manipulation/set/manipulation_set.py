@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
+import pandas as pd
 
 from querygraph.exceptions import QueryGraphException
 from querygraph.manipulation.expression.evaluator import Evaluator
@@ -85,6 +86,31 @@ class Remove(Manipulation):
 
     def _execute(self, df, evaluator=None):
         return df.drop(self.columns, inplace=False, axis=1)
+
+
+class Flatten(Manipulation):
+
+    def __init__(self, column):
+        self.column = column
+
+    def _execute(self, df, evaluator=None):
+        col_flat = pd.DataFrame([[i, x]
+                                 for i, y in df[self.column].apply(list).iteritems()
+                                 for x in y], columns=['I', self.column])
+        col_flat = col_flat.set_index('I')
+        df = df.drop(self.column, 1)
+        df = df.merge(col_flat, left_index=True, right_index=True)
+        df = df.reset_index(drop=True)
+        return df
+
+test_df = pd.DataFrame({'A': ['album_1', 'album_2'],
+                            'B': [0, 0],
+                            'C': [['tag_1', 'tag_2'], ['tag_3', 'tag_1']]})
+
+
+flatten = Flatten(column='C')
+
+print flatten.execute(df=test_df)
 
 
 # =============================================

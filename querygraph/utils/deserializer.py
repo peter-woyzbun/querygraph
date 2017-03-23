@@ -12,8 +12,8 @@ class Deserializer(object):
         parser = self.parser()
         return parser.parseString(value_str)[0]
 
-    def _make_datetime(self, toks):
-        print toks
+    @staticmethod
+    def _make_datetime(toks):
         return datetime.datetime(*toks)
 
     def parser(self):
