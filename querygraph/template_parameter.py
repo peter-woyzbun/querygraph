@@ -209,7 +209,7 @@ class TemplateParameter(object):
         # data_type = (num | _int | _float | _str | _date | custom)
         data_type.addParseAction(lambda x: self._set_attribute(target='data_type', value=x[0]))
 
-        parameter_block = (param_expr + Suppress("|") + container_type + data_type)
+        parameter_block = (param_expr + Suppress("->") + container_type + data_type)
         parameter_block.parseString(self.param_str)
         self.prep_value = expr_evaluator.output_value()
 
