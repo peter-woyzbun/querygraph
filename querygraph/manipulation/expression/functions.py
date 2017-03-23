@@ -147,6 +147,24 @@ class Sin(ExprFunc):
         return np.sin(value)
 
 
+class Cos(ExprFunc):
+
+    def __init__(self):
+        ExprFunc.__init__(self, name='cos')
+
+    @multimethod(pd.Series)
+    def _execute(self, value):
+        return np.cos(value)
+
+    @multimethod(int)
+    def _execute(self, value):
+        return np.cos(value)
+
+    @multimethod(float)
+    def _execute(self, value):
+        return np.cos(value)
+
+
 # =============================================
 # String Functions
 # ---------------------------------------------
