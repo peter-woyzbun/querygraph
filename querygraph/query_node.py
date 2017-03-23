@@ -139,6 +139,13 @@ class QueryNode(object):
                                                  db_connector=self.db_connector,
                                                  fields=self.fields)
 
+    def retrieve_dataframe(self, independent_param_vals):
+        query_template = self._make_query_template()
+        if self.parent is not None:
+            self.df = query_template.execute(df=self.parent.df, independent_param_vals=independent_param_vals)
+        else:
+            self.df = query_template.execute(independent_param_vals=independent_param_vals)
+
     def _execute(self, **independent_param_vals):
         """
         Execute this QueryNode's query. This requires:
@@ -166,6 +173,14 @@ class QueryNode(object):
             self.execute_manipulation_set()
         self.already_executed = True
 
+    def root_execution_thread(self, threads, independent_param_vals):
+        if not self.is_root_node:
+            raise QueryGraphException("Trying to get root execution thread from node that is not root node.")
+        root_thread = ExecutionThread(query_node=self,
+                                      threads=threads,
+                                      independent_param_vals=independent_param_vals)
+        return root_thread
+
     def execution_thread(self, threads, **independent_param_vals):
         thread_query_template = self._make_query_template()
         thread_query_template.db_connector = copy.deepcopy(self.db_connector)
@@ -175,7 +190,6 @@ class QueryNode(object):
             parent_df = self.parent.df
         thread_query_template.pre_render(df=parent_df, **independent_param_vals)
         exec_thread = ExecutionThread(query_node=self,
-                                      query_template=thread_query_template,
                                       threads=threads,
                                       independent_param_vals=independent_param_vals)
         return exec_thread

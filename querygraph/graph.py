@@ -155,8 +155,8 @@ class QueryGraph(object):
 
         """
         threads = list()
-        root_thread = self.root_node.execution_thread(threads=threads,
-                                                      **independent_param_vals)
+        root_thread = self.root_node.root_execution_thread(threads=threads,
+                                                           independent_param_vals=independent_param_vals)
         root_thread.start()
         for thread in threads:
             thread.join()
