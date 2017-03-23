@@ -183,6 +183,24 @@ class Tan(ExprFunc):
         return np.tan(value)
 
 
+class Sqrt(ExprFunc):
+
+    def __init__(self):
+        ExprFunc.__init__(self, name='sqrt')
+
+    @multimethod(pd.Series)
+    def _execute(self, value):
+        return np.sqrt(value)
+
+    @multimethod(int)
+    def _execute(self, value):
+        return np.sqrt(value)
+
+    @multimethod(float)
+    def _execute(self, value):
+        return np.sqrt(value)
+
+
 # =============================================
 # String Functions
 # ---------------------------------------------
