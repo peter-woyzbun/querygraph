@@ -13,7 +13,7 @@ CONNECT
     postgres_conn <- Postgres(host='', user='',...)
 RETRIEVE
     QUERY |
-        {"tags" : {"$in" : {% user_tags|value_list:str %} }};
+        {"tags" : {"$in" : {% user_tags -> value_list:str %} }};
     FIELDS user_id, field_x
     USING mongodb_conn
     AS mongo_node
@@ -21,7 +21,7 @@ RETRIEVE
     QUERY |
         SELECT *
         FROM user
-        WHERE user_id IN {{ mongo_node.user_id|value_list:int }};
+        WHERE user_id IN {{ mongo_node.user_id -> value_list:int }};
     USING postgres_conn
     AS postgres_node
 JOIN
