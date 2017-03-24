@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 import pandas as pd
+import pyparsing as pp
 
 from querygraph.exceptions import QueryGraphException
 from querygraph.manipulation.expression.evaluator import Evaluator
@@ -107,10 +108,53 @@ test_df = pd.DataFrame({'A': ['album_1', 'album_2'],
                             'B': [0, 0],
                             'C': [['tag_1', 'tag_2'], ['tag_3', 'tag_1']]})
 
+test_df_2 = pd.DataFrame({'A': [{'city': 'bagdad', 'country': 'iraq'}, {'city': 'detroit', 'country': 'US'}],
+                            'B': [0, 0],
+                            'C': [['tag_1', 'tag_2'], ['tag_3', 'tag_1']],
+                          'D': [{'first': {'second': 'lol1'}}, {'first': {'second': 'lol2'}}]})
 
-flatten = Flatten(column='C')
 
-print flatten.execute(df=test_df)
+class Unpack(Manipulation):
+
+    def __init__(self, unpack_list):
+        self.unpack_list = unpack_list
+
+    @staticmethod
+    def unpack_dict(row_dict, key_list):
+        return reduce(dict.__getitem__, key_list, row_dict)
+
+    def _execute(self, df, evaluator=None):
+        for unpack_dict in self.unpack_list:
+            print unpack_dict
+            packed_col = unpack_dict['packed_col']
+            key_list = unpack_dict['key_list']
+            new_col_name = unpack_dict['new_col_name']
+            df[new_col_name] = df[packed_col].apply(lambda x: self.unpack_dict(row_dict=x, key_list=key_list))
+        return df
+
+    @classmethod
+    def parser(cls):
+        unpack = pp.Suppress("unpack")
+
+        packed_col_name = pp.Word(pp.alphas, pp.alphanums + "_$")
+        dict_key = pp.Suppress("[") + pp.QuotedString(quoteChar="'") + pp.Suppress("]")
+        dict_key_grp = pp.Group(pp.OneOrMore(dict_key))
+        _as = pp.Keyword("AS")
+        new_col_name = pp.Word(pp.alphas, pp.alphanums + "_$")
+
+        unpack_arg = packed_col_name + dict_key_grp + pp.Suppress(_as) + new_col_name
+        unpack_arg.setParseAction(lambda x: {'packed_col': x[0], 'key_list': x[1], 'new_col_name': x[2]})
+
+        parser = unpack + pp.Suppress("(") + pp.delimitedList(unpack_arg) + pp.Suppress(")")
+        parser.setParseAction(lambda x: Unpack(unpack_list=x))
+        return parser
+
+
+unpack_parser = Unpack.parser()
+
+unpack = unpack_parser.parseString("unpack(A['city'] AS city, A['country'] AS country, D['first']['second'] AS fun)")[0]
+
+print unpack._execute(df=test_df_2)
 
 
 # =============================================
