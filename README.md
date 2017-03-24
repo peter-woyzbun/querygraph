@@ -9,23 +9,26 @@ and Mongo Db data.
 
 ```
 CONNECT
-    mongodb_conn <- MongDb(host='', client='',...)
-    postgres_conn <- Postgres(host='', user='',...)
+    postgres_conn <- Postgres(db_name='%s', user='%s', password='%s', host='%s', port='%s')
+    mongodb_conn <- Mongodb(host='%s', port='%s', db_name='%s', collection='%s')
 RETRIEVE
     QUERY |
-        {"tags" : {"$in" : {% user_tags -> list:str %} }};
-    FIELDS user_id, field_x
+        {'tags': {'$in': {%% album_tags -> list:str %%}}};
+    FIELDS album, tags
     USING mongodb_conn
+    THEN |
+        flatten(tags) >>
+        remove(_id);
     AS mongo_node
     ---
     QUERY |
         SELECT *
-        FROM user
-        WHERE user_id IN {{ mongo_node.user_id -> list:int }};
+        FROM "Album"
+        WHERE "Title" IN {{ album -> list:str }};
     USING postgres_conn
     AS postgres_node
 JOIN
-    LEFT (postgres_node[user_id] ==> mongo_node[user_id]);
+    LEFT (postgres_node[Title] ==> mongo_node[album])
 ```
 
 ## Query Graph Language

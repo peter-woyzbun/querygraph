@@ -40,12 +40,11 @@ class MongoDbPostgresTests(unittest.TestCase):
         query_graph = QueryGraph(qgl_str=query)
 
         df = query_graph.execute(album_tags=['canada', 'rock'])
-        print df
         self.assertEquals(set(df['album'].unique()),
-                          set(['Jagged Little Pill',
+                              {'Jagged Little Pill',
                                'Facelift', 'Big Ones',
                                'Let There Be Rock',
-                               'For Those About To Rock We Salute You']))
+                               'For Those About To Rock We Salute You'})
 
 
 def main():
