@@ -19,7 +19,7 @@ class MongoDbConnector(NoSqlDbConnector):
                                   execution_exception=pymongo.errors.OperationFailure)
 
     def _conn(self):
-        return pymongo.MongoClient(host=self.host, port=self.port)
+        return pymongo.MongoClient(host=self.host, port=int(self.port))
 
     def _execute_query(self, query, fields):
         client = self.conn()

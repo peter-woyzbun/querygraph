@@ -5,6 +5,7 @@ import pyparsing as pp
 
 from querygraph.exceptions import QueryGraphException
 from querygraph.manipulation.expression.evaluator import Evaluator
+from querygraph.utils.abstract_cls_method import abstractclassmethod
 
 
 # =============================================
@@ -41,6 +42,10 @@ class Manipulation(object):
     def _execute(self, df, evaluator=None):
         pass
 
+    @abstractclassmethod
+    def parser(cls):
+        pass
+
 
 # =============================================
 # Manipulation Types
@@ -58,6 +63,20 @@ class Mutate(Manipulation):
         expr_evaluator = Evaluator(df=df)
         df[self.col_name] = expr_evaluator.eval(expr_str=self.col_expr)
         return df
+
+    @classmethod
+    def parser(cls):
+        lpar = pp.Suppress("(")
+        rpar = pp.Suppress(")")
+        mutate = pp.Suppress('mutate')
+        col_name = pp.Word(pp.alphas, pp.alphanums + "_$")
+
+        expr_evaluator = Evaluator(deferred_eval=True)
+        col_expr = expr_evaluator.parser()
+
+        parser = mutate + lpar + col_name + pp.Suppress("=") + col_expr + rpar
+        parser.setParseAction(lambda x: Mutate(col_name=x[0], col_expr=x[1]))
+        return parser
 
 
 class Rename(Manipulation):
@@ -104,14 +123,13 @@ class Flatten(Manipulation):
         df = df.reset_index(drop=True)
         return df
 
-test_df = pd.DataFrame({'A': ['album_1', 'album_2'],
-                            'B': [0, 0],
-                            'C': [['tag_1', 'tag_2'], ['tag_3', 'tag_1']]})
-
-test_df_2 = pd.DataFrame({'A': [{'city': 'bagdad', 'country': 'iraq'}, {'city': 'detroit', 'country': 'US'}],
-                            'B': [0, 0],
-                            'C': [['tag_1', 'tag_2'], ['tag_3', 'tag_1']],
-                          'D': [{'first': {'second': 'lol1'}}, {'first': {'second': 'lol2'}}]})
+    @classmethod
+    def parser(cls):
+        unpack = pp.Suppress("flatten")
+        column = pp.Word(pp.alphas, pp.alphanums + "_$")
+        parser = unpack + pp.Suppress("(") + column + pp.Suppress(")")
+        parser.setParseAction(lambda x: Flatten(column=x[0]))
+        return parser
 
 
 class Unpack(Manipulation):
@@ -139,22 +157,14 @@ class Unpack(Manipulation):
         packed_col_name = pp.Word(pp.alphas, pp.alphanums + "_$")
         dict_key = pp.Suppress("[") + pp.QuotedString(quoteChar="'") + pp.Suppress("]")
         dict_key_grp = pp.Group(pp.OneOrMore(dict_key))
-        _as = pp.Keyword("AS")
         new_col_name = pp.Word(pp.alphas, pp.alphanums + "_$")
 
-        unpack_arg = packed_col_name + dict_key_grp + pp.Suppress(_as) + new_col_name
-        unpack_arg.setParseAction(lambda x: {'packed_col': x[0], 'key_list': x[1], 'new_col_name': x[2]})
+        unpack_arg = new_col_name + pp.Suppress("=") + packed_col_name + dict_key_grp
+        unpack_arg.setParseAction(lambda x: {'packed_col': x[1], 'key_list': x[2], 'new_col_name': x[0]})
 
         parser = unpack + pp.Suppress("(") + pp.delimitedList(unpack_arg) + pp.Suppress(")")
         parser.setParseAction(lambda x: Unpack(unpack_list=x))
         return parser
-
-
-unpack_parser = Unpack.parser()
-
-unpack = unpack_parser.parseString("unpack(A['city'] AS city, A['country'] AS country, D['first']['second'] AS fun)")[0]
-
-print unpack._execute(df=test_df_2)
 
 
 # =============================================
@@ -183,6 +193,14 @@ class ManipulationSet(object):
         for x in self.manipulations:
             yield x
 
+    def __lshift__(self, other):
+        parser = self.parser()
+        manipulations = parser.parseString(other)
+        print manipulations
+        for manipulation in manipulations:
+            self.manipulations.append(manipulation)
+        return self
+
     def __nonzero__(self):
         if len(self.manipulations) > 0:
             return True
@@ -195,3 +213,18 @@ class ManipulationSet(object):
         for manipulation in self:
             df = manipulation.execute(df, evaluator)
         return df
+
+    def parser(self):
+        manipulation = (Unpack.parser() | Mutate.parser() | Flatten.parser())
+        manipulation_set = pp.delimitedList(manipulation, delim='>>')
+        return manipulation_set
+
+    def append_from_str(self, set_str):
+        parser = self.parser()
+        manipulations = parser.parseString(set_str)
+        print manipulations
+        for manipulation in manipulations:
+            self.manipulations.append(manipulation)
+        return self
+
+

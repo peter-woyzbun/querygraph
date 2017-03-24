@@ -111,6 +111,7 @@ class TemplateParameter(object):
         # Setup generic converters for 'str' type converters.
         self._add_str_converters(
             {str: lambda x: "'%s'" % x,
+             unicode: lambda x: "'%s'" % x,
              float: lambda x: "'%s'" % x,
              int: lambda x: "'%s'" % x}
         )

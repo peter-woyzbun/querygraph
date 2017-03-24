@@ -42,9 +42,6 @@ class MongoDbTemplate(QueryTemplate):
 
     def _post_render_value(self, render_value):
         post_value = self.deserialize(render_value)
-        print "POST RENDER MONGODB VALUE!"
-        print type(post_value)
-        print post_value
         return post_value
 
     def execute(self, df=None, **independent_param_vals):

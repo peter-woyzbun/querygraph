@@ -247,9 +247,8 @@ class QGLCompiler(object):
                                                           db_connector=self.connectors[node_dict['connector_name']],
                                                           fields=node_dict['fields'])
             if node_dict['manipulation_set'] is not None:
-                manipulation_set_parser = ManipulationSetParser()
-                node_manipulation_set = manipulation_set_parser(node_dict['manipulation_set'])
-                self.query_graph.nodes[node_name].manipulation_set = node_manipulation_set
+                print node_dict['manipulation_set']
+                self.query_graph.nodes[node_name].manipulation_set.append_from_str(node_dict['manipulation_set'])
 
     def _create_joins(self):
         for join_dict in self.join_block.joins:

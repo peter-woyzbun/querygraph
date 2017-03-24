@@ -2,6 +2,7 @@
 from querygraph import exceptions
 from querygraph.language.compiler import QGLCompiler
 from querygraph.query_node import QueryNode
+from querygraph.log import ExecutionLog
 
 
 # =================================================
@@ -14,15 +15,25 @@ class QueryGraph(object):
     QueryGraph class containing core logic for creating and executing
     query graphs.
 
+    Responsibilities:
+
+        (1) Mapping node names to their instances.
+        (2) Joining nodes.
+        (3) Execution..
+
+
+
 
     """
 
     def __init__(self, qgl_str=None):
         # Dictionary that maps node names to their instances.
         self.nodes = dict()
+        self.num_edges = 0
         if qgl_str is not None:
             compiler = QGLCompiler(qgl_str=qgl_str, query_graph=self)
             compiler.compile()
+        self.log = ExecutionLog(stdout_print=True)
 
     def add_node(self, query_node):
         """
@@ -51,13 +62,6 @@ class QueryGraph(object):
     @property
     def num_nodes(self):
         return len(self.nodes.keys())
-
-    @property
-    def num_edges(self):
-        num_edges = 0
-        for node in self:
-            num_edges += node.num_edges
-        return num_edges
 
     @property
     def root_node(self):
@@ -113,6 +117,7 @@ class QueryGraph(object):
         for pair_dict in on_columns:
             child_node.join_context.add_on_column_pair(parent_col_name=pair_dict[parent_node.name],
                                                        child_col_name=pair_dict[child_node.name])
+        self.num_edges += 1
 
     def inner_join(self, child_node, parent_node, on_columns):
         self.join(child_node=child_node, parent_node=parent_node, join_type='inner', on_columns=on_columns)
@@ -158,47 +163,34 @@ class QueryGraph(object):
         root_thread = self.root_node.root_execution_thread(threads=threads,
                                                            independent_param_vals=independent_param_vals)
         root_thread.start()
+        threads.append(root_thread)
+        while len(threads) < self.num_nodes:
+            # Wait until all threads have been created.
+            pass
         for thread in threads:
             print "TRYING TO JOIN THREAD!"
             thread.join()
         self.root_node.fold_children()
 
-    def parallel_execute(self, **independent_param_vals):
+    def parallel_execute(self, independent_param_vals):
         self._parallel_execute(independent_param_vals=independent_param_vals)
         return self.root_node.df
 
-    def node_generations(self):
-        """
-        Iterable that returns lists containing each 'generation' of
-        nodes contained in the graph. In the example graph below,
-        the first generation contains the node labeled '1', the second
-        generation contains both nodes labeled '2', and the third
-        generation contains only the node labeled '3'.
+    def _pre_execution_checks(self):
+        if not self.is_spanning_tree:
+            self.log.graph_error(msg="Can't execute graph because there are disconnected nodes.")
+            raise exceptions.DisconnectedNodes("Can't execute graph because there are disconnected nodes.")
 
-                      +---+
-                  +---+ 1 +---+
-                  |   +---+   |
-                  |           |
-                +-v-+       +-v-+
-                | 2 |       | 2 |
-                +-+-+       +---+
-                  |
-                +-v-+
-                | 3 |
-                +---+
-
-        Each generation is yielded as a list containing the node
-        instances.
-
-        """
-        parent_generation = [self.root_node]
-        while len(parent_generation) > 0:
-            yield parent_generation
-            child_generation = list()
-            for parent_node in parent_generation:
-                for child_node in parent_node.children:
-                    child_generation.append(child_node)
-            parent_generation = child_generation
+    def _execute(self, independent_param_vals):
+        for query_node in self:
+            query_node.retrieve_dataframe(independent_param_vals=independent_param_vals)
+        self.root_node.fold_children()
 
     def execute(self, **independent_param_vals):
-        self.parallel_execute(**independent_param_vals)
+        self.log.graph_info(msg="Starting query graph execution.")
+        # self._execute(independent_param_vals=independent_param_vals)
+        self.parallel_execute(independent_param_vals)
+        return self.root_node.df
+
+
+

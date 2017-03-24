@@ -7,12 +7,17 @@ class ExecutionLog(object):
         self.stdout_print = stdout_print
         self.entries = list()
 
-    def _add_entry(self, msg):
-        entry_str = "%s: %s" % (datetime.datetime.now(), msg)
+    def _add_entry(self, source, msg):
+        entry_str = "%s[%s]: %s" % (datetime.datetime.now(), source, msg)
         if self.stdout_print:
             print entry_str
         self.entries.append(entry_str)
 
-    def info(self, msg):
-        self._add_entry(msg)
+    def graph_info(self, msg):
+        self._add_entry(source='graph', msg=msg)
+
+    def graph_error(self, msg):
+        self._add_entry(source='graph', msg="ERROR: %s" % msg)
+
+
 

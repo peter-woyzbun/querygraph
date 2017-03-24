@@ -143,12 +143,12 @@ class QueryNode(object):
         query_template = self._make_query_template()
         if self.parent is not None:
             df = query_template.execute(df=self.parent.df, independent_param_vals=independent_param_vals)
-            print df
             self.df = df
         else:
             df = query_template.execute(independent_param_vals=independent_param_vals)
-            print df
             self.df = df
+        if self.manipulation_set:
+            self.execute_manipulation_set()
 
     def _execute(self, **independent_param_vals):
         """
@@ -214,11 +214,3 @@ class QueryNode(object):
             query_node._execute(**independent_param_vals)
         if self.is_root_node:
             self.fold_children()
-
-
-
-
-# parent_node = QueryNode(query='', db_connector=connectors.daily_ts_connector, name='parent_node')
-# child_node = QueryNode(query='', db_connector=connectors.daily_ts_connector, name='child_node')
-
-# print parent_node['parent_col'] >> child_node['child_col']

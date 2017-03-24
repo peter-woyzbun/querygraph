@@ -64,7 +64,7 @@ class QueryTemplate(object):
         dependent_parameter = self.parameter_class(param_str=param_str, independent=False)
         return dependent_parameter.query_value(df=df)
 
-    def render(self, df=None, **independent_param_vals):
+    def render(self, df=None, independent_param_vals=None):
         """
         Returns parsed query template string.
 
@@ -88,8 +88,8 @@ class QueryTemplate(object):
                 parsed_query += token
         return self._post_render_value(parsed_query)
 
-    def pre_render(self, df=None, **independent_param_vals):
-        self.rendered_query = self.render(df, **independent_param_vals)
+    def pre_render(self, df=None, independent_param_vals=None):
+        self.rendered_query = self.render(df, independent_param_vals)
 
     def _post_render_value(self, render_value):
         return render_value

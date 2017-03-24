@@ -60,7 +60,7 @@ class ExecutionTests(unittest.TestCase):
     def test_unpack(self):
         manipulation_set = ManipulationSet()
         unpack_parser = Unpack.parser()
-        manipulation_set += unpack_parser.parseString("unpack(L['nested']['data'] AS test_col)")[0]
+        manipulation_set += unpack_parser.parseString("unpack(test_col=L['nested']['data'])")[0]
         result_df = manipulation_set.execute(df=test_df)
         self.assertTrue(series_equal(result_df['test_col'], test_df['A']))
 
