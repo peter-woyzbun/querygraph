@@ -237,6 +237,20 @@ class Round(ExprFunc):
         return np.round_(value, decimals)
 
 
+class Sum(ExprFunc):
+
+    def __init__(self):
+        ExprFunc.__init__(self, name='sum')
+
+    @multimethod(pd.Series)
+    def _execute(self, value):
+        return value.sum()
+
+    @multimethod(list)
+    def _execute(self, value):
+        return sum(value)
+
+
 # =============================================
 # String Functions
 # ---------------------------------------------
