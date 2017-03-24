@@ -1,5 +1,7 @@
 import datetime
 
+import tabulate
+
 
 class ExecutionLog(object):
 
@@ -18,6 +20,11 @@ class ExecutionLog(object):
 
     def graph_error(self, msg):
         self._add_entry(source='graph', msg="ERROR: %s" % msg)
+
+    def dataframe_header(self, source_node, df):
+        msg = '[%s] Dataframe retrieved: \n %s' % (source_node,
+                                                   str(tabulate.tabulate(df[1:5], headers='keys', tablefmt='psql')))
+        self._add_entry(source='node', msg=msg)
 
 
 

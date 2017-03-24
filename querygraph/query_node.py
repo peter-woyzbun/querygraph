@@ -35,9 +35,10 @@ class AddColumnException(QueryGraphException):
 
 class QueryNode(object):
 
-    def __init__(self, name, query, db_connector, fields=None):
+    def __init__(self, name, query, db_connector, log, fields=None):
         self.name = name
         self.query = query
+        self.log = log
         if not isinstance(db_connector, DbConnector):
             raise QueryGraphException("The db_connector for node '%s' must be a "
                                       "DbConnector instance." % self.name)
@@ -149,6 +150,7 @@ class QueryNode(object):
             self.df = df
         if self.manipulation_set:
             self.execute_manipulation_set()
+        self.log.dataframe_header(source_node=self.name, df=self.df)
 
     def _execute(self, **independent_param_vals):
         """

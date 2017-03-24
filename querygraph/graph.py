@@ -30,10 +30,11 @@ class QueryGraph(object):
         # Dictionary that maps node names to their instances.
         self.nodes = dict()
         self.num_edges = 0
+        self.log = ExecutionLog(stdout_print=True)
         if qgl_str is not None:
             compiler = QGLCompiler(qgl_str=qgl_str, query_graph=self)
             compiler.compile()
-        self.log = ExecutionLog(stdout_print=True)
+
 
     def add_node(self, query_node):
         """

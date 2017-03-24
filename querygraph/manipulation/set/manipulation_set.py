@@ -96,7 +96,17 @@ class Select(Manipulation):
         self.columns = columns
 
     def _execute(self, df, evaluator=None):
-        return df[self.columns]
+        existing_columns = list(df.columns.values)
+        unneeded_cols = list(set(existing_columns) - set(self.columns))
+        return df.drop(unneeded_cols, inplace=False, axis=1)
+
+    @classmethod
+    def parser(cls):
+        select = pp.Suppress("select")
+        column = pp.Word(pp.alphas, pp.alphanums + "_$")
+        parser = select + pp.Suppress("(") + pp.Group(pp.delimitedList(column)) + pp.Suppress(")")
+        parser.setParseAction(lambda x: Select(columns=x[0]))
+        return parser
 
 
 class Remove(Manipulation):
@@ -215,7 +225,7 @@ class ManipulationSet(object):
         return df
 
     def parser(self):
-        manipulation = (Unpack.parser() | Mutate.parser() | Flatten.parser())
+        manipulation = (Unpack.parser() | Mutate.parser() | Flatten.parser() | Select.parser())
         manipulation_set = pp.delimitedList(manipulation, delim='>>')
         return manipulation_set
 

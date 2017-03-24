@@ -244,6 +244,7 @@ class QGLCompiler(object):
     def _create_query_nodes(self):
         for node_name, node_dict in self.retrieve_block.nodes.items():
             self.query_graph.nodes[node_name] = QueryNode(name=node_name, query=node_dict['query_value'],
+                                                          log=self.query_graph.log,
                                                           db_connector=self.connectors[node_dict['connector_name']],
                                                           fields=node_dict['fields'])
             if node_dict['manipulation_set'] is not None:
