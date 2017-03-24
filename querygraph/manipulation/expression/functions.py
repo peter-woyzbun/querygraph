@@ -251,6 +251,20 @@ class Sum(ExprFunc):
         return sum(value)
 
 
+class Mean(ExprFunc):
+
+    def __init__(self):
+        ExprFunc.__init__(self, name='sum')
+
+    @multimethod(pd.Series)
+    def _execute(self, value):
+        return np.mean(value)
+
+    @multimethod(list)
+    def _execute(self, value):
+        return np.mean(value)
+
+
 # =============================================
 # String Functions
 # ---------------------------------------------
