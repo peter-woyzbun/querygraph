@@ -103,7 +103,7 @@ class Select(Manipulation):
     @classmethod
     def parser(cls):
         select = pp.Suppress("select")
-        column = pp.Word(pp.alphas, pp.alphanums + "_$")
+        column = pp.Word(pp.alphas + "_", pp.alphanums + "_$")
         parser = select + pp.Suppress("(") + pp.Group(pp.delimitedList(column)) + pp.Suppress(")")
         parser.setParseAction(lambda x: Select(columns=x[0]))
         return parser
@@ -116,6 +116,14 @@ class Remove(Manipulation):
 
     def _execute(self, df, evaluator=None):
         return df.drop(self.columns, inplace=False, axis=1)
+
+    @classmethod
+    def parser(cls):
+        remove = pp.Suppress("remove")
+        column = pp.Word(pp.alphas + "_", pp.alphanums)
+        parser = remove + pp.Suppress("(") + pp.Group(pp.delimitedList(column)) + pp.Suppress(")")
+        parser.setParseAction(lambda x: Remove(columns=x[0]))
+        return parser
 
 
 class Flatten(Manipulation):
@@ -136,7 +144,7 @@ class Flatten(Manipulation):
     @classmethod
     def parser(cls):
         unpack = pp.Suppress("flatten")
-        column = pp.Word(pp.alphas, pp.alphanums + "_$")
+        column = pp.Word(pp.alphas + "_", pp.alphanums + "_$")
         parser = unpack + pp.Suppress("(") + column + pp.Suppress(")")
         parser.setParseAction(lambda x: Flatten(column=x[0]))
         return parser
@@ -218,21 +226,20 @@ class ManipulationSet(object):
             return False
 
     def execute(self, df):
-        print "Executing manipulation set!"
         evaluator = Evaluator()
+        print self.manipulations
         for manipulation in self:
             df = manipulation.execute(df, evaluator)
         return df
 
     def parser(self):
-        manipulation = (Unpack.parser() | Mutate.parser() | Flatten.parser() | Select.parser())
+        manipulation = (Unpack.parser() | Mutate.parser() | Flatten.parser() | Select.parser() | Remove.parser())
         manipulation_set = pp.delimitedList(manipulation, delim='>>')
         return manipulation_set
 
     def append_from_str(self, set_str):
         parser = self.parser()
         manipulations = parser.parseString(set_str)
-        print manipulations
         for manipulation in manipulations:
             self.manipulations.append(manipulation)
         return self
