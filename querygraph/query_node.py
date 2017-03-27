@@ -109,6 +109,8 @@ class QueryNode(object):
         Join this QueryNode with its parent node, using the defined join context.
 
         """
+        self.log.node_info(source_node=self.name, msg="Attempting to join child node "
+                                                      "'%s' with parent node '%s'." % (self.name, self.parent.name))
         if self.parent is None and self.df is None:
             raise QueryGraphException
         joined_df = self.join_context.apply_join(parent_df=self.parent.df, child_df=self.df)
@@ -150,14 +152,16 @@ class QueryNode(object):
     def retrieve_dataframe(self, independent_param_vals):
         query_template = self._make_query_template()
         self.log.node_info(source_node=self.name,
-                           msg="Attempting to execute query on %s database." % self.db_connector.db_type)
+                           msg="Attempting to execute query using connector '%s'." % self.db_connector.name)
         try:
             self._execute_query(query_template=query_template, independent_param_vals=independent_param_vals)
         except ConnectionError, e:
-            self.log.node_error(source_node=self.name, msg="Could not connect to database.")
+            self.log.node_error(source_node=self.name, msg="Could not connect to database using connector '%s'."
+                                                           % self.db_connector.name)
             return e
         except ExecutionError, e:
-            self.log.node_error(source_node=self.name, msg="Problem executing query on database.")
+            self.log.node_error(source_node=self.name, msg="Problem executing query on database using connector '%s'."
+                                                           % self.db_connector.name)
             return e
         if self.manipulation_set and not self.result_set_empty:
             self.execute_manipulation_set()

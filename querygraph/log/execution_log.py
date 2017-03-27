@@ -22,7 +22,11 @@ class ExecutionLog(object):
         self._add_entry(source_prefix='[GRAPH]', msg="ERROR: %s" % msg)
 
     def dataframe_header(self, source_node, df):
-        msg = 'Dataframe retrieved: \n %s' % str(tabulate.tabulate(df[1:5], headers='keys', tablefmt='psql'))
+        n_rows, n_cols = df.shape
+        msg = 'Dataframe retrieved (%s rows, %s columns). First four rows shown below: \n %s' \
+              % (n_rows,
+                 n_cols,
+                 str(tabulate.tabulate(df[1:5], headers='keys', tablefmt='psql')))
         self._add_entry(source_prefix='[NODE:%s]' % source_node, msg=msg)
 
     def node_info(self, source_node, msg):
