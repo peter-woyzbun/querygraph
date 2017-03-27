@@ -177,6 +177,9 @@ class JoinBlock(object):
     def __init__(self):
         self.joins = list()
 
+    def __nonzero__(self):
+        return len(self.joins) > 0
+
     def _add_join(self, join_type, child_node_name, child_cols, parent_node_name, parent_cols):
         self.joins.append({'join_type': join_type,
                            'child_node': child_node_name,
@@ -228,12 +231,13 @@ class QGLCompiler(object):
     def compile(self):
         parser = (pp.Keyword("CONNECT") + self.connect_block.parser() +
                   pp.Keyword("RETRIEVE") + self.retrieve_block.parser() +
-                  pp.Keyword("JOIN") + self.join_block.parser())
+                  pp.Optional(pp.Keyword("JOIN") + self.join_block.parser()))
 
         parser.parseString(self.qgl_str)
         self._create_connectors()
         self._create_query_nodes()
-        self._create_joins()
+        if self.join_block:
+            self._create_joins()
 
     def _create_connectors(self):
         for conn_name, conn_dict in self.connect_block.connectors.items():

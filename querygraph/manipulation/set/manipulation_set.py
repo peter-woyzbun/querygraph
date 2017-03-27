@@ -1,10 +1,12 @@
 from abc import ABCMeta, abstractmethod
+from collections import defaultdict
 
 import pandas as pd
 import pyparsing as pp
 
 from querygraph.exceptions import QueryGraphException
 from querygraph.manipulation.expression.evaluator import Evaluator
+from querygraph.manipulation import common_parsers
 from querygraph.utils.abstract_cls_method import abstractclassmethod
 
 
@@ -103,7 +105,7 @@ class Select(Manipulation):
     @classmethod
     def parser(cls):
         select = pp.Suppress("select")
-        column = pp.Word(pp.alphas + "_", pp.alphanums + "_$")
+        column = common_parsers.column
         parser = select + pp.Suppress("(") + pp.Group(pp.delimitedList(column)) + pp.Suppress(")")
         parser.setParseAction(lambda x: Select(columns=x[0]))
         return parser
@@ -120,7 +122,7 @@ class Remove(Manipulation):
     @classmethod
     def parser(cls):
         remove = pp.Suppress("remove")
-        column = pp.Word(pp.alphas + "_", pp.alphanums)
+        column = common_parsers.column
         parser = remove + pp.Suppress("(") + pp.Group(pp.delimitedList(column)) + pp.Suppress(")")
         parser.setParseAction(lambda x: Remove(columns=x[0]))
         return parser
@@ -144,7 +146,7 @@ class Flatten(Manipulation):
     @classmethod
     def parser(cls):
         unpack = pp.Suppress("flatten")
-        column = pp.Word(pp.alphas + "_", pp.alphanums + "_$")
+        column = common_parsers.column
         parser = unpack + pp.Suppress("(") + column + pp.Suppress(")")
         parser.setParseAction(lambda x: Flatten(column=x[0]))
         return parser
@@ -172,10 +174,10 @@ class Unpack(Manipulation):
     def parser(cls):
         unpack = pp.Suppress("unpack")
 
-        packed_col_name = pp.Word(pp.alphas, pp.alphanums + "_$")
+        packed_col_name = common_parsers.column
         dict_key = pp.Suppress("[") + pp.QuotedString(quoteChar="'") + pp.Suppress("]")
         dict_key_grp = pp.Group(pp.OneOrMore(dict_key))
-        new_col_name = pp.Word(pp.alphas, pp.alphanums + "_$")
+        new_col_name = common_parsers.column
 
         unpack_arg = new_col_name + pp.Suppress("=") + packed_col_name + dict_key_grp
         unpack_arg.setParseAction(lambda x: {'packed_col': x[1], 'key_list': x[2], 'new_col_name': x[0]})
@@ -183,6 +185,56 @@ class Unpack(Manipulation):
         parser = unpack + pp.Suppress("(") + pp.delimitedList(unpack_arg) + pp.Suppress(")")
         parser.setParseAction(lambda x: Unpack(unpack_list=x))
         return parser
+
+
+class GroupedSummary(Manipulation):
+
+    lambda_summaries = {'spread': lambda x: max(x) - min(x)}
+
+    def __init__(self, group_by, aggregations):
+        self.group_by = group_by
+        self.aggregations = aggregations
+        print self.aggregations
+        self._aggregations = defaultdict(dict)
+        self._merge_aggregations()
+        print self._aggregations
+
+    def _merge_aggregations(self):
+        for agg_dict in self.aggregations:
+            summary_type = agg_dict['summary_type']
+            if summary_type in self.lambda_summaries:
+                self._aggregations[agg_dict['target_col']][agg_dict['summary_col_name']] = self.lambda_summaries[summary_type]
+            else:
+                self._aggregations[agg_dict['target_col']][agg_dict['summary_col_name']] = agg_dict['summary_type']
+
+    @classmethod
+    def parser(cls):
+        group_by = pp.Suppress("group_by")
+        column = common_parsers.column
+        group_by_block = group_by + pp.Suppress("(") + pp.Group(pp.delimitedList(column)) + pp.Suppress(")")
+
+        summarize = pp.Suppress("summarize")
+        summary_col_name = common_parsers.column
+        summary_type = pp.Word(pp.alphas, pp.alphanums + "_$")
+        target_column = common_parsers.column
+        single_summary = summary_col_name + pp.Suppress("=") + summary_type +\
+                         pp.Suppress("(") + target_column + pp.Suppress(")")
+        single_summary.setParseAction(lambda x: {'summary_col_name': x[0], 'summary_type': x[1], 'target_col': x[2]})
+        summarize_block = summarize + pp.Suppress("(") + pp.Group(pp.delimitedList(single_summary)) + pp.Suppress(")")
+
+        parser = group_by_block + pp.Suppress(">>") + summarize_block
+        parser.setParseAction(lambda x: GroupedSummary(group_by=x[0], aggregations=x[1]))
+        return parser
+
+    def _execute(self, df, evaluator=None):
+        return df.groupby(self.group_by).agg(self._aggregations)
+
+
+test_parser = GroupedSummary.parser()
+
+test_group = test_parser.parseString("group_by(col_1, col_2) >> summarize(mean_col_1=mean(col_1), std_col_1=std(col_1))")
+print test_group
+print test_group.group_by
 
 
 # =============================================
@@ -214,7 +266,6 @@ class ManipulationSet(object):
     def __lshift__(self, other):
         parser = self.parser()
         manipulations = parser.parseString(other)
-        print manipulations
         for manipulation in manipulations:
             self.manipulations.append(manipulation)
         return self
@@ -227,13 +278,13 @@ class ManipulationSet(object):
 
     def execute(self, df):
         evaluator = Evaluator()
-        print self.manipulations
         for manipulation in self:
             df = manipulation.execute(df, evaluator)
         return df
 
     def parser(self):
-        manipulation = (Unpack.parser() | Mutate.parser() | Flatten.parser() | Select.parser() | Remove.parser())
+        manipulation = (Unpack.parser() | Mutate.parser() | Flatten.parser() |
+                        Select.parser() | Remove.parser() | GroupedSummary.parser())
         manipulation_set = pp.delimitedList(manipulation, delim='>>')
         return manipulation_set
 

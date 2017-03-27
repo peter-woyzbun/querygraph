@@ -35,7 +35,6 @@ class QueryGraph(object):
             compiler = QGLCompiler(qgl_str=qgl_str, query_graph=self)
             compiler.compile()
 
-
     def add_node(self, query_node):
         """
         Add a QueryNode to the QueryGraph.
@@ -48,7 +47,7 @@ class QueryGraph(object):
         """
         if not isinstance(query_node, QueryNode):
             raise exceptions.GraphConfigException("When adding a graph node, the 'query_node' argument must be a "
-                                       "QueryNode instance.")
+                                                  "QueryNode instance.")
         self.nodes[query_node.name] = query_node
 
     def __iter__(self):
@@ -74,8 +73,6 @@ class QueryGraph(object):
 
     def __contains__(self, item):
         """ Check if graph contains given QueryNode instance. """
-        if not isinstance(item, QueryNode):
-            raise exceptions.GraphException("Can only check if graph __contains__ a QueryNode instance.")
         return item in self.nodes.values()
 
     def join(self, child_node, parent_node, join_type, on_columns):
@@ -169,13 +166,8 @@ class QueryGraph(object):
             # Wait until all threads have been created.
             pass
         for thread in threads:
-            print "TRYING TO JOIN THREAD!"
             thread.join()
         self.root_node.fold_children()
-
-    def parallel_execute(self, independent_param_vals):
-        self._parallel_execute(independent_param_vals=independent_param_vals)
-        return self.root_node.df
 
     def _pre_execution_checks(self):
         if not self.is_spanning_tree:
@@ -188,9 +180,8 @@ class QueryGraph(object):
         self.root_node.fold_children()
 
     def execute(self, **independent_param_vals):
-        self.log.graph_info(msg="Starting query graph execution.")
-        # self._execute(independent_param_vals=independent_param_vals)
-        self.parallel_execute(independent_param_vals)
+        self.log.graph_info(msg="Starting execution on query graph with %s nodes." % self.num_nodes)
+        self._parallel_execute(independent_param_vals)
         return self.root_node.df
 
 
