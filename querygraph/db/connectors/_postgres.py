@@ -5,8 +5,9 @@ from querygraph.db.connector import RelationalDbConnector
 
 
 class PostgresConnector(RelationalDbConnector):
-    def __init__(self, db_name, user, password, host, port):
+    def __init__(self, name, db_name, user, password, host, port):
         RelationalDbConnector.__init__(self,
+                                       name=name,
                                        host=host,
                                        db_name=db_name,
                                        user=user,

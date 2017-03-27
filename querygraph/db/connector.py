@@ -37,7 +37,8 @@ class DbConnector(object):
 
     """
 
-    def __init__(self, db_type, conn_exception, execution_exception):
+    def __init__(self, name, db_type, conn_exception, execution_exception):
+        self.name = name
         self.db_type = db_type
         self.conn_exception = conn_exception
         self.execution_exception = execution_exception
@@ -73,7 +74,7 @@ class DbConnector(object):
 
 class RelationalDbConnector(DbConnector):
 
-    def __init__(self, db_type,
+    def __init__(self, name, db_type,
                  conn_exception,
                  execution_exception,
                  host=None,
@@ -87,6 +88,7 @@ class RelationalDbConnector(DbConnector):
         self.password = password
         self.port = port
         DbConnector.__init__(self,
+                             name=name,
                              db_type=db_type,
                              conn_exception=conn_exception,
                              execution_exception=execution_exception)
@@ -110,10 +112,13 @@ class RelationalDbConnector(DbConnector):
 
 class NoSqlDbConnector(DbConnector):
 
-    def __init__(self, db_type,
+    def __init__(self,
+                 name,
+                 db_type,
                  conn_exception,
                  execution_exception):
         DbConnector.__init__(self,
+                             name=name,
                              db_type=db_type,
                              conn_exception=conn_exception,
                              execution_exception=execution_exception)

@@ -7,13 +7,14 @@ from querygraph.db.connector import NoSqlDbConnector
 
 class ElasticSearchConnector(NoSqlDbConnector):
 
-    def __init__(self, host, port, doc_type, index):
+    def __init__(self, name, host, port, doc_type, index):
         self.host = host
         self.port = port
         self.doc_type = doc_type
         self.index = index
 
         NoSqlDbConnector.__init__(self,
+                                  name=name,
                                   db_type='elasticsearch',
                                   conn_exception=elasticsearch.ConnectionError,
                                   execution_exception=elasticsearch.ElasticsearchException)

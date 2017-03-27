@@ -7,13 +7,14 @@ from querygraph.db.connector import NoSqlDbConnector
 
 class MongoDbConnector(NoSqlDbConnector):
 
-    def __init__(self, host, port, db_name, collection):
+    def __init__(self, name, host, port, db_name, collection):
         self.host = host
         self.port = port
         self.db_name = db_name
         self.collection = collection
 
         NoSqlDbConnector.__init__(self,
+                                  name=name,
                                   db_type='mongodb',
                                   conn_exception=pymongo.errors.ConnectionFailure,
                                   execution_exception=pymongo.errors.OperationFailure)

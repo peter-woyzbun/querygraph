@@ -10,13 +10,14 @@ def pandas_factory(colnames, rows):
 
 class RedisConnector(NoSqlDbConnector):
 
-    def __init__(self, host, port, db_name, password):
+    def __init__(self, name, host, port, db_name, password):
         self.host = host
         self.port = port
         self.db_name = db_name
         self.password = password
 
         NoSqlDbConnector.__init__(self,
+                                  name=name,
                                   db_type='redis',
                                   conn_exception=redis.ConnectionError,
                                   execution_exception=redis.RedisError)

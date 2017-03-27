@@ -239,7 +239,7 @@ class QGLCompiler(object):
 
         parser = (pp.Keyword("CONNECT") + self.connect_block.parser() +
                   pp.Keyword("RETRIEVE") + self.retrieve_block.parser() +
-                  pp.Optional(pp.Keyword("JOIN") + self.join_block.parser()) + manipulation_set)
+                  pp.Optional(pp.Keyword("JOIN") + self.join_block.parser()))
 
         parser.parseString(self.qgl_str)
         self._create_connectors()
@@ -253,6 +253,7 @@ class QGLCompiler(object):
         for conn_name, conn_dict in self.connect_block.connectors.items():
             conn_type = conn_dict['conn_type'].lower()
             conn_kwargs = conn_dict['conn_kwargs']
+            conn_kwargs['name'] = conn_name
             self.connectors[conn_name] = self.connector_map[conn_type](**conn_kwargs)
 
     def _create_query_nodes(self):
@@ -262,7 +263,6 @@ class QGLCompiler(object):
                                                           db_connector=self.connectors[node_dict['connector_name']],
                                                           fields=node_dict['fields'])
             if node_dict['manipulation_set'] is not None:
-                print node_dict['manipulation_set']
                 self.query_graph.nodes[node_name].manipulation_set.append_from_str(node_dict['manipulation_set'])
 
     def _create_joins(self):

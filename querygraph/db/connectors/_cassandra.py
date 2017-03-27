@@ -12,12 +12,13 @@ def pandas_factory(colnames, rows):
 
 class CassandraConnector(NoSqlDbConnector):
 
-    def __init__(self, contact_point, port, keyspace):
+    def __init__(self, name, contact_point, port, keyspace):
         self.contact_point = contact_point
         self.port = port
         self.keyspace = keyspace
 
         NoSqlDbConnector.__init__(self,
+                                  name=name,
                                   db_type='cassandra',
                                   conn_exception=ConnectionException,
                                   execution_exception=ReadFailure)

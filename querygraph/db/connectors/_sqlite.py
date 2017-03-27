@@ -6,8 +6,9 @@ from querygraph.db.connector import RelationalDbConnector
 
 class SqliteConnector(RelationalDbConnector):
 
-    def __init__(self, host):
+    def __init__(self, name, host):
         RelationalDbConnector.__init__(self,
+                                       name=name,
                                        host=host,
                                        db_type='sqlite',
                                        conn_exception=Exception,

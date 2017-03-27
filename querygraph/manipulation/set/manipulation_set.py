@@ -179,7 +179,6 @@ class Unpack(Manipulation):
 
     def _execute(self, df, evaluator=None):
         for unpack_dict in self.unpack_list:
-            print unpack_dict
             packed_col = unpack_dict['packed_col']
             key_list = unpack_dict['key_list']
             new_col_name = unpack_dict['new_col_name']
@@ -210,10 +209,8 @@ class GroupedSummary(Manipulation):
     def __init__(self, group_by, aggregations):
         self.group_by = group_by
         self.aggregations = aggregations
-        print self.aggregations
         self._aggregations = defaultdict(dict)
         self._merge_aggregations()
-        print self._aggregations
 
     def _merge_aggregations(self):
         for agg_dict in self.aggregations:

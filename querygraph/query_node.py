@@ -4,13 +4,14 @@ import copy
 import pandas as pd
 
 from querygraph import query_templates
-from querygraph.exceptions import QueryGraphException
+from querygraph.exceptions import QueryGraphException, ConnectionError, ExecutionError
 from querygraph.join_context import JoinContext, OnColumn
 from querygraph.thread_tree import ExecutionThread
 from querygraph.db.connector import DbConnector
 from querygraph.db import connectors
 from querygraph.manipulation.expression.evaluator import Evaluator
 from querygraph.manipulation.set import ManipulationSet
+from querygraph.log import ExecutionLog
 
 
 # =============================================
@@ -38,6 +39,8 @@ class QueryNode(object):
     def __init__(self, name, query, db_connector, log, fields=None):
         self.name = name
         self.query = query
+        if not isinstance(log, ExecutionLog):
+            raise QueryGraphException
         self.log = log
         if not isinstance(db_connector, DbConnector):
             raise QueryGraphException("The db_connector for node '%s' must be a "
@@ -146,15 +149,27 @@ class QueryNode(object):
 
     def retrieve_dataframe(self, independent_param_vals):
         query_template = self._make_query_template()
+        self.log.node_info(source_node=self.name,
+                           msg="Attempting to execute query on %s database." % self.db_connector.db_type)
+        try:
+            self._execute_query(query_template=query_template, independent_param_vals=independent_param_vals)
+        except ConnectionError, e:
+            self.log.node_error(source_node=self.name, msg="Could not connect to database.")
+            return e
+        except ExecutionError, e:
+            self.log.node_error(source_node=self.name, msg="Problem executing query on database.")
+            return e
+        if self.manipulation_set and not self.result_set_empty:
+            self.execute_manipulation_set()
+        self.log.dataframe_header(source_node=self.name, df=self.df)
+
+    def _execute_query(self, query_template, independent_param_vals):
         if self.parent is not None:
             df = query_template.execute(df=self.parent.df, independent_param_vals=independent_param_vals)
             self.df = df
         else:
             df = query_template.execute(independent_param_vals=independent_param_vals)
             self.df = df
-        if self.manipulation_set and not self.result_set_empty:
-            self.execute_manipulation_set()
-        self.log.dataframe_header(source_node=self.name, df=self.df)
 
     def _execute(self, **independent_param_vals):
         """

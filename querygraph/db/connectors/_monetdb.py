@@ -6,8 +6,9 @@ from querygraph.db.connector import RelationalDbConnector
 
 class MonetDbConnector(RelationalDbConnector):
 
-    def __init__(self, host, db_name, user, password):
+    def __init__(self, name, host, db_name, user, password):
         RelationalDbConnector.__init__(self,
+                                       name=name,
                                        host=host,
                                        db_type='monetdb',
                                        db_name=db_name,
