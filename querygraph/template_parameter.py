@@ -102,6 +102,9 @@ class TemplateParameter(object):
         self._add_float_converters(
             {int: lambda x: float(x),
              np.int64: lambda x: float(x),
+             np.int32: lambda x: float(x),
+             np.int16: lambda x: float(x),
+             np.int8: lambda x: float(x),
              np.float64: lambda x: x,
              np.float32: lambda x: x,
              np.float16: lambda x: x,

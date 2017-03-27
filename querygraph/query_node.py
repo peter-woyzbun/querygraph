@@ -4,7 +4,7 @@ import copy
 import pandas as pd
 
 from querygraph import query_templates
-from querygraph.exceptions import QueryGraphException, ConnectionError, ExecutionError
+from querygraph.exceptions import QueryGraphException, ConnectionError, ExecutionError, JoinContextException
 from querygraph.join_context import JoinContext, OnColumn
 from querygraph.thread_tree import ExecutionThread
 from querygraph.db.connector import DbConnector
@@ -109,12 +109,18 @@ class QueryNode(object):
         Join this QueryNode with its parent node, using the defined join context.
 
         """
-        self.log.node_info(source_node=self.name, msg="Attempting to join child node "
-                                                      "'%s' with parent node '%s'." % (self.name, self.parent.name))
+        self.log.node_info(source_node=self.name, msg="Attempting to join with parent node '%s'." % self.parent.name)
         if self.parent is None and self.df is None:
             raise QueryGraphException
-        joined_df = self.join_context.apply_join(parent_df=self.parent.df, child_df=self.df)
-        self.parent.df = joined_df
+        try:
+            joined_df = self.join_context.apply_join(parent_df=self.parent.df, child_df=self.df)
+            self.parent.df = joined_df
+            self.log.node_info(source_node=self.name, msg="Joined with parent node '%s' dataframe." % self.parent.name)
+        except JoinContextException, e:
+            self.log.node_error(source_node=self.name,
+                                msg="Couldn't join child '%s''s dataframe"
+                                    " with parent node '%s''s dataframe." % (self.name, self.parent.name))
+            return e
 
     def fold_children(self):
         """
