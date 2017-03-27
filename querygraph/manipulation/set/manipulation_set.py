@@ -55,15 +55,16 @@ class Manipulation(object):
 
 class Mutate(Manipulation):
 
-    def __init__(self, col_name, col_expr):
-        self.col_name = col_name
-        self.col_expr = col_expr
+    def __init__(self, mutations):
+        self.mutations = mutations
 
     def _execute(self, df, evaluator=None):
         if not isinstance(evaluator, Evaluator):
             raise ManipulationException
-        expr_evaluator = Evaluator(df=df)
-        df[self.col_name] = expr_evaluator.eval(expr_str=self.col_expr)
+
+        for mutation in self.mutations:
+            expr_evaluator = Evaluator(df=df)
+            df[mutation['col_name']] = expr_evaluator.eval(expr_str=mutation['col_expr'])
         return df
 
     @classmethod
@@ -76,20 +77,35 @@ class Mutate(Manipulation):
         expr_evaluator = Evaluator(deferred_eval=True)
         col_expr = expr_evaluator.parser()
 
-        parser = mutate + lpar + col_name + pp.Suppress("=") + col_expr + rpar
-        parser.setParseAction(lambda x: Mutate(col_name=x[0], col_expr=x[1]))
+        mutation = col_name + pp.Suppress("=") + col_expr
+        mutation.setParseAction(lambda x: {'col_name': x[0], 'col_expr': x[1]})
+        mutations = pp.Group(pp.delimitedList(mutation))
+        parser = mutate + lpar + mutations + rpar
+        parser.setParseAction(lambda x: Mutate(mutations=x))
         return parser
 
 
 class Rename(Manipulation):
 
-    def __init__(self, old_column_name, new_column_name):
-        self.old_column_name = old_column_name
-        self.new_column_name = new_column_name
+    def __init__(self, columns):
+        self.columns = columns
 
     def _execute(self, df, evaluator=None):
-        df = df.rename(columns={self.old_column_name: self.new_column_name})
+        df = df.rename(columns=self.columns)
         return df
+
+    @classmethod
+    def parser(cls):
+        rename = pp.Suppress("rename")
+        rename_kwarg = common_parsers.column + pp.Suppress("=") + common_parsers.column
+        rename_kwarg.setParseAction(lambda x: {x[0]: x[1]})
+
+        kwargs = pp.Group(pp.delimitedList(rename_kwarg))
+        kwargs.setParseAction(lambda x: {k: v for d in x for k, v in d.items()})
+
+        parser = rename + pp.Suppress("(") + kwargs + pp.Suppress(")")
+        parser.setParseAction(lambda x: Rename(columns=x[0]))
+        return parser
 
 
 class Select(Manipulation):
@@ -230,11 +246,17 @@ class GroupedSummary(Manipulation):
         return df.groupby(self.group_by).agg(self._aggregations)
 
 
-test_parser = GroupedSummary.parser()
+class DropNa(Manipulation):
 
-test_group = test_parser.parseString("group_by(col_1, col_2) >> summarize(mean_col_1=mean(col_1), std_col_1=std(col_1))")
-print test_group
-print test_group.group_by
+    def _execute(self, df, evaluator=None):
+        return df.dropna()
+
+    @classmethod
+    def parser(cls):
+        drop_na = pp.Suppress("group_by")
+        parser = drop_na + pp.Suppress("()")
+        parser.setParseAction(lambda x: DropNa())
+        return parser
 
 
 # =============================================
@@ -284,7 +306,8 @@ class ManipulationSet(object):
 
     def parser(self):
         manipulation = (Unpack.parser() | Mutate.parser() | Flatten.parser() |
-                        Select.parser() | Remove.parser() | GroupedSummary.parser())
+                        Select.parser() | Remove.parser() | GroupedSummary.parser() |
+                        DropNa.parser())
         manipulation_set = pp.delimitedList(manipulation, delim='>>')
         return manipulation_set
 

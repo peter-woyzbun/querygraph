@@ -225,19 +225,29 @@ class QGLCompiler(object):
         self.connect_block = ConnectBlock()
         self.retrieve_block = RetrieveBlock()
         self.join_block = JoinBlock()
+        self.manipulation_set_str = None
 
         self.connectors = dict()
 
+    def _add_manipulation_set(self, manipulation_set_str):
+        self.manipulation_set_str = manipulation_set_str
+
     def compile(self):
+        manipulation_set = pp.Optional(pp.Suppress(pp.Keyword("THEN")) +
+                                       pp.Suppress("|") + pp.SkipTo(pp.Suppress(";"), include=True))
+        manipulation_set.setParseAction(lambda x: self._add_manipulation_set(x[0]))
+
         parser = (pp.Keyword("CONNECT") + self.connect_block.parser() +
                   pp.Keyword("RETRIEVE") + self.retrieve_block.parser() +
-                  pp.Optional(pp.Keyword("JOIN") + self.join_block.parser()))
+                  pp.Optional(pp.Keyword("JOIN") + self.join_block.parser()) + manipulation_set)
 
         parser.parseString(self.qgl_str)
         self._create_connectors()
         self._create_query_nodes()
         if self.join_block:
             self._create_joins()
+        if self.manipulation_set_str:
+            self.query_graph.manipulation_set.append_from_str(self.manipulation_set_str)
 
     def _create_connectors(self):
         for conn_name, conn_dict in self.connect_block.connectors.items():

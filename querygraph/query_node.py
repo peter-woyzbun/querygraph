@@ -63,6 +63,10 @@ class QueryNode(object):
             return self.parent.root_node()
 
     @property
+    def result_set_empty(self):
+        return self.df.empty
+
+    @property
     def num_edges(self):
         return len(self.children)
 
@@ -148,7 +152,7 @@ class QueryNode(object):
         else:
             df = query_template.execute(independent_param_vals=independent_param_vals)
             self.df = df
-        if self.manipulation_set:
+        if self.manipulation_set and not self.result_set_empty:
             self.execute_manipulation_set()
         self.log.dataframe_header(source_node=self.name, df=self.df)
 

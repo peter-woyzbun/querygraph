@@ -15,10 +15,11 @@ class ExecutionThread(threading.Thread):
 
     def run(self):
         self.query_node.retrieve_dataframe(independent_param_vals=self.independent_param_vals)
-        for child_node in self.query_node.children:
-            child_thread = self._create_child_thread(child_query_node=child_node)
-            child_thread.start()
-            self.threads.append(child_thread)
+        if not self.query_node.result_set_empty:
+            for child_node in self.query_node.children:
+                child_thread = self._create_child_thread(child_query_node=child_node)
+                child_thread.start()
+                self.threads.append(child_thread)
 
     def _create_child_thread(self, child_query_node):
         child_thread = ExecutionThread(threads=self.threads,

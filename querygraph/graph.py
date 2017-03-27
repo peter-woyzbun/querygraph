@@ -2,6 +2,7 @@
 from querygraph import exceptions
 from querygraph.language.compiler import QGLCompiler
 from querygraph.query_node import QueryNode
+from querygraph.manipulation.set import ManipulationSet
 from querygraph.log import ExecutionLog
 
 
@@ -31,6 +32,7 @@ class QueryGraph(object):
         self.nodes = dict()
         self.num_edges = 0
         self.log = ExecutionLog(stdout_print=True)
+        self.manipulation_set = ManipulationSet()
         if qgl_str is not None:
             compiler = QGLCompiler(qgl_str=qgl_str, query_graph=self)
             compiler.compile()
