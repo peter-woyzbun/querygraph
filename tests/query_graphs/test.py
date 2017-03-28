@@ -48,6 +48,50 @@ class MongoDbPostgresTests(unittest.TestCase):
                                'For Those About To Rock We Salute You'})
 
 
+class MongoDbMySqlTests(unittest.TestCase):
+
+    def test_execute(self):
+        query = """
+        CONNECT
+            mysql_conn <- MySql(db_name='%s', user='%s', password='%s', host='%s', port='%s')
+            mongodb_conn <- Mongodb(host='%s', port='%s', db_name='%s', collection='%s')
+        RETRIEVE
+            QUERY |
+                {'tags': {'$in': {%% album_tags -> list:str %%}}};
+            FIELDS album, tags
+            USING mongodb_conn
+            THEN |
+                flatten(tags) >>
+                remove(_id);
+            AS mongo_node
+            ---
+            QUERY |
+                SELECT *
+                FROM Album
+                WHERE Title IN {{ album -> list:str }};
+            USING mysql_conn
+            AS mysql_node
+            JOIN
+                LEFT (mysql_node[Title] ==> mongo_node[album])
+                        """ % (config.DATABASES['mysql']['DB_NAME'],
+                               config.DATABASES['mysql']['USER'],
+                               config.DATABASES['mysql']['PASSWORD'],
+                               config.DATABASES['mysql']['HOST'],
+                               config.DATABASES['mysql']['PORT'],
+                               config.DATABASES['mongodb']['HOST'],
+                               config.DATABASES['mongodb']['PORT'],
+                               config.DATABASES['mongodb']['DB_NAME'],
+                               config.DATABASES['mongodb']['COLLECTION'])
+        query_graph = QueryGraph(qgl_str=query)
+
+        df = query_graph.execute(album_tags=['canada', 'rock'])
+        self.assertEquals(set(df['album'].unique()),
+                              {'Jagged Little Pill',
+                               'Facelift', 'Big Ones',
+                               'Let There Be Rock',
+                               'For Those About To Rock We Salute You'})
+
+
 class ElasticSearchPostgresTests(unittest.TestCase):
 
     def test_execute(self):
