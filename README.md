@@ -38,7 +38,7 @@ the `RETRIEVE` block, and the `JOIN` block. The `CONNECT` block
 established database connections, the `RETRIEVE` block creates query
 nodes, and the `JOIN` describes how the nodes are joined.
 
-![QGL Syntax Railroad Diagram](docs/_static/images/qgl_syntax.png)
+![QGL Syntax Railroad Diagram](docs/_static/images/syntax_railroad.png)
 
 ### Connect Block
 

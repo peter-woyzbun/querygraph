@@ -78,14 +78,14 @@ class TemplateParameter(object):
         self._setup_generic_converters()
         self._setup_db_specific_converters()
 
-        self.prep_value = None
+        self.python_value = None
 
     # =============================================
     # Type Conversion Handling
     # ---------------------------------------------
 
     def _setup_generic_converters(self):
-        # Setup generic converters for 'int' type converters.
+
         self._add_int_converters(
             {int: lambda x: x,
              np.int64: lambda x: x,
@@ -98,7 +98,7 @@ class TemplateParameter(object):
              float: lambda x: int(x),
              str: lambda x: int(x)}
         )
-        # Setup generic converters for 'float' type converters.
+
         self._add_float_converters(
             {int: lambda x: float(x),
              np.int64: lambda x: float(x),
@@ -111,7 +111,7 @@ class TemplateParameter(object):
              float: lambda x: x,
              str: lambda x: float(x)}
         )
-        # Setup generic converters for 'str' type converters.
+
         self._add_str_converters(
             {str: lambda x: "'%s'" % x,
              unicode: lambda x: "'%s'" % x,
@@ -137,11 +137,11 @@ class TemplateParameter(object):
                                                  "input type '%s'." % (data_type, type(value)))
         return self.type_converters[data_type][type(value)](value)
 
-    def _convert_prep_value(self, prep_value):
-        if type(prep_value) not in self.type_converters[self.data_type]:
+    def _convert_python_value(self, python_value):
+        if type(python_value) not in self.type_converters[self.data_type]:
             raise exceptions.TypeConversionError("There is no converter defined for parameter data type '%s', "
-                                                 "input type '%s'." % (self.data_type, type(prep_value)))
-        return self.type_converters[self.data_type][type(prep_value)](prep_value)
+                                                 "input type '%s'." % (self.data_type, type(python_value)))
+        return self.type_converters[self.data_type][type(python_value)](python_value)
 
     def _add_type_converter(self, data_type, input_type, converter):
         """
@@ -205,7 +205,7 @@ class TemplateParameter(object):
             expr_evaluator = Evaluator(df=df, df_name=parent_node_name)
         return expr_evaluator
 
-    def _make_prep_value(self, parent_node_name=None, df=None, independent_param_vals=None):
+    def _make_python_value(self, parent_node_name=None, df=None, independent_param_vals=None):
         expr_evaluator = self._expr_evaluator(parent_node_name, df, independent_param_vals)
         param_expr = expr_evaluator.parser()
 
@@ -220,16 +220,16 @@ class TemplateParameter(object):
 
         parameter_block = (param_expr + Suppress("->") + container_type + data_type)
         parameter_block.parseString(self.param_str)
-        self.prep_value = expr_evaluator.output_value()
+        self.python_value = expr_evaluator.output_value()
 
-    def _make_atomic_query_value(self, prep_value):
+    def _make_atomic_query_value(self, python_value):
         if self.data_type == 'custom':
-            return self.custom_data_type_str % prep_value
+            return self.custom_data_type_str % python_value
         else:
-            return self._convert_prep_value(prep_value=prep_value)
+            return self._convert_python_value(python_value=python_value)
 
     def _make_list_query_value(self):
-        parameter_value = self.prep_value
+        parameter_value = self.python_value
         val_str = ", ".join(str(self._make_atomic_query_value(x)) for x in parameter_value)
         val_str = "(%s)" % val_str
         return val_str
@@ -263,12 +263,12 @@ class TemplateParameter(object):
         """
         self._data_requirement_check(df=df, independent_param_vals=independent_param_vals)
 
-        self._make_prep_value(df=df,
-                              parent_node_name=parent_node_name,
-                              independent_param_vals=independent_param_vals)
+        self._make_python_value(df=df,
+                                parent_node_name=parent_node_name,
+                                independent_param_vals=independent_param_vals)
         if self.container_type == 'list':
             value = self._make_list_query_value()
             return value
         elif self.container_type == 'value':
-            value = self._make_atomic_query_value(prep_value=self.prep_value)
+            value = self._make_atomic_query_value(python_value=self.python_value)
             return value
