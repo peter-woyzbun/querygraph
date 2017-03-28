@@ -13,7 +13,7 @@ CONNECT
     mongodb_conn <- Mongodb(host='%s', port='%s', db_name='%s', collection='%s')
 RETRIEVE
     QUERY |
-        {'tags': {'$in': {%% album_tags -> list:str %%}}};
+        {'tags': {'$in': {% album_tags -> list:str %}}};
     FIELDS album, tags
     USING mongodb_conn
     THEN |

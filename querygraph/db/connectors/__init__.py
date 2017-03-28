@@ -20,6 +20,13 @@ except ImportError:
 
 
 try:
+    from _mariadb import MariaDbConnector as MariaDb
+except ImportError:
+    MariaDb = optional_import.NotInstalled(name='mysql-connector-python')
+
+
+
+try:
     from _mongodb import MongoDbConnector as MongoDb
 except ImportError:
     MongoDb = optional_import.NotInstalled(name='pymongo')
