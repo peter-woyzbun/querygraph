@@ -54,10 +54,11 @@ class DbConnector(object):
         pass
 
     def execute_query(self, *args, **kwargs):
+        # return self._execute_query(*args, **kwargs)
         try:
             return self._execute_query(*args, **kwargs)
-        except self.execution_exception:
-            raise exceptions.ExecutionError
+        except self.execution_exception, e:
+            raise exceptions.ExecutionError("%s" % e)
 
     @abstractmethod
     def _execute_query(self, *args, **kwargs):

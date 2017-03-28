@@ -20,14 +20,13 @@ class ElasticSearchConnector(NoSqlDbConnector):
                                   execution_exception=elasticsearch.ElasticsearchException)
 
     def _conn(self):
-        return elasticsearch.Elasticsearch([{'host': self.host, 'port': self.port}])
+        return elasticsearch.Elasticsearch([{'host': self.host, 'port': int(self.port)}])
 
     def _execute_query(self, query, fields):
         es = self.conn()
-        df = json_normalize(es.search(index=self.index, body={"_source": fields, "query": query})['hits']['hits'])
+        df = json_normalize(es.search(index=self.index, body={"query": query, "_source": fields})['hits']['hits'])
         df.rename(columns={'_source.%s' % field_name: field_name for field_name in fields}, inplace=True)
-        df = df[fields]
-        return df
+        return df[fields]
 
     def execute_insert_query(self, id, data):
         es = self.conn()

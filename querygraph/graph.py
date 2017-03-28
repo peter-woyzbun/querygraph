@@ -183,6 +183,7 @@ class QueryGraph(object):
 
     def execute(self, **independent_param_vals):
         self.log.graph_info(msg="Starting execution on query graph with %s nodes." % self.num_nodes)
+        self._pre_execution_checks()
         self._parallel_execute(independent_param_vals)
         return self.root_node.df
 

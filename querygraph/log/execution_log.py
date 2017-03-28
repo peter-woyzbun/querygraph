@@ -21,7 +21,7 @@ class ExecutionLog(object):
     def graph_error(self, msg):
         self._add_entry(source_prefix='[GRAPH]', msg="ERROR: %s" % msg)
 
-    def dataframe_header(self, source_node, df):
+    def node_dataframe_header(self, source_node, df):
         n_rows, n_cols = df.shape
         msg = 'Dataframe retrieved (%s rows, %s columns). First five rows shown below: \n %s' \
               % (n_rows,

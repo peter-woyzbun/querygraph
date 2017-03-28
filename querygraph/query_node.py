@@ -6,10 +6,9 @@ import pandas as pd
 from querygraph import query_templates
 from querygraph.exceptions import QueryGraphException, ConnectionError, ExecutionError, JoinContextException
 from querygraph.join_context import JoinContext, OnColumn
-from querygraph.thread_tree import ExecutionThread
+from querygraph import thread_tree
 from querygraph.db.connector import DbConnector
 from querygraph.db import connectors
-from querygraph.manipulation.expression.evaluator import Evaluator
 from querygraph.manipulation.set import ManipulationSet
 from querygraph.log import ExecutionLog
 
@@ -35,6 +34,26 @@ class AddColumnException(QueryGraphException):
 # ---------------------------------------------
 
 class QueryNode(object):
+    """
+    QueryNode class...
+
+    Parameters
+    ----------
+    name : str
+        Name assigned to the node.
+    query : str
+        The node's query template string.
+    db_connector : DbConnector instance
+        The node's database connector.
+    log : ExecutionLog instance
+        Logging class passed to QueryNode by its host QueryGraph.
+    fields : list or None
+        A list of fields to return - only used for NoSql databases
+        that do not return relational data.
+
+
+
+    """
 
     def __init__(self, name, query, db_connector, log, fields=None):
         self.name = name
@@ -54,6 +73,23 @@ class QueryNode(object):
         self.already_executed = False
         self._new_columns = OrderedDict()
         self.manipulation_set = ManipulationSet()
+
+    def __getitem__(self, item):
+        return OnColumn(query_node=self, col_name=item)
+
+    def __contains__(self, item):
+        """ Check if given item is a child of this QueryNode. """
+        return item in list(self)
+
+    def __iter__(self):
+        """
+        Define iterator behaviour. Returns all nodes in the query graph in a topological order.
+
+        """
+        yield self
+        for child in self.children:
+            for child_child in child:
+                yield child_child
 
     def is_independent(self):
         # Todo: this.
@@ -76,23 +112,6 @@ class QueryNode(object):
     @property
     def is_root_node(self):
         return self.parent is None
-
-    def __getitem__(self, item):
-        return OnColumn(query_node=self, col_name=item)
-
-    def __contains__(self, item):
-        """ Check if given item is a child of this QueryNode. """
-        return item in list(self)
-
-    def __iter__(self):
-        """
-        Define iterator behaviour. Returns all nodes in the query graph in a topological order.
-
-        """
-        yield self
-        for child in self.children:
-            for child_child in child:
-                yield child_child
 
     def creates_cycle(self, child_node):
         """
@@ -168,10 +187,11 @@ class QueryNode(object):
         except ExecutionError, e:
             self.log.node_error(source_node=self.name, msg="Problem executing query on database using connector '%s'."
                                                            % self.db_connector.name)
+            print e
             return e
         if self.manipulation_set and not self.result_set_empty:
             self.execute_manipulation_set()
-        self.log.dataframe_header(source_node=self.name, df=self.df)
+        self.log.node_dataframe_header(source_node=self.name, df=self.df)
 
     def _execute_query(self, query_template, independent_param_vals):
         if self.parent is not None:
@@ -180,6 +200,7 @@ class QueryNode(object):
         else:
             df = query_template.execute(independent_param_vals=independent_param_vals)
             self.df = df
+        self.already_executed = True
 
     def _execute(self, **independent_param_vals):
         """
@@ -211,26 +232,10 @@ class QueryNode(object):
     def root_execution_thread(self, threads, independent_param_vals):
         if not self.is_root_node:
             raise QueryGraphException("Trying to get root execution thread from node that is not root node.")
-        root_thread = ExecutionThread(query_node=self,
-                                      threads=threads,
-                                      independent_param_vals=independent_param_vals)
+        root_thread = thread_tree.ExecutionThread(query_node=self,
+                                                  threads=threads,
+                                                  independent_param_vals=independent_param_vals)
         return root_thread
-
-    def execution_thread(self, threads, **independent_param_vals):
-        thread_query_template = self._make_query_template()
-        thread_query_template.db_connector = copy.deepcopy(self.db_connector)
-        if self.parent is None:
-            parent_df = None
-        else:
-            parent_df = self.parent.df
-        thread_query_template.pre_render(df=parent_df, **independent_param_vals)
-        exec_thread = ExecutionThread(query_node=self,
-                                      threads=threads,
-                                      independent_param_vals=independent_param_vals)
-        return exec_thread
-
-    def thread_process(self, results_dict):
-        pass
 
     def execute(self, **independent_param_vals):
         """

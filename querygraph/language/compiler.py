@@ -123,6 +123,8 @@ class RetrieveBlock(object):
         self.nodes = dict()
 
     def _add_query_node(self, query_value, connector_name, node_name, fields=None, manipulation_set=None):
+        print "ADDING FIELDS!"
+        print fields
         self.nodes[node_name] = {'query_value': query_value,
                                  'connector_name': connector_name,
                                  'fields': fields,
@@ -134,7 +136,7 @@ class RetrieveBlock(object):
 
         fields_key = pp.Keyword("FIELDS")
         field_name = pp.Word(pp.alphas, pp.alphanums + "_$")
-        field_name_list = pp.Group(pp.delimitedList(field_name, delim=","))
+        field_name_list = pp.Group(pp.delimitedList(field_name, delim=",")).setParseAction(lambda x: x.asList())
 
         fields_block = (pp.Suppress(fields_key) + field_name_list)
 

@@ -20,7 +20,7 @@ class SqliteTests(unittest.TestCase):
         """
 
         query_template = query_templates.Sqlite(template_str=query, db_connector=sqlite_chinook)
-        df = query_template.execute(album_ids=[346])
+        df = query_template.execute(independent_param_vals={'album_ids': [346]})
         self.assertEquals(df['Title'].unique(), ['Mozart: Chamber Music'])
 
 
@@ -35,7 +35,7 @@ class MySqlTests(unittest.TestCase):
         """
 
         query_template = query_templates.Sqlite(template_str=query, db_connector=mysql_chinook)
-        df = query_template.execute(album_ids=[346])
+        df = query_template.execute(independent_param_vals={'album_ids': [346]})
         self.assertEquals(df['Title'].unique(), ['Mozart: Chamber Music'])
 
 
@@ -49,8 +49,9 @@ class PostgresTests(unittest.TestCase):
         WHERE "AlbumId" IN {% album_ids -> list:int %}
         """
 
-        query_template = query_templates.Sqlite(template_str=query, db_connector=postgres_chinook)
-        df = query_template.execute(album_ids=[346])
+        query_template = query_templates.Sqlite(template_str=query, db_connector=postgres_chinook)\
+
+        df = query_template.execute(independent_param_vals={'album_ids': [346]})
         self.assertEquals(df['Title'].unique(), ['Mozart: Chamber Music'])
 
 
@@ -65,7 +66,7 @@ class MongoDbTests(unittest.TestCase):
         query = """{'tags': {'$in': {% album_tags -> list:str %}}}"""
 
         query_template = query_templates.MongoDb(template_str=query, db_connector=mongodb_albums, fields=['album'])
-        df = query_template.execute(album_tags=["canada"])
+        df = query_template.execute(independent_param_vals={'album_tags': ["canada"]})
         self.assertEquals(df['album'].unique(), ['Jagged Little Pill'])
 
 
@@ -78,7 +79,8 @@ class ElasticSearchTests(unittest.TestCase):
         query_template = query_templates.ElasticSearch(template_str=query,
                                                        db_connector=elastic_search_albums,
                                                        fields=['album'])
-        df = query_template.execute(album_tags=["canada"])
+
+        df = query_template.execute(independent_param_vals={'album_tags': ["canada"]})
         self.assertEquals(df['album'].unique(), ['Jagged Little Pill'])
 
 
