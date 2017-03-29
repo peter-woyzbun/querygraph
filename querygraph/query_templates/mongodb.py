@@ -17,7 +17,7 @@ class MongoDbParameter(TemplateParameter):
                                    independent=independent)
 
     def _make_list_query_value(self):
-        parameter_value = self.prep_value
+        parameter_value = self.python_value
         val_str = ", ".join(str(self._make_atomic_query_value(x)) for x in parameter_value)
         val_str = "[%s]" % val_str
         return val_str

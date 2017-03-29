@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import copy
+import re
 
 import pandas as pd
 
@@ -69,7 +70,7 @@ class QueryNode(object):
         self.children = list()
         self.parent = None
         self.join_context = JoinContext(child_node_name=self.name)
-        self.df = None
+        self._df = None
         self.already_executed = False
         self._new_columns = OrderedDict()
         self.manipulation_set = ManipulationSet()
@@ -90,6 +91,24 @@ class QueryNode(object):
         for child in self.children:
             for child_child in child:
                 yield child_child
+
+    @property
+    def df(self):
+        return self._df
+
+    @df.setter
+    def df(self, value):
+        assert isinstance(value, pd.DataFrame)
+        cleaned_df = self.clean_df_col_names(df=value)
+        self._df = cleaned_df
+
+    @staticmethod
+    def clean_col_name(col_name):
+        return re.sub('\W|^(?=\d)', '_', col_name)
+
+    def clean_df_col_names(self, df):
+        rename_dict = {col_name: self.clean_col_name(col_name) for col_name in df.columns.values.tolist()}
+        return df.rename(columns=rename_dict)
 
     def is_independent(self):
         # Todo: this.
