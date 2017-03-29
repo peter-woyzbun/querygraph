@@ -211,6 +211,9 @@ class QueryNode(object):
         if self.manipulation_set and not self.result_set_empty:
             self.execute_manipulation_set()
         self.log.node_dataframe_header(source_node=self.name, df=self.df)
+        
+    def _rendered_query(self):
+        pass
 
     def _execute_query(self, query_template, independent_param_vals):
         if self.parent is not None:

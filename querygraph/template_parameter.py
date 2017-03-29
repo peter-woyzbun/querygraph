@@ -11,7 +11,8 @@ from pyparsing import (Suppress,
                        Literal,
                        ParseException,
                        Keyword,
-                       Optional)
+                       Optional,
+                       ParseException)
 
 from querygraph import exceptions
 from querygraph.manipulation.expression.evaluator import Evaluator
@@ -128,19 +129,12 @@ class TemplateParameter(object):
     def _setup_db_specific_converters(self):
         pass
 
-    def convert(self, data_type, value):
-        if data_type not in self.type_converters:
-            raise exceptions.TypeConversionError("There are no converters defined for parameter "
-                                                 "data type '%s'." % data_type)
-        if type(value) not in self.type_converters[data_type]:
-            raise exceptions.TypeConversionError("There is no converter defined for parameter data type '%s', "
-                                                 "input type '%s'." % (data_type, type(value)))
-        return self.type_converters[data_type][type(value)](value)
-
     def _convert_python_value(self, python_value):
         if type(python_value) not in self.type_converters[self.data_type]:
-            raise exceptions.TypeConversionError("There is no converter defined for parameter data type '%s', "
-                                                 "input type '%s'." % (self.data_type, type(python_value)))
+            raise exceptions.ParameterError(param_str=self.param_str,
+                                            msg="Cannot render parameter with data type '%s' using input Python value"
+                                                "of type '%s' because no converter is defined." % (self.data_type,
+                                                                                                   type(python_value)))
         return self.type_converters[self.data_type][type(python_value)](python_value)
 
     def _add_type_converter(self, data_type, input_type, converter):
@@ -219,8 +213,17 @@ class TemplateParameter(object):
         data_type.addParseAction(lambda x: self._set_attribute(target='data_type', value=x[0]))
 
         parameter_block = (param_expr + Suppress("->") + container_type + data_type)
-        parameter_block.parseString(self.param_str)
-        self.python_value = expr_evaluator.output_value()
+        try:
+            parameter_block.parseString(self.param_str)
+        except ParseException, e:
+            raise exceptions.ParameterError(param_str=self.param_str,
+                                            msg="Error parsing parameter string: \n %s" % e)
+
+        try:
+            self.python_value = expr_evaluator.output_value()
+        except Exception, e:
+            raise exceptions.ParameterError(param_str=self.param_str,
+                                            msg="Error evaluating parameter expression: \n %s" % e)
 
     def _make_atomic_query_value(self, python_value):
         if self.data_type == 'custom':
@@ -238,12 +241,14 @@ class TemplateParameter(object):
         # If the parameter is independent, and no independent parameter values are given,
         # raise exception.
         if self.independent and independent_param_vals is None:
-            raise TemplateParameterException("Independent template parameter cannot be defined because no "
-                                             "independent parameter values were given.")
+            raise exceptions.ParameterError(param_str=self.param_str,
+                                            msg="Independent template parameter cannot be rendered because"
+                                                "no independent parameter values were given.")
         # If the parameter is dependent, and no dataframe is given, raise exception.
         if not self.independent and df is None:
-            raise TemplateParameterException("Dependent template parameter cannot be defined because no "
-                                             "parent dataframe was given.")
+            raise exceptions.ParameterError(param_str=self.param_str,
+                                            msg="Dependent template parameter cannot be rendered because"
+                                                "no parent dataframe was given.")
 
     def query_value(self, df=None, parent_node_name=None, independent_param_vals=None):
         """

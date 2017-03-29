@@ -4,6 +4,7 @@ from querygraph.db import connectors
 from querygraph.query_node import QueryNode
 from querygraph.manipulation.expression.evaluator import Evaluator
 from querygraph.manipulation.set import ManipulationSet, Mutate, Rename
+from querygraph.manipulation import common_parsers
 
 
 class ConnectBlock(object):
@@ -135,7 +136,7 @@ class RetrieveBlock(object):
         query_value = pp.Suppress("|") + pp.SkipTo(pp.Suppress(";"), include=True)
 
         fields_key = pp.Keyword("FIELDS")
-        field_name = pp.Word(pp.alphas, pp.alphanums + "_$")
+        field_name = common_parsers.column
         field_name_list = pp.Group(pp.delimitedList(field_name, delim=",")).setParseAction(lambda x: x.asList())
 
         fields_block = (pp.Suppress(fields_key) + field_name_list)

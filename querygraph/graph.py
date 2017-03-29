@@ -164,8 +164,12 @@ class QueryGraph(object):
                                                            independent_param_vals=independent_param_vals)
         root_thread.start()
         threads.append(root_thread)
+        # Wait until all threads have been created.
         while len(threads) < self.num_nodes:
-            # Wait until all threads have been created.
+            # Keep checking threads for any errors to prevent this becoming an infinite loop.
+            for t in threads:
+                if t.has_error:
+                    raise exceptions.QueryGraphException("Execution exception in thread: %s" % t.exception)
             pass
         for thread in threads:
             thread.join()

@@ -53,6 +53,26 @@ class JoinContextException(QueryGraphException):
 
 
 # =================================================
+# Query Template Exceptions
+# -------------------------------------------------
+
+class QueryTemplateError(QueryGraphException):
+    pass
+
+
+class ParameterError(QueryTemplateError):
+
+    def __init__(self, param_str, msg):
+        self.param_str = param_str
+        self.pre_msg = msg
+        QueryTemplateError.__init__(self, msg=self._make_msg())
+
+    def _make_msg(self):
+        msg = "Parameter error for parameter string '%s': \n %s" % (self.param_str, self.pre_msg)
+        return msg
+
+
+# =================================================
 # Parameter Exceptions
 # -------------------------------------------------
 

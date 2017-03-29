@@ -12,9 +12,21 @@ class ExecutionThread(threading.Thread):
         self.threads = threads
         self.query_node = query_node
         self.independent_param_vals = independent_param_vals
+        self.has_error = False
+        self.exception = None
 
     def run(self):
-        self.query_node.retrieve_dataframe(independent_param_vals=self.independent_param_vals)
+        try:
+            self.query_node.retrieve_dataframe(independent_param_vals=self.independent_param_vals)
+        except QueryGraphException, e:
+            self.has_error = True
+            self.exception = e
+            return e
+        except Exception, e:
+            self.has_error = True
+            self.exception = e
+            return e
+
         if not self.query_node.result_set_empty:
             for child_node in self.query_node.children:
                 child_thread = self._create_child_thread(child_query_node=child_node)
