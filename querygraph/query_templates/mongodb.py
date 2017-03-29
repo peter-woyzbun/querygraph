@@ -33,21 +33,19 @@ class MongoDbParameter(TemplateParameter):
 
 class MongoDbTemplate(QueryTemplate):
 
-    def __init__(self, template_str, db_connector, fields):
+    def __init__(self, template_str):
         QueryTemplate.__init__(self,
                                template_str=template_str,
-                               db_connector=db_connector,
-                               parameter_class=MongoDbParameter,
-                               fields=fields)
+                               parameter_class=MongoDbParameter)
 
     def _post_render_value(self, render_value):
         post_value = self.deserialize(render_value)
         return post_value
 
-    def execute(self, df=None, **independent_param_vals):
+    def execute(self, db_connector, fields=None, df=None, **independent_param_vals):
         if self.rendered_query is not None:
             rendered_query = self.rendered_query
         else:
             rendered_query = self.render(df=df, **independent_param_vals)
-        df = self.db_connector.execute_query(query=rendered_query, fields=self.fields)
+        df = db_connector.execute_query(query=rendered_query, fields=fields)
         return df

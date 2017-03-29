@@ -45,14 +45,12 @@ class QueryTemplate(object):
 
     """
 
-    def __init__(self, template_str, db_connector, parameter_class, fields=None):
+    def __init__(self, template_str, parameter_class):
         self.template_str = template_str
-        self.db_connector = db_connector
         self.rendered_query = None
         if not issubclass(parameter_class, TemplateParameter):
             raise Exception
         self.parameter_class = parameter_class
-        self.fields = fields
 
         self.deserialize = Deserializer()
 
@@ -94,7 +92,7 @@ class QueryTemplate(object):
     def _post_render_value(self, render_value):
         return render_value
 
-    def execute(self, df=None, independent_param_vals=None):
+    def execute(self, db_connector, fields=None, df=None, independent_param_vals=None):
         """ Should be implemented by child class. """
         raise NotImplementedError
 

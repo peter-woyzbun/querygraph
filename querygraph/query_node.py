@@ -5,10 +5,10 @@ import re
 import pandas as pd
 
 from querygraph import query_templates
-from querygraph.exceptions import QueryGraphException, ConnectionError, ExecutionError, JoinContextException
+from querygraph.exceptions import QueryGraphException, ConnectionError, ExecutionError, JoinContextException, ParameterError
 from querygraph.join_context import JoinContext, OnColumn
 from querygraph import thread_tree
-from querygraph.db.connector import DbConnector
+from querygraph.db.connector import DbConnector, RelationalDbConnector, NoSqlDbConnector
 from querygraph.db import connectors
 from querygraph.manipulation.set import ManipulationSet
 from querygraph.log import ExecutionLog
@@ -55,6 +55,14 @@ class QueryNode(object):
 
 
     """
+
+    DB_CONN_TEMPLATE_MAP = {
+        connectors.Sqlite: query_templates.Sqlite,
+        connectors.MySql: query_templates.MySql,
+        connectors.Postgres: query_templates.Postgres,
+        connectors.MongoDb: query_templates.MongoDb,
+        connectors.ElasticSearch: query_templates.ElasticSearch
+    }
 
     def __init__(self, name, query, db_connector, log, fields=None):
         self.name = name
@@ -175,30 +183,14 @@ class QueryNode(object):
 
     @property
     def query_template(self):
-        return self._make_query_template()
-
-    def _make_query_template(self):
-        if isinstance(self.db_connector, connectors.Sqlite):
-            return query_templates.Sqlite(template_str=self.query, db_connector=self.db_connector)
-        elif isinstance(self.db_connector, connectors.Postgres):
-            return query_templates.Postgres(template_str=self.query, db_connector=self.db_connector)
-        elif isinstance(self.db_connector, connectors.MySql):
-            return query_templates.MySql(template_str=self.query, db_connector=self.db_connector)
-        elif isinstance(self.db_connector, connectors.MongoDb):
-            return query_templates.MongoDb(template_str=self.query,
-                                           db_connector=self.db_connector,
-                                           fields=self.fields)
-        elif isinstance(self.db_connector, connectors.ElasticSearch):
-            return query_templates.ElasticSearch(template_str=self.query,
-                                                 db_connector=self.db_connector,
-                                                 fields=self.fields)
+        # return self._make_query_template()
+        return self.DB_CONN_TEMPLATE_MAP[self.db_connector.__class__](template_str=self.query)
 
     def retrieve_dataframe(self, independent_param_vals):
-        query_template = self._make_query_template()
         self.log.node_info(source_node=self.name,
                            msg="Attempting to execute query using connector '%s'." % self.db_connector.name)
         try:
-            self._execute_query(query_template=query_template, independent_param_vals=independent_param_vals)
+            self._execute_query(independent_param_vals=independent_param_vals)
         except ConnectionError, e:
             self.log.node_error(source_node=self.name, msg="Could not connect to database using connector '%s'."
                                                            % self.db_connector.name)
@@ -206,23 +198,31 @@ class QueryNode(object):
         except ExecutionError, e:
             self.log.node_error(source_node=self.name, msg="Problem executing query on database using connector '%s'."
                                                            % self.db_connector.name)
-            print e
             return e
         if self.manipulation_set and not self.result_set_empty:
             self.execute_manipulation_set()
         self.log.node_dataframe_header(source_node=self.name, df=self.df)
-        
-    def _rendered_query(self):
-        pass
 
-    def _execute_query(self, query_template, independent_param_vals):
-        if self.parent is not None:
-            df = query_template.execute(df=self.parent.df, independent_param_vals=independent_param_vals)
-            self.df = df
-        else:
-            df = query_template.execute(independent_param_vals=independent_param_vals)
-            self.df = df
-        self.already_executed = True
+    def _rendered_query(self, independent_param_vals):
+        try:
+            query_template = self.query_template
+            if self.parent is not None:
+                rendered_query = query_template.render(df=self.parent.df, independent_param_vals=independent_param_vals)
+            else:
+                rendered_query = query_template.render(independent_param_vals=independent_param_vals)
+            return rendered_query
+        except ParameterError, e:
+            self.log.node_error(source_node=self.name, msg="Couldn't render query template due to error(s): \n %s" % e)
+            return e
+
+    def _execute_query(self, independent_param_vals):
+        rendered_query = self._rendered_query(independent_param_vals=independent_param_vals)
+        if isinstance(self.db_connector, RelationalDbConnector):
+            df = self.db_connector.execute_query(query=rendered_query)
+            return df
+        elif isinstance(self.db_connector, NoSqlDbConnector):
+            df = self.db_connector.execute_query(query=rendered_query, fields=self.fields)
+            return df
 
     def _execute(self, **independent_param_vals):
         """
@@ -240,16 +240,7 @@ class QueryNode(object):
 
 
         """
-        query_template = self._make_query_template()
-        if self.parent is not None:
-            parent_df = self.parent.df
-            df = query_template.execute(df=parent_df, **independent_param_vals)
-        else:
-            df = query_template.execute(**independent_param_vals)
-        self.df = df
-        if self.manipulation_set:
-            self.execute_manipulation_set()
-        self.already_executed = True
+        pass
 
     def root_execution_thread(self, threads, independent_param_vals):
         if not self.is_root_node:
