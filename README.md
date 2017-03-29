@@ -18,10 +18,14 @@ The following databases are currently supported:
 * Elastic Search
 * Maria Db (untested)
 
+## Getting Started
+
+To install Query Graph... Example query...
+
 
 ### Example Query
 
-***
+___
 
 ![QGL Syntax Railroad Diagram](docs/_static/images/syntax_diagram.png)
 
