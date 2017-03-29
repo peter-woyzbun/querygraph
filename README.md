@@ -6,6 +6,7 @@ database management systems - i.e. joins that can't typically be
 accomplished with a single query. For example, joining Postgres data
 and Mongo Db data.
 
+![QGL Syntax Railroad Diagram](docs/_static/images/syntax_diagram.png)
 
 ```
 CONNECT

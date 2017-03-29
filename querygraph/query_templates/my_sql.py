@@ -39,7 +39,7 @@ class MySqlParameter(TemplateParameter):
 
 class MySqlTemplate(QueryTemplate):
 
-    def __init__(self, template_str, db_connector):
+    def __init__(self, template_str):
         QueryTemplate.__init__(self,
                                template_str=template_str,
                                parameter_class=MySqlParameter)

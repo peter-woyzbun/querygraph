@@ -120,9 +120,21 @@ class TemplateParameter(object):
              int: lambda x: "'%s'" % x}
         )
 
+        self._add_datetime_converters(
+            {datetime.datetime: lambda x: "'%s'" % x.strftime('%Y-%m-%d %H:%M:%S'),
+             datetime.date: lambda x: "'%s'" % x.strftime('%Y-%m-%d'),
+             str: lambda x: "'%s'" % x}
+        )
+
         self._add_date_converters(
             {datetime.datetime: lambda x: "'%s'" % x.strftime('%Y-%m-%d'),
              datetime.date: lambda x: "'%s'" % x.strftime('%Y-%m-%d'),
+             str: lambda x: "'%s'" % x}
+        )
+
+        self._add_time_converters(
+            {datetime.datetime: lambda x: "'%s'" % x.strftime('%H:%M:%S'),
+             datetime.time: lambda x: "'%s'" % x.strftime('%H:%M:%S'),
              str: lambda x: "'%s'" % x}
         )
 

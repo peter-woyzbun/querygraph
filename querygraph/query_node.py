@@ -219,10 +219,10 @@ class QueryNode(object):
         rendered_query = self._rendered_query(independent_param_vals=independent_param_vals)
         if isinstance(self.db_connector, RelationalDbConnector):
             df = self.db_connector.execute_query(query=rendered_query)
-            return df
+            self.df = df
         elif isinstance(self.db_connector, NoSqlDbConnector):
             df = self.db_connector.execute_query(query=rendered_query, fields=self.fields)
-            return df
+            self.df = df
 
     def _execute(self, **independent_param_vals):
         """
