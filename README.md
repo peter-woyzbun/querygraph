@@ -7,7 +7,7 @@ accomplished with a single query. For example, joining Postgres data
 and Mongo Db data. It also provides tools for easily converting
 non-tabular data (e.g. JSON) into tabular form.
 
-![QGL Syntax Railroad Diagram](docs/_static/images/syntax_diagram.png)
+![QGL Syntax Railroad Diagram](docs/_static/images/syntax_diagram.png | width=100))
 
 ```
 CONNECT
