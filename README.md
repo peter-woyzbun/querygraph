@@ -20,7 +20,16 @@ The following databases are currently supported:
 
 ## Getting Started
 
-To install Query Graph... Example query...
+* To install Query Graph, see below.
+* For a brief introduction to Query Graph, see here.
+* For a more complete introduction, see here.
+* For documentation, see here.
+
+## Installation
+
+To install Query Graph...
+
+## Brief Introduction
 
 
 ### Example Query
