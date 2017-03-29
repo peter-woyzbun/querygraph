@@ -44,6 +44,7 @@ To install Query Graph...
 
 ## Brief Introduction
 
+![QGL Syntax Railroad Diagram](docs/_static/images/query_graph_diagram.png)
 
 ### Example Query
 
