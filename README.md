@@ -2,11 +2,11 @@
 
 ***
 
-Query Graph is a framework/language for joining data from different
-database management systems - i.e. joins that can't typically be 
-accomplished with a single query. For example, joining Postgres data
-and Mongo Db data. It also provides tools for easily converting
-non-tabular data (e.g. JSON) into tabular form.
+Query Graph is a framework/language, written in Python, for joining data 
+from different database management systems - i.e. joins that can't 
+typically be accomplished with a single query. For example, joining 
+Postgres data and Mongo Db data. It also provides tools for easily 
+converting non-tabular data (e.g. JSON) into tabular form.
 
 The following databases are currently supported:
 
@@ -23,6 +23,10 @@ The following databases are currently supported:
 * Join data from any number of different database types in a single query.
 * Manipulate data using "manipulation sets", which are chained together
   statements very similar to those used in the `dplyr` package for R.
+  ```
+  mutate(new_col=log(old_col)) >>
+  remove(some_column)
+  ```
 * Easily transform JSON-like data into relational form.
 * Threading can optionally be used to run queries on different databases
   simultaneously, based the structure of the query graph.
