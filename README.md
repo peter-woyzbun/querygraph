@@ -21,6 +21,8 @@ The following databases are currently supported:
 
 ### Example Query
 
+***
+
 ![QGL Syntax Railroad Diagram](docs/_static/images/syntax_diagram.png)
 
 
