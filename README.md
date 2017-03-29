@@ -1,5 +1,4 @@
 <img src="docs/_static/images/qg_logo.png" alt="Drawing" />
-===========
 
 Query Graph is a framework/language for joining data from different
 database management systems - i.e. joins that can't typically be 
