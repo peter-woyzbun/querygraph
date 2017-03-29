@@ -4,7 +4,8 @@ Query Graph
 Query Graph is a framework/language for joining data from different
 database management systems - i.e. joins that can't typically be 
 accomplished with a single query. For example, joining Postgres data
-and Mongo Db data.
+and Mongo Db data. It also provides tools for easily converting
+non-tabular data (e.g. JSON) into tabular form.
 
 ![QGL Syntax Railroad Diagram](docs/_static/images/syntax_diagram.png)
 
