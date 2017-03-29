@@ -18,6 +18,15 @@ The following databases are currently supported:
 * Elastic Search
 * Maria Db (untested)
 
+## Main Features
+
+* Join data from any number of different database types in a single query.
+* Manipulate data using "manipulation sets", which are chained together
+  statements very similar to those used in the `dplyr` package for R.
+* Easily transform JSON-like data into relational form.
+* Threading can optionally be used to run queries on different databases
+  simultaneously, based the structure of the query graph.
+
 ## Getting Started
 
 * To install Query Graph, see below.
