@@ -44,6 +44,11 @@ To install Query Graph...
 
 ## Brief Introduction
 
+The basic building block of Query Graph are "query templates". A query
+template is a query written in the appropriate form/language, given 
+the type of database it is intended for (e.g. SQL), augmented with 
+"template parameters".
+
 A query graph is a directed, acyclic graph whose nodes each represent a
 single query on a database. When two nodes are connected, the data 
 resulting from the parent node's query is used to "fill-in-the-blanks" of

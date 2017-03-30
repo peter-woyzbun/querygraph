@@ -23,6 +23,17 @@ class ConnectionError(DatabaseError):
 class ExecutionError(DatabaseError):
     pass
 
+# =================================================
+# Type Converter Exceptions
+# -------------------------------------------------
+
+class TypeConverterException(QueryGraphException):
+    pass
+
+
+class TypeConversionError(TypeConverterException):
+    pass
+
 
 # =================================================
 # Graph Exceptions
