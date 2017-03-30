@@ -44,6 +44,11 @@ To install Query Graph...
 
 ## Brief Introduction
 
+A query graph is a directed, acyclic graph whose nodes each represent a
+single query on a database. When two nodes are connected, the data 
+resulting from the parent node's query is used to "fill-in-the-blanks" of
+the child node's query.
+
 ![QGL Syntax Railroad Diagram](docs/_static/images/query_graph_diagram.png)
 
 ### Example Query
