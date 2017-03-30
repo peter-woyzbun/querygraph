@@ -14,9 +14,10 @@ The following databases are currently supported:
 * MySQL
 * Postgres
 * Mongo Db
-* Apache Cassandra (untested)
 * Elastic Search
+* Apache Cassandra (untested)
 * Maria Db (untested)
+* InfluxDB (untested)
 
 ## Main Features
 
