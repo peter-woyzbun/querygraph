@@ -1,6 +1,5 @@
 import pyparsing as pp
 
-from querygraph.db import connectors
 from querygraph.query_node import QueryNode
 from querygraph.manipulation.expression.evaluator import Evaluator
 from querygraph.manipulation.set import ManipulationSet, Mutate, Rename
@@ -215,12 +214,6 @@ class JoinBlock(object):
 
 
 class QGLCompiler(object):
-
-    connector_map = {'sqlite': connectors.Sqlite,
-                     'mysql': connectors.MySql,
-                     'postgres': connectors.Postgres,
-                     'mongodb': connectors.MongoDb,
-                     'elasticsearch': connectors.ElasticSearch}
 
     db_interface_map = {'sqlite': interfaces.Sqlite,
                         'postgres': interfaces.Postgres,

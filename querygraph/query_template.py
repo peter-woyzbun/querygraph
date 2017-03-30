@@ -1,24 +1,6 @@
 import re
 
-from querygraph.exceptions import QueryGraphException
-from querygraph.utils.deserializer import Deserializer
 from querygraph.template_parameter import TemplateParameter
-
-
-# =============================================
-# Exceptions
-# ---------------------------------------------
-
-class QueryTemplateException(QueryGraphException):
-    pass
-
-
-class DependentParameterException(QueryTemplateException):
-    pass
-
-
-class IndependentParameterException(QueryTemplateException):
-    pass
 
 
 # =============================================

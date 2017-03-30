@@ -4,16 +4,14 @@ import re
 
 import pandas as pd
 
-from querygraph import query_templates
+
 from querygraph.query_template import QueryTemplate
 from querygraph.exceptions import QueryGraphException, ConnectionError, ExecutionError, JoinContextException, ParameterError
 from querygraph.join_context import JoinContext, OnColumn
 from querygraph import thread_tree
-from querygraph.db.connector import DbConnector, RelationalDbConnector, NoSqlDbConnector
-from querygraph.db import connectors
 from querygraph.db.interface import DatabaseInterface
 from querygraph.manipulation.set import ManipulationSet
-from querygraph.log import ExecutionLog
+from querygraph.execution_log import ExecutionLog
 
 
 # =============================================

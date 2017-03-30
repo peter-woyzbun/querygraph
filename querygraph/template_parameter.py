@@ -3,33 +3,11 @@ import datetime
 from collections import defaultdict
 
 import numpy as np
-from pyparsing import (Suppress,
-                       Word,
-                       alphanums,
-                       alphas,
-                       SkipTo,
-                       Literal,
-                       ParseException,
-                       Keyword,
-                       Optional,
-                       ParseException)
+import pyparsing as pp
 
-from querygraph import exceptions
 from querygraph.manipulation.expression.evaluator import Evaluator
 from querygraph.manipulation.expression import ManipulationExpression
 from querygraph.db.type_converter import TypeConverter
-
-
-# =============================================
-# Template Parameter Exceptions
-# ---------------------------------------------
-
-class TemplateParameterException(exceptions.QueryGraphException):
-    pass
-
-
-class ParameterParseException(TemplateParameterException):
-    pass
 
 
 # =============================================
@@ -64,13 +42,13 @@ class TemplateParameter(object):
         col_expr = expr_evaluator.parser()
         col_expr.setParseAction(lambda x: self._set_param_expr(value=x[0]))
 
-        render_as_type = Word(alphas, alphanums + "_$")
+        render_as_type = pp.Word(pp.alphas, pp.alphanums + "_$")
         render_as_type.setParseAction(lambda x: self._set_render_type(value=x[0]))
 
-        container_type = Optional(Word(alphas, alphanums + "_$") + Suppress(":"), default=None)
+        container_type = pp.Optional(pp.Word(pp.alphas, pp.alphanums + "_$") + pp.Suppress(":"), default=None)
         container_type.setParseAction(lambda x: self._set_container_type(value=x[0]))
 
-        parser = col_expr + Suppress("->") + container_type + render_as_type
+        parser = col_expr + pp.Suppress("->") + container_type + render_as_type
         parser.parseString(self.parameter_str)
 
     def render(self, df=None, independent_param_vals=None):

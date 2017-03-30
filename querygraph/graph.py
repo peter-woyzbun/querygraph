@@ -3,7 +3,7 @@ from querygraph import exceptions
 from querygraph.language.compiler import QGLCompiler
 from querygraph.query_node import QueryNode
 from querygraph.manipulation.set import ManipulationSet
-from querygraph.log import ExecutionLog
+from querygraph.execution_log import ExecutionLog
 
 
 # =================================================
