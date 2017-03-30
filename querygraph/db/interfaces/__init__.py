@@ -45,3 +45,8 @@ try:
     from _influx_db import InfluxDb
 except ImportError:
     InfluxDb = optional_import.NotInstalled(name='influxdb')
+
+try:
+    from _ms_sql import MsSql
+except ImportError:
+    MsSql = optional_import.NotInstalled(name='pymssql')

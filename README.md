@@ -18,6 +18,7 @@ The following databases are currently supported:
 * Apache Cassandra (untested)
 * Maria Db (untested)
 * InfluxDB (untested)
+* MS Sql (untested)
 
 ## Main Features
 

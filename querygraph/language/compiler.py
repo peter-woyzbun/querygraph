@@ -228,8 +228,9 @@ class QGLCompiler(object):
                         'mongodb': interfaces.MongoDb,
                         'elasticsearch': interfaces.ElasticSearch,
                         'mariadb': interfaces.MariaDb,
-                        'cassandra': interfaces.Cassandra}
-
+                        'cassandra': interfaces.Cassandra,
+                        'influxdb': interfaces.InfluxDb,
+                        'ms_sql': interfaces.MsSql}
 
     def __init__(self, qgl_str, query_graph):
         self.qgl_str = qgl_str
