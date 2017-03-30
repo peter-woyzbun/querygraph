@@ -7,6 +7,23 @@ from querygraph import exceptions
 
 
 class TypeConverter(object):
+    """
+    The TypeConverter class is in charge of rendering Python values
+    into their appropriate form for the given database type.
+
+    Parameters
+    ----------
+    type_converters : dict or None
+        A dictionary mapping parameter render types (e.g. 'str') to
+        Python input types (e.g. int) to a converter (callable) that
+        converts a Python input value into a value that can be used in a
+        database query.
+    container_converters : dict or None
+        A dictionary mapping container render types (e.g. 'list')
+        to a converter (callable) that returns a value that can be
+        used in a database query.
+
+    """
 
     GENERIC_TYPE_CONVERTERS = {
         'int': {
@@ -57,7 +74,8 @@ class TypeConverter(object):
     }
 
     GENERIC_CONTAINER_CONVERTERS = {
-        'list': lambda x: '(%s)' % ", ".join(str(y) for y in x)
+        'list': lambda x: '(%s)' % ", ".join(str(y) for y in x),
+        'tuple': lambda x: '(%s)' % ", ".join(str(y) for y in x)
     }
 
     def __init__(self, type_converters=None, container_converters=None):

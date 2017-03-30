@@ -229,7 +229,7 @@ class QGLCompiler(object):
                         'elasticsearch': interfaces.ElasticSearch,
                         'mariadb': interfaces.MariaDb,
                         'cassandra': interfaces.Cassandra}
-    
+
 
     def __init__(self, qgl_str, query_graph):
         self.qgl_str = qgl_str
