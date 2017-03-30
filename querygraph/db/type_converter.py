@@ -54,22 +54,28 @@ class TypeConverter(object):
             str: lambda x: "'%s'" % x,
             unicode: lambda x: "'%s'" % x,
             float: lambda x: "'%s'" % x,
-            int: lambda x: "'%s'" % x
+            int: lambda x: "'%s'" % x,
+            datetime.datetime: lambda x: "'%s'" % x.strftime('%Y-%m-%d %H:%M:%S'),
+            datetime.date: lambda x: "'%s'" % x.strftime('%Y-%m-%d'),
+            datetime.time: lambda x: "'%s'" % x.strftime('%H:%M:%S'),
         },
         'datetime': {
             datetime.datetime: lambda x: "'%s'" % x.strftime('%Y-%m-%d %H:%M:%S'),
             datetime.date: lambda x: "'%s'" % x.strftime('%Y-%m-%d'),
-            str: lambda x: "'%s'" % x
+            str: lambda x: "'%s'" % x,
+            unicode: lambda x: "'%s'" % x,
         },
         'date': {
             datetime.datetime: lambda x: "'%s'" % x.strftime('%Y-%m-%d'),
             datetime.date: lambda x: "'%s'" % x.strftime('%Y-%m-%d'),
-            str: lambda x: "'%s'" % x
+            str: lambda x: "'%s'" % x,
+            unicode: lambda x: "'%s'" % x,
         },
         'time': {
             datetime.datetime: lambda x: "'%s'" % x.strftime('%H:%M:%S'),
             datetime.time: lambda x: "'%s'" % x.strftime('%H:%M:%S'),
-            str: lambda x: "'%s'" % x
+            str: lambda x: "'%s'" % x,
+            unicode: lambda x: "'%s'" % x,
         }
     }
 

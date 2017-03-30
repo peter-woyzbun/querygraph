@@ -5,6 +5,29 @@ from querygraph.utils.deserializer import Deserializer
 
 
 class DatabaseInterface(object):
+    """
+    The DatabaseInterface class...
+
+    Parameters
+    ----------
+
+    name : str
+        ...
+    db_type : str
+        ...
+    conn_exception: Exception
+        ...
+    execution_exception: Exception
+        ...
+    type_converter : TypeConverter
+        ...
+    fields_accepted : bool
+        ...
+    deserialize_query : bool
+        ...
+
+
+    """
 
     def __init__(self,
                  name,
