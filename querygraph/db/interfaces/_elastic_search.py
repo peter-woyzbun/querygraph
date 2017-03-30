@@ -11,7 +11,19 @@ from querygraph.db.type_converter import TypeConverter
 class ElasticSearch(DatabaseInterface):
 
     # ElasticSearch specific type converters...
-    TYPE_CONVERTER = TypeConverter()
+    TYPE_CONVERTER = TypeConverter(
+        type_converters={
+            'datetime':
+                {
+                    datetime.datetime: lambda x: repr(x),
+                    datetime.date: lambda x: repr(x),
+                    datetime.time: lambda x: repr(x)
+                }
+        },
+        container_converters={
+            'list': lambda x: '[%s]' % ", ".join(str(y) for y in x)
+        }
+    )
 
     def __init__(self, name, host, port, doc_type, index):
         self.host = host

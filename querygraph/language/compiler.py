@@ -5,6 +5,7 @@ from querygraph.query_node import QueryNode
 from querygraph.manipulation.expression.evaluator import Evaluator
 from querygraph.manipulation.set import ManipulationSet, Mutate, Rename
 from querygraph.manipulation import common_parsers
+from querygraph.db import interfaces
 
 
 class ConnectBlock(object):
@@ -221,6 +222,15 @@ class QGLCompiler(object):
                      'mongodb': connectors.MongoDb,
                      'elasticsearch': connectors.ElasticSearch}
 
+    db_interface_map = {'sqlite': interfaces.Sqlite,
+                        'postgres': interfaces.Postgres,
+                        'mysql': interfaces.MySql,
+                        'mongodb': interfaces.MongoDb,
+                        'elasticsearch': interfaces.ElasticSearch,
+                        'mariadb': interfaces.MariaDb,
+                        'cassandra': interfaces.Cassandra}
+    
+
     def __init__(self, qgl_str, query_graph):
         self.qgl_str = qgl_str
         self.query_graph = query_graph
@@ -257,13 +267,13 @@ class QGLCompiler(object):
             conn_type = conn_dict['conn_type'].lower()
             conn_kwargs = conn_dict['conn_kwargs']
             conn_kwargs['name'] = conn_name
-            self.connectors[conn_name] = self.connector_map[conn_type](**conn_kwargs)
+            self.connectors[conn_name] = self.db_interface_map[conn_type](**conn_kwargs)
 
     def _create_query_nodes(self):
         for node_name, node_dict in self.retrieve_block.nodes.items():
             self.query_graph.nodes[node_name] = QueryNode(name=node_name, query=node_dict['query_value'],
                                                           log=self.query_graph.log,
-                                                          db_connector=self.connectors[node_dict['connector_name']],
+                                                          db_interface=self.connectors[node_dict['connector_name']],
                                                           fields=node_dict['fields'])
             if node_dict['manipulation_set'] is not None:
                 self.query_graph.nodes[node_name].manipulation_set.append_from_str(node_dict['manipulation_set'])

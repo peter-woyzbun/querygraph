@@ -15,12 +15,14 @@ def pandas_factory(colnames, rows):
 
 class Cassandra(DatabaseInterface):
 
-    TYPE_CONVERTER = TypeConverter({
-        'datetime': {
-            datetime.datetime: lambda x: "'%s'" % x.isoformat(' '),
-            str: lambda x: "'%s'" % x
+    TYPE_CONVERTER = TypeConverter(
+        type_converters={
+            'datetime': {
+                datetime.datetime: lambda x: "'%s'" % x.isoformat(' '),
+                str: lambda x: "'%s'" % x
+            }
         }
-    })
+    )
 
     def __init__(self, name, contact_point, port, keyspace):
         self.contact_point = contact_point

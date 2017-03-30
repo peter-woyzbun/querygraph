@@ -22,45 +22,22 @@ class IndependentParameterException(QueryTemplateException):
 
 
 # =============================================
-# QueryTemplate Base Class
+# QueryTemplate Class
 # ---------------------------------------------
 
 class QueryTemplate(object):
-    """
-    Base QueryTemplate class. Handles rendering of queries with parameter values so
-    they may be executed and data retrieved.
 
-    Parameters
-    ----------
-    template_str : str
-        The raw template string. This should be a valid query, once parameters
-        are replaced with actual values, for whatever database type it is
-        intended for.
-    db_connector : DbConnector instance
-        The database connector for this query.
-    parameter_class : Child TemplateParameter class instance.
-        The TemplateParameter class associated with the given query template database type (e.g. 'MySql').
-        This class instance is used to render the actual parameter values.
-
-
-    """
-
-    def __init__(self, template_str, parameter_class):
+    def __init__(self, template_str, type_converter):
         self.template_str = template_str
-        self.rendered_query = None
-        if not issubclass(parameter_class, TemplateParameter):
-            raise Exception
-        self.parameter_class = parameter_class
-
-        self.deserialize = Deserializer()
+        self.type_converter = type_converter
 
     def _render_independent_param(self, param_str, independent_param_vals):
-        independent_parameter = self.parameter_class(param_str=param_str, independent=True)
-        return str(independent_parameter.query_value(independent_param_vals=independent_param_vals))
+        independent_parameter = TemplateParameter(parameter_str=param_str, type_converter=self.type_converter)
+        return str(independent_parameter.render(independent_param_vals=independent_param_vals))
 
     def _render_dependent_param(self, param_str, df):
-        dependent_parameter = self.parameter_class(param_str=param_str, independent=False)
-        return dependent_parameter.query_value(df=df)
+        dependent_parameter = TemplateParameter(parameter_str=param_str, type_converter=self.type_converter)
+        return dependent_parameter.render(df=df)
 
     def render(self, df=None, independent_param_vals=None):
         """
@@ -84,15 +61,5 @@ class QueryTemplate(object):
                                                                independent_param_vals=independent_param_vals)
             else:
                 parsed_query += token
-        return self._post_render_value(parsed_query)
-
-    def pre_render(self, df=None, independent_param_vals=None):
-        self.rendered_query = self.render(df, independent_param_vals)
-
-    def _post_render_value(self, render_value):
-        return render_value
-
-    def execute(self, db_connector, fields=None, df=None, independent_param_vals=None):
-        """ Should be implemented by child class. """
-        raise NotImplementedError
+        return parsed_query
 

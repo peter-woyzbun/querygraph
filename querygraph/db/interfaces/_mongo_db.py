@@ -12,13 +12,16 @@ class MongoDb(DatabaseInterface):
 
     # Mongo DB specific type converters...
     TYPE_CONVERTER = TypeConverter(
-        {
+        type_converters={
             'datetime':
                 {
                     datetime.datetime: lambda x: repr(x),
                     datetime.date: lambda x: repr(x),
                     datetime.time: lambda x: repr(x)
                 }
+        },
+        container_converters={
+            'list': lambda x: '[%s]' % ", ".join(str(y) for y in x)
         }
     )
 

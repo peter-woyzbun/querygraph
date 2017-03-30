@@ -5,11 +5,13 @@ import re
 import pandas as pd
 
 from querygraph import query_templates
+from querygraph.query_template import QueryTemplate
 from querygraph.exceptions import QueryGraphException, ConnectionError, ExecutionError, JoinContextException, ParameterError
 from querygraph.join_context import JoinContext, OnColumn
 from querygraph import thread_tree
 from querygraph.db.connector import DbConnector, RelationalDbConnector, NoSqlDbConnector
 from querygraph.db import connectors
+from querygraph.db.interface import DatabaseInterface
 from querygraph.manipulation.set import ManipulationSet
 from querygraph.log import ExecutionLog
 
@@ -56,24 +58,14 @@ class QueryNode(object):
 
     """
 
-    DB_CONN_TEMPLATE_MAP = {
-        connectors.Sqlite: query_templates.Sqlite,
-        connectors.MySql: query_templates.MySql,
-        connectors.Postgres: query_templates.Postgres,
-        connectors.MongoDb: query_templates.MongoDb,
-        connectors.ElasticSearch: query_templates.ElasticSearch
-    }
-
-    def __init__(self, name, query, db_connector, log, fields=None):
+    def __init__(self, name, query, db_interface, log, fields=None):
         self.name = name
         self.query = query
         if not isinstance(log, ExecutionLog):
             raise QueryGraphException
         self.log = log
-        if not isinstance(db_connector, DbConnector):
-            raise QueryGraphException("The db_connector for node '%s' must be a "
-                                      "DbConnector instance." % self.name)
-        self.db_connector = db_connector
+        assert isinstance(db_interface, DatabaseInterface)
+        self.db_interface = db_interface
         self.fields = fields
         self.children = list()
         self.parent = None
@@ -184,20 +176,21 @@ class QueryNode(object):
     @property
     def query_template(self):
         # return self._make_query_template()
-        return self.DB_CONN_TEMPLATE_MAP[self.db_connector.__class__](template_str=self.query)
+        return QueryTemplate(template_str=self.query,
+                             type_converter=self.db_interface.type_converter)
 
     def retrieve_dataframe(self, independent_param_vals):
         self.log.node_info(source_node=self.name,
-                           msg="Attempting to execute query using connector '%s'." % self.db_connector.name)
+                           msg="Attempting to execute query using connector '%s'." % self.db_interface.name)
         try:
             self._execute_query(independent_param_vals=independent_param_vals)
         except ConnectionError, e:
             self.log.node_error(source_node=self.name, msg="Could not connect to database using connector '%s'."
-                                                           % self.db_connector.name)
+                                                           % self.db_interface.name)
             return e
         except ExecutionError, e:
             self.log.node_error(source_node=self.name, msg="Problem executing query on database using connector '%s'."
-                                                           % self.db_connector.name)
+                                                           % self.db_interface.name)
             return e
         if self.manipulation_set and not self.result_set_empty:
             self.execute_manipulation_set()
@@ -217,12 +210,11 @@ class QueryNode(object):
 
     def _execute_query(self, independent_param_vals):
         rendered_query = self._rendered_query(independent_param_vals=independent_param_vals)
-        if isinstance(self.db_connector, RelationalDbConnector):
-            df = self.db_connector.execute_query(query=rendered_query)
-            self.df = df
-        elif isinstance(self.db_connector, NoSqlDbConnector):
-            df = self.db_connector.execute_query(query=rendered_query, fields=self.fields)
-            self.df = df
+        if self.db_interface.fields_accepted:
+            df = self.db_interface.execute_query(query=rendered_query, fields=self.fields)
+        else:
+            df = self.db_interface.execute_query(query=rendered_query)
+        self.df = df
 
     def _execute(self, **independent_param_vals):
         """
