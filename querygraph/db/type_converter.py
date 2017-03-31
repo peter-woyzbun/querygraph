@@ -1,4 +1,5 @@
 import datetime
+import time
 import copy
 
 import numpy as np
@@ -26,6 +27,8 @@ class TypeConverter(object):
     """
 
     GENERIC_TYPE_CONVERTERS = {
+        # Render type 'int'
+        # Parameter string: '<parameter_expression> -> [<container_type>:]int'
         'int': {
             int: lambda x: x,
             np.int64: lambda x: x,
@@ -38,6 +41,8 @@ class TypeConverter(object):
             float: lambda x: int(x),
             str: lambda x: int(x)
         },
+        # Render type 'float'
+        # Parameter string: '<parameter_expression> -> [<container_type>:]float'
         'float': {
             int: lambda x: float(x),
             np.int64: lambda x: float(x),
@@ -50,6 +55,8 @@ class TypeConverter(object):
             float: lambda x: x,
             str: lambda x: float(x)
         },
+        # Render type 'str'
+        # Parameter string: '<parameter_expression> -> [<container_type>:]str'
         'str': {
             str: lambda x: "'%s'" % x,
             unicode: lambda x: "'%s'" % x,
@@ -59,18 +66,24 @@ class TypeConverter(object):
             datetime.date: lambda x: "'%s'" % x.strftime('%Y-%m-%d'),
             datetime.time: lambda x: "'%s'" % x.strftime('%H:%M:%S'),
         },
+        # Render type 'datetime'
+        # Parameter string: '<parameter_expression> -> [<container_type>:]datetime'
         'datetime': {
             datetime.datetime: lambda x: "'%s'" % x.strftime('%Y-%m-%d %H:%M:%S'),
             datetime.date: lambda x: "'%s'" % x.strftime('%Y-%m-%d'),
             str: lambda x: "'%s'" % x,
             unicode: lambda x: "'%s'" % x,
         },
+        # Render type 'date'
+        # Parameter string: '<parameter_expression> -> [<container_type>:]date'
         'date': {
             datetime.datetime: lambda x: "'%s'" % x.strftime('%Y-%m-%d'),
             datetime.date: lambda x: "'%s'" % x.strftime('%Y-%m-%d'),
             str: lambda x: "'%s'" % x,
             unicode: lambda x: "'%s'" % x,
         },
+        # Render type 'time'
+        # Parameter string: '<parameter_expression> -> [<container_type>:]time'
         'time': {
             datetime.datetime: lambda x: "'%s'" % x.strftime('%H:%M:%S'),
             datetime.time: lambda x: "'%s'" % x.strftime('%H:%M:%S'),
@@ -80,7 +93,11 @@ class TypeConverter(object):
     }
 
     GENERIC_CONTAINER_CONVERTERS = {
+        # Container type 'list'
+        # Parameter string: '<parameter_expression> -> list:<render_type>'
         'list': lambda x: '(%s)' % ", ".join(str(y) for y in x),
+        # Container type 'tuple'
+        # Parameter string: '<parameter_expression> -> tuple:<render_type>'
         'tuple': lambda x: '(%s)' % ", ".join(str(y) for y in x)
     }
 

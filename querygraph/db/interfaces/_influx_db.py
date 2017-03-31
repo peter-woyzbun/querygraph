@@ -1,3 +1,5 @@
+import datetime
+import time
 
 from influxdb import DataFrameClient
 
@@ -6,6 +8,20 @@ from querygraph.db.type_converter import TypeConverter
 
 
 class InfluxDb(DatabaseInterface):
+
+    TYPE_CONVERTER = TypeConverter(
+        type_converters={
+            # Render type 'abstime' - "epoch time".
+            # Parameter string: '<parameter_expression> -> [<container_type>:]abstime'
+            'abstime': {
+                datetime.datetime: lambda x: "%ss" % int(time.mktime(x.timetuple())),
+                str: lambda x: "%s" % x,
+                unicode: lambda x: "%s" % x,
+                float: lambda x: "%ss" % int(x),
+                int: lambda x: "%ss" % x,
+            }
+        }
+    )
 
     def __init__(self, name, host, port, user, password, db_name):
         self.host = host

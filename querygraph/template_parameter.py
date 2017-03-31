@@ -1,8 +1,3 @@
-import re
-import datetime
-from collections import defaultdict
-
-import numpy as np
 import pyparsing as pp
 
 from querygraph.manipulation.expression.evaluator import Evaluator

@@ -203,8 +203,7 @@ class Evaluator(object):
 
         term = factor + ZeroOrMore((multop + factor).setParseAction(lambda x: self.push_first(tok=x[0])))
         expr << term + ZeroOrMore((addop + term).setParseAction(lambda x: self.push_first(tok=x[0])))
-        if self.deferred_eval:
-            expr.setParseAction(lambda x: originalTextFor(expr))
+
         return expr
 
     def _evaluate_stack(self):
