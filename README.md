@@ -64,6 +64,12 @@ of the query node's "query templates". A query template is simply a query
 written in the appropriate language for the database system it is
 intended for (e.g. SQL), augmented with "template parameters".
 
+You'll see below that if the template parameters are replaces, each
+query is valid for its respective database type (Mongo Db and Postgres)
+
+![QGL Syntax Railroad Diagram](docs/_static/images/query_template_diagram.png)
+
+
 ### Template Parameters
 
 
