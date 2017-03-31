@@ -259,6 +259,7 @@ class QGLCompiler(object):
             conn_type = conn_dict['conn_type'].lower()
             conn_kwargs = conn_dict['conn_kwargs']
             conn_kwargs['name'] = conn_name
+            # Todo: catch exception for bad conn_type
             self.connectors[conn_name] = self.db_interface_map[conn_type](**conn_kwargs)
 
     def _create_query_nodes(self):

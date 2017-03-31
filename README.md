@@ -44,7 +44,10 @@ The following databases are currently supported:
 
 To install Query Graph...
 
-## Brief Introduction
+## Query Graph Language - Brief Introduction
+
+Query Graph Language (QGL) is a simple, domain specific declarative 
+language.
 
 The basic building block of Query Graph are "query templates". A query
 template is a query written in the appropriate form/language, given 
