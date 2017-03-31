@@ -52,8 +52,9 @@ block, the `RETRIEVE` block, and the `JOIN` block.
 
 The `CONNECT` block establishes connections with databases that will be
 queried upon execution. The `RETRIEVE` block is where actual queries
-on the databases are defined, and the `JOIN` block is for describing
-how the results of queries in the `RETRIEVE` block are joined.
+on the databases - called "query nodes" - are defined, and the `JOIN` block
+is for describing how the results of queries in the `RETRIEVE` block are
+joined. The diagram below shows an example QGL query.
 
 ![QGL Syntax Railroad Diagram](docs/_static/images/syntax_diagram.png)
 
