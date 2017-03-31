@@ -57,11 +57,11 @@ is for describing how the results of query nodes defined in the`RETRIEVE`
 block are joined. The diagram below shows the basic structure of each 
 block using an example QGL query.
 
-<hr>
+<hr style="border-top: 1px solid #cccccc;">
 
 ![QGL Syntax Railroad Diagram](docs/_static/images/syntax_diagram.png)
 
-<hr>
+<hr style="border-top: 1px solid #cccccc;">
 
 The example query above has two query nodes. Highlighted in red are each
 of the query node's "query templates". A query template is simply a query
