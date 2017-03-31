@@ -87,9 +87,19 @@ syntax, but have different open/close tags.
 
 <hr style="height: 0.1em;">
 
-![QGL Syntax Railroad Diagram](docs/_static/images/parameter_diagram.png)
+![Parameter Diagram](docs/_static/images/parameter_diagram.png)
 
 <hr style="height: 0.1em;">
+
+Independent parameters are rendered using values defined prior to a 
+query graph being executed - they don't depend on the results of query
+nodes.
+
+```python
+df = query_graph.execute(my_param=6)
+```
+
+
 
 ## Syntax Stuff
 
