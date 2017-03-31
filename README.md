@@ -57,15 +57,21 @@ is for describing how the results of query nodes defined in the`RETRIEVE`
 block are joined. The diagram below shows the basic structure of each 
 block using an example QGL query.
 
+<hr>
+
 ![QGL Syntax Railroad Diagram](docs/_static/images/syntax_diagram.png)
+
+<hr>
 
 The example query above has two query nodes. Highlighted in red are each
 of the query node's "query templates". A query template is simply a query
 written in the appropriate language for the database system it is
 intended for (e.g. SQL), augmented with "template parameters".
 
-You'll see below that if the template parameters are replaces, each
-query is valid for its respective database type (Mongo Db and Postgres)
+You'll see below that if the template parameters (highlighted in green)
+are replaced, each query is valid for its respective database type 
+(Mongo Db and Postgres). You'll note that a slightly different syntax is
+used for each parameter - this is explained further on.
 
 ![QGL Syntax Railroad Diagram](docs/_static/images/query_template_diagram.png)
 
