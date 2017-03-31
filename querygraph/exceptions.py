@@ -71,6 +71,18 @@ class QueryTemplateError(QueryGraphException):
     pass
 
 
+class MissingDataError(QueryTemplateError):
+    pass
+
+
+class ParameterException(QueryGraphException):
+    pass
+
+
+class ParameterRenderError(ParameterException):
+    pass
+
+
 class ParameterError(QueryTemplateError):
 
     def __init__(self, param_str, msg):

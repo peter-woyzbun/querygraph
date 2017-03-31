@@ -1,6 +1,7 @@
 import re
 
 from querygraph.template_parameter import TemplateParameter
+from querygraph.exceptions import MissingDataError
 
 
 # =============================================
@@ -14,10 +15,14 @@ class QueryTemplate(object):
         self.type_converter = type_converter
 
     def _render_independent_param(self, param_str, independent_param_vals):
+        if independent_param_vals is None:
+            raise MissingDataError("No independent parameter values provided.")
         independent_parameter = TemplateParameter(parameter_str=param_str, type_converter=self.type_converter)
         return str(independent_parameter.render(independent_param_vals=independent_param_vals))
 
     def _render_dependent_param(self, param_str, df):
+        if df is None:
+            raise MissingDataError("No parent dataframe provided to render dependent parameter.")
         dependent_parameter = TemplateParameter(parameter_str=param_str, type_converter=self.type_converter)
         return dependent_parameter.render(df=df)
 

@@ -3,6 +3,7 @@ import pyparsing as pp
 from querygraph.manipulation.expression.evaluator import Evaluator
 from querygraph.manipulation.expression import ManipulationExpression
 from querygraph.db.type_converter import TypeConverter
+from querygraph.exceptions import ParameterRenderError
 
 
 # =============================================
@@ -41,7 +42,11 @@ class TemplateParameter(object):
         container_type.setParseAction(lambda x: self._set_container_type(value=x[0]))
 
         parser = param_expr + pp.Suppress("->") + container_type + render_as_type
-        parser.parseString(self.parameter_str)
+
+        try:
+            parser.parseString(self.parameter_str)
+        except pp.ParseException, e:
+            raise ParameterRenderError("Error parsing parameter string: \n %s" % e)
 
         python_value = expr_evaluator.output_value()
         return python_value

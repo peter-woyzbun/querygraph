@@ -73,12 +73,23 @@ are replaced, each query is valid for its respective database type
 (Mongo Db and Postgres). You'll note that a slightly different syntax is
 used for each parameter - this is explained further on.
 
+<hr style="height: 0.1em;">
+
 ![QGL Syntax Railroad Diagram](docs/_static/images/query_template_diagram.png)
 
+<hr style="height: 0.1em;">
 
 ### Template Parameters
 
+There are two different types of template parameters: "independent"
+parameters, and "dependent" parameters. Both share the same basic
+syntax, but have different open/close tags.
 
+<hr style="height: 0.1em;">
+
+![QGL Syntax Railroad Diagram](docs/_static/images/parameter_diagram.png)
+
+<hr style="height: 0.1em;">
 
 ## Syntax Stuff
 
