@@ -93,7 +93,8 @@ syntax, but have different open/close tags.
 
 Independent parameters are rendered using values defined prior to a 
 query graph being executed - they don't depend on the results of query
-nodes.
+nodes. Dependent parameters, on the other hand, are rendered used values
+from results of a given node's "parent node".
 
 ```python
 df = query_graph.execute(my_param=6)
