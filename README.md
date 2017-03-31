@@ -62,16 +62,18 @@ block using an example QGL query.
 The example query above has two query nodes. Highlighted in red are each
 of the query node's "query templates". A query template is simply a query
 written in the appropriate language for the database system it is
-intended for, augmented with "template parameters".
+intended for (e.g. SQL), augmented with "template parameters".
+
+### Template Parameters
+
+
+
+## Syntax Stuff
 
 The basic building block of Query Graph are "query templates". A query
 template is a query written in the appropriate form/language, given 
 the type of database it is intended for (e.g. SQL), augmented with 
 "template parameters".
-
-### Template Parameters
-
-## Syntax Stuff
 
 A query graph is a directed, acyclic graph whose nodes each represent a
 single query on a database. When two nodes are connected, the data 
