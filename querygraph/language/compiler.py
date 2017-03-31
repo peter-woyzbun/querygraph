@@ -124,8 +124,6 @@ class RetrieveBlock(object):
         self.nodes = dict()
 
     def _add_query_node(self, query_value, connector_name, node_name, fields=None, manipulation_set=None):
-        print "ADDING FIELDS!"
-        print fields
         self.nodes[node_name] = {'query_value': query_value,
                                  'connector_name': connector_name,
                                  'fields': fields,

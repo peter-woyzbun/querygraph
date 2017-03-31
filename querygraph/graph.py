@@ -119,18 +119,6 @@ class QueryGraph(object):
                                                        child_col_name=pair_dict[child_node.name])
         self.num_edges += 1
 
-    def inner_join(self, child_node, parent_node, on_columns):
-        self.join(child_node=child_node, parent_node=parent_node, join_type='inner', on_columns=on_columns)
-
-    def outer_join(self, child_node, parent_node, on_columns):
-        self.join(child_node=child_node, parent_node=parent_node, join_type='outer', on_columns=on_columns)
-
-    def left_join(self, child_node, parent_node, on_columns):
-        self.join(child_node=child_node, parent_node=parent_node, join_type='left', on_columns=on_columns)
-
-    def right_join(self, child_node, parent_node, on_columns):
-        self.join(child_node=child_node, parent_node=parent_node, join_type='right', on_columns=on_columns)
-
     def _join_checks(self, child_node, parent_node):
         if child_node not in self:
             raise exceptions.GraphConfigException("The child node attempting to be joined, '%s',"

@@ -1,12 +1,15 @@
 from collections import OrderedDict
-import copy
 import re
 
 import pandas as pd
 
 
 from querygraph.query_template import QueryTemplate
-from querygraph.exceptions import QueryGraphException, ConnectionError, ExecutionError, JoinContextException, ParameterError
+from querygraph.exceptions import (QueryGraphException,
+                                   ConnectionError,
+                                   ExecutionError,
+                                   JoinContextException,
+                                   ParameterError)
 from querygraph.join_context import JoinContext, OnColumn
 from querygraph import thread_tree
 from querygraph.db.interface import DatabaseInterface

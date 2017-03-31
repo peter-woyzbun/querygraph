@@ -93,23 +93,28 @@ class TypeConverter(object):
         self._setup_container_converters()
 
     def _convert_atomic_value(self, rendered_type, python_value):
+        self._check_conversion_inputs(rendered_type, python_value)
         return self.type_converters[rendered_type][type(python_value)](python_value)
 
     def convert(self, rendered_type, python_value, container_type=None):
-        self._check_conversion_inputs(rendered_type, python_value, container_type)
         if container_type is not None:
+            self._container_type_check(container_type)
             container_values = [self._convert_atomic_value(rendered_type, x) for x in python_value]
             return self.container_converters[container_type](container_values)
         else:
             return self._convert_atomic_value(rendered_type=rendered_type, python_value=python_value)
 
+    def _container_type_check(self, container_type):
+        if container_type not in self.supported_container_types:
+            raise exceptions.TypeConversionError("Unsupported container type: '%s'." % container_type)
+
     def _check_conversion_inputs(self, rendered_type, python_value, container_type=None):
         if rendered_type not in self.supported_rendered_types:
-            raise exceptions.TypeConversionError
+            raise exceptions.TypeConversionError("The given render type '%s' is not supported." % rendered_type)
         if type(python_value) not in self.type_converters[rendered_type]:
-            raise exceptions.TypeConversionError
-        if container_type is not None and container_type not in self.supported_container_types:
-            raise exceptions.TypeConversionError
+            raise exceptions.TypeConversionError("Dont know how to convert Python"
+                                                 "value of type '%s' to render type '%s'" % (type(python_value),
+                                                                                             rendered_type))
 
     @property
     def supported_rendered_types(self):
@@ -121,13 +126,13 @@ class TypeConverter(object):
 
     def _setup_type_converters(self):
         if self.db_specific_converters is not None:
-            for input_type_converter in self.db_specific_converters.values():
-                for input_type, converter in input_type_converter.items():
+            for render_type, converter_dict in self.db_specific_converters.items():
+                for input_type, converter in converter_dict.items():
                     if not isinstance(input_type, type):
                         raise exceptions.TypeConverterException
                     if not callable(converter):
                         raise exceptions.TypeConverterException
-                    self.type_converters[input_type_converter][input_type] = converter
+                    self.type_converters[render_type][input_type] = converter
         else:
             pass
 

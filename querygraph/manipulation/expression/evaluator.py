@@ -73,6 +73,8 @@ class Evaluator(object):
         is retrieved when the function is called from the expression stack.
 
         """
+        print "ADDED FUNCTION INPUTS!"
+        print input_dict
         self.func_input_stack.append(input_dict)
 
     @property
@@ -176,13 +178,15 @@ class Evaluator(object):
         args = Optional(delimitedList(arg), default=None).setParseAction(lambda x: {'args': [z for z in x]})
         kwarg = (Word(alphas, alphas + nums + "_$") + Suppress("=") + arg).setParseAction(lambda x: {x[0]: x[1]})
         kwargs = Optional(Suppress(",") + delimitedList(kwarg), default=None)
+
         kwargs.setParseAction(lambda x:
-                              {'kwargs': dict(pair for d in x for pair in d.items())} if x[0] is not None else {
-                                  'kwargs': None})
+                                  {'kwargs': dict(pair for d in x for pair in d.items())} if x[0] is not None else {
+                                      'kwargs': None})
 
         func_inputs = (Suppress(",") + args + kwargs)
-        func_input_block = Optional(func_inputs, default={'args': None, 'kwargs': None}) \
-            .setParseAction(lambda x: self._add_func_inputs(dict(pair for d in x for pair in d.items())))
+        func_input_block = Optional(func_inputs, default={'args': None, 'kwargs': None})
+
+        func_input_block.setParseAction(lambda x: self._add_func_inputs(dict(pair for d in x for pair in d.items())))
 
         expr = Forward()
 

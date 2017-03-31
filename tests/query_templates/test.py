@@ -1,7 +1,9 @@
 import unittest
 
-from querygraph import query_templates
+from querygraph.query_template import QueryTemplate
+from querygraph.db import interfaces
 from tests import config
+from tests.db import interfaces as test_db_interfaces
 from tests.db.connectors import sqlite_chinook, mysql_chinook, postgres_chinook, mongodb_albums, elastic_search_albums
 
 
@@ -19,8 +21,10 @@ class SqliteTests(unittest.TestCase):
         WHERE AlbumId IN {% album_ids -> list:int %}
         """
 
-        query_template = query_templates.Sqlite(template_str=query)
-        df = query_template.execute(independent_param_vals={'album_ids': [346]}, db_connector=sqlite_chinook)
+        query_template = QueryTemplate(template_str=query,
+                                       type_converter=test_db_interfaces.sqlite_chinook.type_converter)
+        rendered_query = query_template.render(independent_param_vals={'album_ids': [346]})
+        df = test_db_interfaces.sqlite_chinook.execute_query(query=rendered_query)
         self.assertEquals(df['Title'].unique(), ['Mozart: Chamber Music'])
 
 
@@ -34,8 +38,10 @@ class MySqlTests(unittest.TestCase):
         WHERE AlbumId IN {% album_ids -> list:int %}
         """
 
-        query_template = query_templates.Sqlite(template_str=query)
-        df = query_template.execute(independent_param_vals={'album_ids': [346]}, db_connector=mysql_chinook)
+        query_template = QueryTemplate(template_str=query,
+                                       type_converter=test_db_interfaces.mysql_chinook.type_converter)
+        rendered_query = query_template.render(independent_param_vals={'album_ids': [346]})
+        df = test_db_interfaces.mysql_chinook.execute_query(query=rendered_query)
         self.assertEquals(df['Title'].unique(), ['Mozart: Chamber Music'])
 
 
@@ -49,9 +55,11 @@ class PostgresTests(unittest.TestCase):
         WHERE "AlbumId" IN {% album_ids -> list:int %}
         """
 
-        query_template = query_templates.Sqlite(template_str=query)\
+        query_template = QueryTemplate(template_str=query,
+                                       type_converter=test_db_interfaces.postgres_chinook.type_converter)
 
-        df = query_template.execute(independent_param_vals={'album_ids': [346]}, db_connector=postgres_chinook)
+        rendered_query = query_template.render(independent_param_vals={'album_ids': [346]})
+        df = test_db_interfaces.postgres_chinook.execute_query(query=rendered_query)
         self.assertEquals(df['Title'].unique(), ['Mozart: Chamber Music'])
 
 
@@ -65,10 +73,10 @@ class MongoDbTests(unittest.TestCase):
     def test_execution(self):
         query = """{'tags': {'$in': {% album_tags -> list:str %}}}"""
 
-        query_template = query_templates.MongoDb(template_str=query)
-        df = query_template.execute(independent_param_vals={'album_tags': ["canada"]},
-                                    db_connector=mongodb_albums,
-                                    fields=['album'])
+        query_template = QueryTemplate(template_str=query,
+                                       type_converter=test_db_interfaces.mongodb_albums.type_converter)
+        rendered_query = query_template.render(independent_param_vals={'album_tags': ["canada"]})
+        df = test_db_interfaces.mongodb_albums.execute_query(query=rendered_query, fields=['album'])
         self.assertEquals(df['album'].unique(), ['Jagged Little Pill'])
 
 
@@ -78,11 +86,11 @@ class ElasticSearchTests(unittest.TestCase):
     def test_execution(self):
         query = """{'terms': {'tags': {% album_tags -> list:str %}}}"""
 
-        query_template = query_templates.ElasticSearch(template_str=query)
+        query_template = QueryTemplate(template_str=query,
+                                       type_converter=test_db_interfaces.elastic_search_albums.type_converter)
+        rendered_query = query_template.render(independent_param_vals={'album_tags': ["canada"]})
 
-        df = query_template.execute(independent_param_vals={'album_tags': ["canada"]},
-                                    db_connector=elastic_search_albums,
-                                    fields=['album'])
+        df = test_db_interfaces.elastic_search_albums.execute_query(query=rendered_query, fields=['album'])
         self.assertEquals(df['album'].unique(), ['Jagged Little Pill'])
 
 

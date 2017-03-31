@@ -20,19 +20,19 @@ except ImportError:
 
 
 try:
-    from _mariadb import MariaDb
+    from _maria_db import MariaDb
 except ImportError:
     MariaDb = optional_import.NotInstalled(name='mysql-connector-python')
 
 
 try:
-    from _mongodb import MongoDb
+    from _mongo_db import MongoDb
 except ImportError:
     MongoDb = optional_import.NotInstalled(name='pymongo')
 
 
 try:
-    from _elasticsearch import ElasticSearch
+    from _elastic_search import ElasticSearch
 except ImportError:
     ElasticSearch = optional_import.NotInstalled(name='elasticsearch')
 
