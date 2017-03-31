@@ -47,7 +47,15 @@ To install Query Graph...
 ## Query Graph Language - Brief Introduction
 
 Query Graph Language (QGL) is a simple, domain specific declarative 
-language.
+language. A QGL query consists of three primary "blocks": the `CONNECT` 
+block, the `RETRIEVE` block, and the `JOIN` block.
+
+The `CONNECT` block establishes connections with databases that will be
+queried upon execution. The `RETRIEVE` block is where actual queries
+on the databases are defined, and the `JOIN` block is for describing
+how the results of queries in the `RETRIEVE` block are joined.
+
+![QGL Syntax Railroad Diagram](docs/_static/images/syntax_diagram.png)
 
 The basic building block of Query Graph are "query templates". A query
 template is a query written in the appropriate form/language, given 
