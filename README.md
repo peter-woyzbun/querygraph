@@ -160,3 +160,21 @@ for whatever database type it will be executed on, augmented with
 "independent" parameter:
 
 ![Parameter Diagram](docs/_static/images/ex_mongo_param.png)
+
+The parameter is "independent" because its value is defined before the
+query is executed. The parameter "value expression" defines the value
+assigned to the parameter. In our case, we defined
+
+```python
+album_tags=['canada', 'rock']
+```
+
+The "container type" and "render type" indicate that the value defined
+above should be rendered as a list of strings. The rendered query for
+`mongo_node` is:
+
+```
+{'tags': {'$in': ['canada', 'rock']}}
+```
+
+which is just an ordinary Mongo Db query (using their Python API).
