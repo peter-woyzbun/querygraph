@@ -139,8 +139,12 @@ Now we'll walk through the query and each step of its execution.
 
 ## Walkthrough
 
-The first thing to happen when our example query is executed, is the
-"rendering" of the `mongo_node` query node's query template. 
+The basic structure of our example query is broken down in the diagram
+below. The `CONNECT` block establishes connections to the databases
+that will be queried upon execution. The `RETRIEVE` block is where
+"query nodes" are defined, and each query node represents a query on 
+a single database. The `JOIN` block describes how the data results of 
+each query node are joined.
 
 <hr>
 
@@ -148,3 +152,11 @@ The first thing to happen when our example query is executed, is the
 
 <hr>
 
+When our example query is executed, the first thing to happen is the
+rendering of the "query template" belonging to the `mongo_node` query
+node. A query template is simply a query written in the form appropriate
+for whatever database type it will be executed on, augmented with
+"template parameters". The `mongo_node` query template has a single 
+"independent" parameter:
+
+![Parameter Diagram](docs/_static/images/ex_mongo_param.png)
