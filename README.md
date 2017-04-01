@@ -106,7 +106,7 @@ RETRIEVE
     QUERY |
         SELECT *
         FROM "Album"
-        WHERE "Title" IN {{ album -> list:str }};
+        WHERE "Title" IN {{ mongo_node.album -> list:str }};
     USING postgres_conn
     THEN |
         remove(Album);
@@ -226,4 +226,8 @@ The dataframe belonging to `mongo_node` node now looks like this:
 ### `pg_node` Execution
 
 With the `mongo_node`'s query being executed and results retrieved, the
-query template belonging to the `pg_node` query node is rendered.
+query template belonging to the `pg_node` query node is rendered. While
+the `mongo_node` query template contained a single "independent" parameter,
+the `pg_node` query template contains a single "dependent" parameter:
+
+![Parameter Diagram](docs/_static/images/ex_mongo_dep_param.png)
