@@ -142,4 +142,9 @@ Now we'll walk through the query and each step of its execution.
 The first thing to happen when our example query is executed, is the
 "rendering" of the `mongo_node` query node's query template. 
 
+<hr>
+
 ![Parameter Diagram](docs/_static/images/ex_query_diagram.png)
+
+<hr>
+
