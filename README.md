@@ -225,15 +225,22 @@ The dataframe belonging to `mongo_node` node now looks like this:
 
 ### `pg_node` Execution
 
-With the `mongo_node`'s query being executed and results retrieved, the
-query template belonging to the `pg_node` query node is rendered. The
-`mongo_node`'s query template had a single "independent" parameter, but
-`pg_node`'s query template has a single "dependent" parameter:
+With the `mongo_node`'s query having been executed and results retrieved, the
+query template belonging to the `pg_node` query node is rendered. Whereas
+the `mongo_node`'s query template had a single "independent" parameter,
+the `pg_node`'s query template has a single "dependent" parameter:
 
 ![Parameter Diagram](docs/_static/images/ex_mongo_dep_param.png)
 
 The difference is that the value expression of a dependent parameter
 draws from the result of its query node's "parent" - in this case
 `mongo_node` - as opposed to variables defined prior to execution. More
-specifically, it references the columns of the dataframe belonging to
-the parent node.
+specifically, it references the unique values of the columns of the 
+dataframe belonging to the parent node. So the rendered query template
+belonging to `pg_node` is:
+
+```
+SELECT *
+FROM "Album"
+WHERE "Title" IN ['Jagged Little Pill']
+```
