@@ -44,14 +44,14 @@ The following databases are currently supported:
 
 To install Query Graph...
 
-## Query Graph Language - Brief Introduction
+# Query Graph Language - Brief Introduction
 
 Query Graph Language (QGL) is a simple, domain specific declarative 
 language. The best way to give an idea of how it works is through
 an example. In the example, we'll be joining data from two databases:
 a Mongo Db database, and a Postgres database.
 
-### The Mongo Db Database
+## The Mongo Db Database
 
 The Mongo Db database contains a collection, `albums`, with data in the 
 following form:
@@ -70,7 +70,7 @@ following form:
 }
 ```
 
-### The Postgres Database
+## The Postgres Database
 
 The Postgres database contains a table, `Albums`, that is structured in
 the following manner:
@@ -82,7 +82,7 @@ the following manner:
 | ...     | ...                | ...      |
 
 
-### The QGL Query
+## The QGL Query
 
 The QGL query used to join both sets of data is below.
 
@@ -135,3 +135,11 @@ The output is a Pandas dataframe:
 | ...     | ...   | ...      | ... | ...          | ...  |
 | ...     | ...   | ...      | ... | ...          | ...  |
 
+Now we'll walk through the query and each step of its execution.
+
+## Walkthrough
+
+The first thing to happen when our example query is executed, is the
+"rendering" of the `mongo_node` query node's query template. 
+
+![Parameter Diagram](docs/_static/images/ex_query_diagram.png)
