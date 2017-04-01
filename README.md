@@ -27,24 +27,23 @@ The following databases are currently supported:
 * Join data from any number of different database types in a single query.
 * Manipulate data using "manipulation sets", which are chained together
   statements very similar to those used in the `dplyr` package for R.
-  ```
-  mutate(new_col=log(old_col)) >>
-  remove(some_column)
-  ```
 * Easily transform JSON-like data into relational form.
 * Threading can optionally be used to run queries on different databases
-  simultaneously, based the structure of the query graph.
+  simultaneously, based on the structure of the query graph.
 
 ## Getting Started
 
 * To install Query Graph, see below.
-* For a brief introduction to Query Graph, see here.
-* For a more complete introduction, see here.
-* For documentation, see here.
+* For a brief introduction to Query Graph, see below the installation
+instructions.
 
 ## Installation
 
-To install Query Graph...
+To install Query Graph, clone the repository locally, and run:
+
+```
+python setup.py install
+```
 
 # Query Graph Language - Brief Introduction
 
