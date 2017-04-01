@@ -53,6 +53,9 @@ a Mongo Db database, and a Postgres database.
 
 ### The Mongo Db Database
 
+The Mongo Db database contains a collection, `albums`, with data in the 
+following form:
+
 ```
 {
       "album": "Jagged Little Pill",
@@ -67,9 +70,21 @@ a Mongo Db database, and a Postgres database.
 }
 ```
 
+### The Postgres Database
 
-Below is a QGL query that joins data from a Mongo DB
-database and a Postgres database.
+The Postgres database contains a table, `Albums`, that is structured in
+the following manner:
+
+| AlbumId | Title              | ArtistId |
+|---------|--------------------|----------|
+| ...     | ...                | ...      |
+| 6       | Jagged Little Pill | 4        |
+| ...     | ...                | ...      |
+
+
+### The QGL Query
+
+The QGL query used to join both sets of data is below.
 
 ```
 CONNECT
