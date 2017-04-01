@@ -108,15 +108,17 @@ RETRIEVE
         FROM "Album"
         WHERE "Title" IN {{ mongo_node.album -> list:str }};
     USING postgres_conn
+    THEN |
+        rename(Album=album);
     AS postgres_node
 JOIN
-    LEFT (pg_node[Album] ==> mongo_node[album])
+    LEFT (pg_node[album] ==> mongo_node[album])
 ```
 
 To execute the query in Python, the code is
 
 ```python
-query_str = "..."
+query_str = "..." # The string defined above.
 
 # Create the graph instance.
 query_graph = QueryGraph(qgl_str=query_str)
@@ -144,11 +146,8 @@ that will be queried upon execution. The `RETRIEVE` block is where
 a single database. The `JOIN` block describes how the data results of 
 each query node are joined.
 
-<hr>
-
 ![Parameter Diagram](docs/_static/images/ex_query_diagram.png)
 
-<hr>
 
 ### `mongo_node` Execution
 
@@ -242,3 +241,10 @@ SELECT *
 FROM "Album"
 WHERE "Title" IN ('Jagged Little Pill')
 ```
+
+The rendered query is then executed using the `postgres_conn` database
+connector and the resulting dataframe is shown below:
+
+| AlbumId | Title              | ArtistId |
+|---------|--------------------|----------|
+| 6       | Jagged Little Pill | 4        |
