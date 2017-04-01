@@ -108,11 +108,9 @@ RETRIEVE
         FROM "Album"
         WHERE "Title" IN {{ mongo_node.album -> list:str }};
     USING postgres_conn
-    THEN |
-        remove(Album);
     AS postgres_node
 JOIN
-    LEFT (postgres_node[Title] ==> mongo_node[album])
+    LEFT (pg_node[Album] ==> mongo_node[album])
 ```
 
 To execute the query in Python, the code is
@@ -242,5 +240,5 @@ belonging to `pg_node` is:
 ```
 SELECT *
 FROM "Album"
-WHERE "Title" IN ['Jagged Little Pill']
+WHERE "Title" IN ('Jagged Little Pill')
 ```
