@@ -27,8 +27,8 @@ class QueryGraph(object):
 
     """
 
-    def __init__(self, qgl_str=None):
-        # Dictionary that maps node names to their instances.
+    def __init__(self, qgl_str=None, use_threads=True):
+        self.use_threads = use_threads
         self.nodes = dict()
         self.num_edges = 0
         self.log = ExecutionLog(stdout_print=True)
@@ -174,9 +174,13 @@ class QueryGraph(object):
         self.root_node.fold_children()
 
     def execute(self, **independent_param_vals):
-        self.log.graph_info(msg="Starting execution on query graph with %s nodes." % self.num_nodes)
+        self.log.graph_info(msg="Starting execution on query graph using "
+                                "threads with %s nodes. THREADS_ENABLED = %s" % (self.num_nodes, self.use_threads))
         self._pre_execution_checks()
-        self._parallel_execute(independent_param_vals)
+        if self.use_threads:
+            self._parallel_execute(independent_param_vals)
+        else:
+            self._execute(independent_param_vals)
         return self.root_node.df
 
 

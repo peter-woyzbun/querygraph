@@ -18,22 +18,6 @@ from querygraph.execution_log import ExecutionLog
 
 
 # =============================================
-# Exceptions
-# ---------------------------------------------
-
-class JoinException(QueryGraphException):
-    pass
-
-
-class CycleException(QueryGraphException):
-    pass
-
-
-class AddColumnException(QueryGraphException):
-    pass
-
-
-# =============================================
 # Query Node Class
 # ---------------------------------------------
 
@@ -159,7 +143,7 @@ class QueryNode(object):
             self.log.node_error(source_node=self.name,
                                 msg="Couldn't join child '%s''s dataframe"
                                     " with parent node '%s''s dataframe." % (self.name, self.parent.name))
-            return e
+            raise
 
     def fold_children(self):
         """
@@ -186,13 +170,13 @@ class QueryNode(object):
         try:
             self._execute_query(independent_param_vals=independent_param_vals)
         except ConnectionError, e:
-            self.log.node_error(source_node=self.name, msg="Could not connect to database using connector '%s'."
-                                                           % self.db_interface.name)
-            return e
+            self.log.node_error(source_node=self.name, msg="Could not connect to database using connector '%s': \n %s"
+                                                           % (self.db_interface.name, e))
+            raise
         except ExecutionError, e:
-            self.log.node_error(source_node=self.name, msg="Problem executing query on database using connector '%s'."
-                                                           % self.db_interface.name)
-            return e
+            self.log.node_error(source_node=self.name, msg="Problem executing query on database using "
+                                                           "connector '%s': \n %s" % (self.db_interface.name, e))
+            raise
         if self.manipulation_set and not self.result_set_empty:
             self.execute_manipulation_set()
         self.log.node_dataframe_header(source_node=self.name, df=self.df)
@@ -207,7 +191,7 @@ class QueryNode(object):
             return rendered_query
         except ParameterError, e:
             self.log.node_error(source_node=self.name, msg="Couldn't render query template due to error(s): \n %s" % e)
-            return e
+            raise
 
     def _execute_query(self, independent_param_vals):
         rendered_query = self._rendered_query(independent_param_vals=independent_param_vals)

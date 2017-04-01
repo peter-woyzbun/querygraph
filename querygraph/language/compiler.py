@@ -47,55 +47,6 @@ class ConnectBlock(object):
         return connector_block
 
 
-class ManipulationSetParser(object):
-
-    manipulation_type_map = {'mutate': Mutate,
-                             'rename': Rename}
-
-    def __init__(self):
-        self.manipulations = list()
-        self.manipulation_set = ManipulationSet()
-
-    def __call__(self, manipulation_set_str):
-        parser = self.parser()
-        parser.parseString(manipulation_set_str)
-        return self.manipulation_set
-
-    def _add_manipulation(self, manipulation_type, kwargs):
-        self.manipulation_set += self.manipulation_type_map[manipulation_type](**kwargs)
-
-    def _rename_parser(self):
-        lpar = pp.Suppress("(")
-        rpar = pp.Suppress(")")
-        rename = pp.Suppress('rename')
-        old_col_name = pp.Word(pp.alphas, pp.alphanums + "_$")
-        new_col_name = pp.Word(pp.alphas, pp.alphanums + "_$")
-        parser = rename + lpar + old_col_name + pp.Suppress("=") + new_col_name + rpar
-        parser.setParseAction(lambda x: self._add_manipulation(manipulation_type='rename',
-                                                               kwargs={'old_column_name': x[0],
-                                                                       'new_column_name': x[1]}))
-        return parser
-
-    def _mutate_parser(self):
-        lpar = pp.Suppress("(")
-        rpar = pp.Suppress(")")
-        mutate = pp.Suppress('mutate')
-        col_name = pp.Word(pp.alphas, pp.alphanums + "_$")
-
-        expr_evaluator = Evaluator(deferred_eval=True)
-        col_expr = expr_evaluator.parser()
-
-        parser = mutate + lpar + col_name + pp.Suppress("=") + col_expr + rpar
-        parser.setParseAction(lambda x: self._add_manipulation(manipulation_type='mutate',
-                                                               kwargs={'col_name': x[0], 'col_expr': x[1]}))
-        return parser
-
-    def parser(self):
-        single_manipulation = (self._mutate_parser() | self._rename_parser())
-        manipulation_set = pp.delimitedList(single_manipulation, delim='>>')
-        return manipulation_set
-
-
 class RetrieveBlock(object):
 
     """
@@ -246,8 +197,10 @@ class QGLCompiler(object):
         parser = (pp.Keyword("CONNECT") + self.connect_block.parser() +
                   pp.Keyword("RETRIEVE") + self.retrieve_block.parser() +
                   pp.Optional(pp.Keyword("JOIN") + self.join_block.parser()))
-
-        parser.parseString(self.qgl_str)
+        try:
+            parser.parseString(self.qgl_str)
+        except pp.ParseException, e:
+            raise QGLSyntaxError("Couldn't parse query: \n %s" % e)
         self._create_connectors()
         self._create_query_nodes()
         if self.join_block:
@@ -268,8 +221,8 @@ class QGLCompiler(object):
             try:
                 self.connectors[conn_name] = self.db_interface_map[conn_type](**conn_kwargs)
             except TypeError:
-                raise QGLSyntaxError("Missing arguments for connector '%s' for database type '%s'." % conn_name,
-                                     conn_type)
+                raise QGLSyntaxError("Missing arguments for connector '%s' for database type '%s'." % (conn_name,
+                                                                                                       conn_type))
 
     def _create_query_nodes(self):
         for node_name, node_dict in self.retrieve_block.nodes.items():
