@@ -31,15 +31,13 @@ class QueryNode(object):
         Name assigned to the node.
     query : str
         The node's query template string.
-    db_connector : DbConnector instance
-        The node's database connector.
+    db_interface : DatabaseInterface instance
+        The node's database interface.
     log : ExecutionLog instance
         Logging class passed to QueryNode by its host QueryGraph.
     fields : list or None
         A list of fields to return - only used for NoSql databases
         that do not return relational data.
-
-
 
     """
 

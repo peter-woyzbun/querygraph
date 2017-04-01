@@ -16,14 +16,12 @@ class QueryGraph(object):
     QueryGraph class containing core logic for creating and executing
     query graphs.
 
-    Responsibilities:
-
-        (1) Mapping node names to their instances.
-        (2) Joining nodes.
-        (3) Execution..
-
-
-
+    Parameters
+    ----------
+    qgl_str : str
+        Query Graph Language string to compile containing graph logic.
+    use_threads : bool
+        Whether or not to use threads when execution query.
 
     """
 

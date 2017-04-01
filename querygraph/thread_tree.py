@@ -21,11 +21,11 @@ class ExecutionThread(threading.Thread):
         except QueryGraphException, e:
             self.has_error = True
             self.exception = e
-            return e
+            raise
         except Exception, e:
             self.has_error = True
             self.exception = e
-            return e
+            raise
 
         if not self.query_node.result_set_empty:
             for child_node in self.query_node.children:

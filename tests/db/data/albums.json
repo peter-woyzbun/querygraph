@@ -51,7 +51,9 @@
         "pop rock",
         "post-grunge",
         "female"
-      ]
+      ],
+      "data": {"record_label": "Maverick",
+               "year": 1995}
     },
     {
       "album": "Facelift",
