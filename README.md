@@ -190,7 +190,8 @@ looks something like this:
 
 The `mongo_node`'s "manipulation set" is now executed on the dataframe
 shown above. A manipulation set is a chained set of statements very
-similar to those from the `dplyr` R package.
+similar to those from the `dplyr` R package - just replace `>>` with
+`%>%`.
 
 ```
 unpack(record_label=data['record_label']) >>
@@ -200,3 +201,12 @@ flatten(tags) >>
 rename(tags=tag)
 ```
 
+The `mongo_node`'s manipulation set does the following:
+
+1. "Unpacks" the `record_label` value of the dictionary contained
+in the `data` column and stores it in a new column called `record_label`.
+2. Does the same for `year`.
+3. Removes the `data` column.
+4. "Flattens" the `tags` column - creates a new row for each item in
+every list contained in the column.
+5. Renames `tags` to `tag`.
