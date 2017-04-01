@@ -152,6 +152,8 @@ each query node are joined.
 
 <hr>
 
+### `mongo_node` Execution
+
 When our example query is executed, the first thing to happen is the
 rendering of the "query template" belonging to the `mongo_node` query
 node. A query template is simply a query written in the form appropriate
@@ -219,3 +221,9 @@ The dataframe belonging to `mongo_node` node now looks like this:
 | Jagged Little Pill | pop rock    | Maverick     | 1995 |
 | Jagged Little Pill | post-grunge | Maverick     | 1995 |
 | ...                | ...         | ...          | ...  |
+
+
+### `pg_node` Execution
+
+With the `mongo_node`'s query being executed and results retrieved, the
+query template belonging to the `pg_node` query node is rendered.
