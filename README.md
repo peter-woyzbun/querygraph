@@ -2,6 +2,8 @@
 
 ***
 
+*Note: Not currently ready for initial release.*
+
 Query Graph is a framework/language, written in Python, for joining data 
 from different database management systems - i.e. joins that can't 
 typically be accomplished with a single query. For example, joining 
@@ -47,7 +49,7 @@ To install Query Graph...
 # Query Graph Language - Brief Introduction
 
 Query Graph Language (QGL) is a simple, domain specific declarative 
-language. The best way to give an idea of how it works is through
+"language". The best way to give an idea of how it works is through
 an example. In the example, we'll be joining data from two databases:
 a Mongo Db database, and a Postgres database.
 
@@ -129,11 +131,12 @@ df = query_graph.execute(album_tags=['canada', 'rock'])
 
 The output is a Pandas dataframe:
 
-| AlbumId | album | ArtistId | tag | record_label | year |
-|---------|-------|----------|-----|--------------|------|
-| ...     | ...   | ...      | ... | ...          | ...  |
-| ...     | ...   | ...      | ... | ...          | ...  |
-| ...     | ...   | ...      | ... | ...          | ...  |
+| album              | tag         | record_label | year | AlbumId | ArtistId |
+|--------------------|-------------|--------------|------|---------|----------|
+| Jagged Little Pill | canada      | Maverick     | 1995 | 6       | 4        |
+| Jagged Little Pill | pop rock    | Maverick     | 1995 | 6       | 4        |
+| Jagged Little Pill | post-grunge | Maverick     | 1995 | 6       | 4        |
+| ...                | ...         | ...          | ...  | ...     | ...      |
 
 Now we'll walk through the query and each step of its execution.
 
@@ -347,6 +350,7 @@ postgres_df = pd.read_sql_query(postgres_query, postgres_conn)
 
 postgres_df = postgres_df.rename(columns={'Title': 'album'})
 
+final_df = mongo_df.merge(postgres_df, left_on='album', right_on='album', how='left')
 
 
 ```
