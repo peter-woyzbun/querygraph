@@ -161,7 +161,8 @@ for whatever database type it will be executed on, augmented with
 ![Parameter Diagram](docs/_static/images/ex_mongo_param.png)
 
 The parameter is "independent" because its value is defined before the
-query is executed. The parameter "value expression" defines the value
+query is executed (as opposed to "dependent" parameters, which are 
+covered below). The parameter "value expression" defines the value
 assigned to the parameter. In our case, we defined
 
 ```python
@@ -187,10 +188,10 @@ looks something like this:
 | ...                | ...                                            | ...                                         |
 | ...                | ...                                            | ...                                         |
 
-The `mongo_node`'s "manipulation set" is now executed on the dataframe
+The `mongo_node`'s "manipulation set", shown below, is now executed on the dataframe
 shown above. A manipulation set is a chained set of statements very
-similar to those from the `dplyr` R package - just replace `>>` with
-`%>%`.
+similar to those from the `dplyr` R package - just replace `%>%` with
+`>>`.
 
 ```
 unpack(record_label=data['record_label']) >>
@@ -233,7 +234,7 @@ The difference is that the value expression of a dependent parameter
 draws from the result of its query node's "parent" - in this case
 `mongo_node` - as opposed to variables defined prior to execution. More
 specifically, it references the unique values of the columns of the 
-dataframe belonging to the parent node. So the rendered query template
+dataframe belonging to the parent node. The rendered query template
 belonging to `pg_node` is:
 
 ```
@@ -242,8 +243,11 @@ FROM "Album"
 WHERE "Title" IN ('Jagged Little Pill')
 ```
 
-The rendered query is then executed using the `postgres_conn` database
-connector and the resulting dataframe is shown below:
+So the parameter used the unique values of the `alboum` column from
+`mongo_node` to render a list of strings in the form appropriate
+for a Postgres SQL query. The rendered query is then executed using the
+`postgres_conn` database connector and the resulting dataframe is shown 
+below:
 
 | AlbumId | Title              | ArtistId |
 |---------|--------------------|----------|
