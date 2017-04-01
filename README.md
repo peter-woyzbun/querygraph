@@ -279,3 +279,60 @@ The final output of our example query's execution is below.
 | Jagged Little Pill | pop rock    | Maverick     | 1995 | 6       | 4        |
 | Jagged Little Pill | post-grunge | Maverick     | 1995 | 6       | 4        |
 | ...                | ...         | ...          | ...  | ...     | ...      |
+
+
+## Equivalent Python Code
+
+```python
+import pymongo
+import psycopg2
+import pandas as pd
+
+mongo_conn = pymongo.MongoClient(host='', port='')
+
+
+def execute_mongo_query(query, fields, conn, collection, db_name):
+    client = conn
+    db = client[db_name]
+    collection = db[collection]
+    projection_fields = {k: 1 for k in fields}
+    results = collection.find(query, projection_fields)
+    df = pd.DataFrame(list(results))
+    return df
+
+
+mongo_query = {'tags': {'$in': ['canada', 'rock']}}
+
+mongo_df = execute_mongo_query(query=mongo_query,
+                               fields=['album', 'tags', 'data'],
+                               conn=mongo_conn,
+                               collection='albums',
+                               db_name='some_db')
+
+
+def unpack_dict(row_dict, key_list):
+    return reduce(dict.__getitem__, key_list, row_dict)
+
+mongo_df['record_label'] = mongo_df['data'].apply(lambda x: unpack_dict(row_dict=x, key_list=['record_label']))
+mongo_df['year'] = mongo_df['data'].apply(lambda x: unpack_dict(row_dict=x, key_list=['year']))
+mongo_df.drop('data', inplace=True, axis=1)
+
+
+def flatten_column(df, target_col):
+    col_flat = pd.DataFrame([[i, x]
+                             for i, y in df[target_col].apply(list).iteritems()
+                             for x in y], columns=['I', target_col])
+    col_flat = col_flat.set_index('I')
+    df = df.drop(target_col, 1)
+    df = df.merge(col_flat, left_index=True, right_index=True)
+    df = df.reset_index(drop=True)
+    return df
+
+mongo_df = flatten_column(df=mongo_df, target_col='tags')
+mongo_df = mongo_df.rename(columns={'tags': 'tag'})
+
+
+postgres_conn = psycopg2.connect("dbname='%s' user='%s' host='%s' password='%s' port='%s'" % ('', '', '', '', ''))
+
+
+```
