@@ -179,10 +179,24 @@ above should be rendered as a list of strings. The rendered query for
 
 which is just an ordinary Mongo Db query (using their Python API). The
 query is then executed using the `mongo_conn` connector, with only the
-fields "album", "tags", and "data" selected.
+fields "album", "tags", and "data" selected. The dataframe returned
+looks something like this:
 
 | album              | tags                                           | data                                        |
 |--------------------|------------------------------------------------|---------------------------------------------|
 | Jagged Little Pill | `["canada","pop rock","post-grunge","female"]` | `{"record_label": "Maverick","year": 1995}` |
 | ...                | ...                                            | ...                                         |
 | ...                | ...                                            | ...                                         |
+
+The `mongo_node`'s "manipulation set" is now executed on the dataframe
+shown above. A manipulation set is a chained set of statements very
+similar to those from the `dplyr` R package.
+
+```
+unpack(record_label=data['record_label']) >>
+unpack(year=data['year']) >>
+remove(data) >>
+flatten(tags) >>
+rename(tags=tag)
+```
+
