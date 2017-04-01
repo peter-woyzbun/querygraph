@@ -93,12 +93,14 @@ CONNECT
 RETRIEVE
     QUERY |
         {'tags': {'$in': {% album_tags -> list:str %}}};
-    FIELDS album, tags
+    FIELDS album, tags, data
     USING mongodb_conn
     THEN |
         unpack(record_label=data['record_label']) >>
+        unpack(year=data['year']) >>
         remove(data) >>
-        flatten(tags);
+        flatten(tags) >>
+        rename(tags=tag);
     AS mongo_node
     ---
     QUERY |
@@ -106,6 +108,8 @@ RETRIEVE
         FROM "Album"
         WHERE "Title" IN {{ album -> list:str }};
     USING postgres_conn
+    THEN |
+        remove(Album);
     AS postgres_node
 JOIN
     LEFT (postgres_node[Title] ==> mongo_node[album])
@@ -122,3 +126,12 @@ query_graph = QueryGraph(qgl_str=query_str)
 # Execute the graph and get a dataframe in return.
 df = query_graph.execute(album_tags=['canada', 'rock'])
 ```
+
+The output is a Pandas dataframe:
+
+| AlbumId | album | ArtistId | tag | record_label | year |
+|---------|-------|----------|-----|--------------|------|
+| ...     | ...   | ...      | ... | ...          | ...  |
+| ...     | ...   | ...      | ... | ...          | ...  |
+| ...     | ...   | ...      | ... | ...          | ...  |
+
