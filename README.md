@@ -334,5 +334,19 @@ mongo_df = mongo_df.rename(columns={'tags': 'tag'})
 
 postgres_conn = psycopg2.connect("dbname='%s' user='%s' host='%s' password='%s' port='%s'" % ('', '', '', '', ''))
 
+album_names = mongo_df.album.unique()
+album_names = '(%s)' % ", ".join(str(y) for y in album_names)
+
+postgres_query = """
+SELECT *
+FROM "Album"
+WHERE "Title" IN %s
+""" % album_names
+
+postgres_df = pd.read_sql_query(postgres_query, postgres_conn)
+
+postgres_df = postgres_df.rename(columns={'Title': 'album'})
+
+
 
 ```
