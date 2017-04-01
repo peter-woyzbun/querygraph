@@ -109,7 +109,7 @@ RETRIEVE
         WHERE "Title" IN {{ mongo_node.album -> list:str }};
     USING postgres_conn
     THEN |
-        rename(Album=album);
+        rename(Title=album);
     AS postgres_node
 JOIN
     LEFT (pg_node[album] ==> mongo_node[album])
@@ -243,7 +243,7 @@ FROM "Album"
 WHERE "Title" IN ('Jagged Little Pill')
 ```
 
-So the parameter used the unique values of the `alboum` column from
+So the parameter used the unique values of the `album` column from
 `mongo_node` to render a list of strings in the form appropriate
 for a Postgres SQL query. The rendered query is then executed using the
 `postgres_conn` database connector and the resulting dataframe is shown 
@@ -252,3 +252,30 @@ below:
 | AlbumId | Title              | ArtistId |
 |---------|--------------------|----------|
 | 6       | Jagged Little Pill | 4        |
+
+The `pg_node` also has a manipulation set, which contains a single
+manipulation renaming the `Title` column to `album`. The final step
+is to join the results of both query nodes.
+
+### Joining
+
+The dataframes of `pg_node` and `mongo_node` are joined according to the
+statement provided in the `JOIN` block:
+
+```
+LEFT (pg_node[album] ==> mongo_node[album])
+```
+
+The statement says a LEFT join should be performed using the `album` 
+column from `pg_node`'s dataframe, and the `album` column from 
+`mongo_node`'s dataframe. If more than one column was required for
+joining they would be listed in the brackets beside each node name.
+
+The final output of our example query's execution is below.
+
+| album              | tag         | record_label | year | AlbumId | ArtistId |
+|--------------------|-------------|--------------|------|---------|----------|
+| Jagged Little Pill | canada      | Maverick     | 1995 | 6       | 4        |
+| Jagged Little Pill | pop rock    | Maverick     | 1995 | 6       | 4        |
+| Jagged Little Pill | post-grunge | Maverick     | 1995 | 6       | 4        |
+| ...                | ...         | ...          | ...  | ...     | ...      |
