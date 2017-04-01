@@ -85,7 +85,8 @@ the following manner:
 
 ## The QGL Query
 
-The QGL query used to join both sets of data is below.
+The QGL query used to join both sets of data is below (see the equivalent
+Python code at the bottom of the page).
 
 ```
 CONNECT
@@ -163,7 +164,7 @@ for whatever database type it will be executed on, augmented with
 ![Parameter Diagram](docs/_static/images/ex_mongo_param.png)
 
 The parameter is "independent" because its value is defined before the
-query is executed (as opposed to "dependent" parameters, which are 
+query graph is executed (as opposed to "dependent" parameters, which are 
 covered below). The parameter "value expression" defines the value
 assigned to the parameter. In our case, we defined
 
@@ -247,7 +248,10 @@ WHERE "Title" IN ('Jagged Little Pill')
 
 So the parameter used the unique values of the `album` column from
 `mongo_node` to render a list of strings in the form appropriate
-for a Postgres SQL query. The rendered query is then executed using the
+for a Postgres SQL query. Note that a "list" container is rendered
+differently for a Postgres query than for a Mongo Db query - Query Graph
+knows how to represent types based on the database type the query will
+be run on. The rendered query is then executed using the
 `postgres_conn` database connector and the resulting dataframe is shown 
 below:
 
