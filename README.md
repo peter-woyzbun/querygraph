@@ -177,4 +177,12 @@ above should be rendered as a list of strings. The rendered query for
 {'tags': {'$in': ['canada', 'rock']}}
 ```
 
-which is just an ordinary Mongo Db query (using their Python API).
+which is just an ordinary Mongo Db query (using their Python API). The
+query is then executed using the `mongo_conn` connector, with only the
+fields "album", "tags", and "data" selected.
+
+| album              | tags                                           | data                                        |
+|--------------------|------------------------------------------------|---------------------------------------------|
+| Jagged Little Pill | `["canada","pop rock","post-grunge","female"]` | `{"record_label": "Maverick","year": 1995}` |
+| ...                | ...                                            | ...                                         |
+| ...                | ...                                            | ...                                         |
