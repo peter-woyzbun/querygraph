@@ -5,6 +5,7 @@ from querygraph.manipulation.expression.evaluator import Evaluator
 from querygraph.manipulation.set import ManipulationSet, Mutate, Rename
 from querygraph.manipulation import common_parsers
 from querygraph.db import interfaces
+from querygraph.exceptions import QGLSyntaxError
 
 
 class ConnectBlock(object):
@@ -254,13 +255,21 @@ class QGLCompiler(object):
         if self.manipulation_set_str:
             self.query_graph.manipulation_set.append_from_str(self.manipulation_set_str)
 
+    def _validate_conn_type(self, conn_type):
+        if conn_type not in self.db_interface_map.keys():
+            raise QGLSyntaxError("Error: '%s' is not a valid database connector type." % conn_type)
+
     def _create_connectors(self):
         for conn_name, conn_dict in self.connect_block.connectors.items():
             conn_type = conn_dict['conn_type'].lower()
             conn_kwargs = conn_dict['conn_kwargs']
             conn_kwargs['name'] = conn_name
-            # Todo: catch exception for bad conn_type
-            self.connectors[conn_name] = self.db_interface_map[conn_type](**conn_kwargs)
+            self._validate_conn_type(conn_type=conn_type)
+            try:
+                self.connectors[conn_name] = self.db_interface_map[conn_type](**conn_kwargs)
+            except TypeError:
+                raise QGLSyntaxError("Missing arguments for connector '%s' for database type '%s'." % conn_name,
+                                     conn_type)
 
     def _create_query_nodes(self):
         for node_name, node_dict in self.retrieve_block.nodes.items():
@@ -271,11 +280,19 @@ class QGLCompiler(object):
             if node_dict['manipulation_set'] is not None:
                 self.query_graph.nodes[node_name].manipulation_set.append_from_str(node_dict['manipulation_set'])
 
+    def _validate_join_nodes(self, parent_node, child_node):
+        if parent_node not in self.query_graph.nodes:
+            raise QGLSyntaxError("Error: can't join parent node '%s' because it does not exist." % parent_node)
+        if child_node not in self.query_graph.nodes:
+            raise QGLSyntaxError("Error: can't join child node '%s' because it does not exist." % child_node)
+
     def _create_joins(self):
         for join_dict in self.join_block.joins:
             parent_node_name = join_dict['parent_node']
-            parent_cols = join_dict['parent_cols']
             child_node_name = join_dict['child_node']
+            self._validate_join_nodes(parent_node=parent_node_name, child_node=child_node_name)
+
+            parent_cols = join_dict['parent_cols']
             child_cols = join_dict['child_cols']
             on_columns = list()
             for parent_col, child_col in zip(parent_cols, child_cols):

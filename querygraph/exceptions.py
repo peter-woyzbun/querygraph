@@ -9,6 +9,18 @@ class QueryGraphException(Exception):
 
 
 # =================================================
+# Language Exceptions
+# -------------------------------------------------
+
+class QGLCompilerException(QueryGraphException):
+    pass
+
+
+class QGLSyntaxError(QueryGraphException):
+    pass
+
+
+# =================================================
 # Database Connector Exceptions
 # -------------------------------------------------
 

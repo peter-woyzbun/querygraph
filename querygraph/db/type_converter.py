@@ -1,6 +1,7 @@
 import datetime
 import time
 import copy
+from collections import defaultdict
 
 import numpy as np
 
@@ -104,8 +105,8 @@ class TypeConverter(object):
     def __init__(self, type_converters=None, container_converters=None):
         self.db_specific_converters = type_converters
         self.db_specific_container_converters = container_converters
-        self.type_converters = copy.deepcopy(self.GENERIC_TYPE_CONVERTERS)
-        self.container_converters = copy.deepcopy(self.GENERIC_CONTAINER_CONVERTERS)
+        self.type_converters = defaultdict(dict)
+        self.container_converters = defaultdict(dict)
         self._setup_type_converters()
         self._setup_container_converters()
 
@@ -142,6 +143,16 @@ class TypeConverter(object):
         return self.container_converters.keys()
 
     def _setup_type_converters(self):
+        self._setup_generic_type_converters()
+        self._set_db_specific_type_converters()
+
+    def _setup_generic_type_converters(self):
+        # Is this copy necessary?
+        generic_type_converters = copy.deepcopy(self.GENERIC_TYPE_CONVERTERS)
+        for render_type, converter_dict in generic_type_converters.items():
+            self.type_converters[render_type] = converter_dict
+
+    def _set_db_specific_type_converters(self):
         if self.db_specific_converters is not None:
             for render_type, converter_dict in self.db_specific_converters.items():
                 for input_type, converter in converter_dict.items():
@@ -154,11 +165,22 @@ class TypeConverter(object):
             pass
 
     def _setup_container_converters(self):
+        self._setup_generic_container_converters()
+        self._setup_db_specific_container_converters()
+
+    def _setup_generic_container_converters(self):
+        generic_container_converters = copy.deepcopy(self.GENERIC_CONTAINER_CONVERTERS)
+        for container_type, converter_dict in generic_container_converters.items():
+            self.container_converters[container_type] = converter_dict
+
+    def _setup_db_specific_container_converters(self):
         if self.db_specific_container_converters is not None:
             for container_type, converter in self.db_specific_container_converters.items():
                 if not callable(converter):
                     raise exceptions.TypeConverterException
                 self.container_converters[container_type] = converter
+
+
 
 
 
