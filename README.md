@@ -210,3 +210,12 @@ in the `data` column and stores it in a new column called `record_label`.
 4. "Flattens" the `tags` column - creates a new row for each item in
 every list contained in the column.
 5. Renames `tags` to `tag`.
+
+The dataframe belonging to `mongo_node` node now looks like this:
+
+| album              | tag         | record_label | year |
+|--------------------|-------------|--------------|------|
+| Jagged Little Pill | canada      | Maverick     | 1995 |
+| Jagged Little Pill | pop rock    | Maverick     | 1995 |
+| Jagged Little Pill | post-grunge | Maverick     | 1995 |
+| ...                | ...         | ...          | ...  |
