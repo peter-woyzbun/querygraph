@@ -21,6 +21,7 @@ The following databases are currently supported:
 * Maria Db (untested)
 * InfluxDB (untested)
 * MS Sql (untested)
+* Neo4j (untested)
 
 ## Main Features
 
