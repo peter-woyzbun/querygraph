@@ -173,7 +173,8 @@ class QGLCompiler(object):
                         'mariadb': interfaces.MariaDb,
                         'cassandra': interfaces.Cassandra,
                         'influxdb': interfaces.InfluxDb,
-                        'ms_sql': interfaces.MsSql}
+                        'ms_sql': interfaces.MsSql,
+                        'neo4j': interfaces.Neo4j}
 
     def __init__(self, qgl_str, query_graph):
         self.qgl_str = qgl_str

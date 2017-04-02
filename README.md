@@ -252,8 +252,9 @@ for a Postgres SQL query. Note that a "list" container is rendered
 differently for a Postgres query than for a Mongo Db query - Query Graph
 knows how to represent types based on the database type the query will
 be run on. This is especially handy when working with dates/times, etc.
+
 The rendered query is then executed using the `postgres_conn` database 
-connector and the resulting dataframe is shown below:
+connector. The resulting dataframe is shown below:
 
 | AlbumId | Title              | ArtistId |
 |---------|--------------------|----------|

@@ -50,3 +50,8 @@ try:
     from _ms_sql import MsSql
 except ImportError:
     MsSql = optional_import.NotInstalled(name='pymssql')
+
+try:
+    from _neo4j import Neo4j
+except ImportError:
+    Neo4j = optional_import.NotInstalled(name='py2neo')
