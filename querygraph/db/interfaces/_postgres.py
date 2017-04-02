@@ -8,6 +8,17 @@ from querygraph.db.type_converter import TypeConverter
 
 class Postgres(DatabaseInterface):
 
+    TYPE_CONVERTER = TypeConverter(
+        type_converters={
+            'bool':
+                {
+                    bool: lambda x: 'TRUE' if x else 'FALSE',
+                    int: lambda x: x,
+                    str: lambda x: "'%s'" % x
+                }
+        }
+    )
+
     def __init__(self, name, db_name, user, password, host, port):
         self.host = host
         self.db_name = db_name
@@ -19,7 +30,7 @@ class Postgres(DatabaseInterface):
                                    db_type='Postgres',
                                    conn_exception=psycopg2.OperationalError,
                                    execution_exception=psycopg2.DatabaseError,
-                                   type_converter=TypeConverter())
+                                   type_converter=self.TYPE_CONVERTER)
 
     def _conn(self):
         return psycopg2.connect("dbname='%s' user='%s' host='%s' password='%s' port='%s'" % (self.db_name,

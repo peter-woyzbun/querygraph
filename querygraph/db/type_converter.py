@@ -40,7 +40,8 @@ class TypeConverter(object):
             np.float32: lambda x: x,
             np.float16: lambda x: x,
             float: lambda x: int(x),
-            str: lambda x: int(x)
+            str: lambda x: int(x),
+            bool: lambda x: 1 if x else 0
         },
         # Render type 'float'
         # Parameter string: '<parameter_expression> -> [<container_type>:]float'
@@ -60,6 +61,7 @@ class TypeConverter(object):
         # Parameter string: '<parameter_expression> -> [<container_type>:]str'
         'str': {
             str: lambda x: "'%s'" % x,
+            bool: lambda x: "'%s'" % x,
             unicode: lambda x: "'%s'" % x,
             float: lambda x: "'%s'" % x,
             int: lambda x: "'%s'" % x,
